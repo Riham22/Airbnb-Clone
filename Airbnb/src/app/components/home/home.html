@@ -1,76 +1,34 @@
-<div class="p-6 space-y-6">
+<div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<div *ngFor="let item of listings" class="border rounded-xl p-3 shadow-sm hover:shadow-md transition">
+<img alt="l" [src]="item.image" class="rounded-lg mb-3 h-48 w-full object-cover" />
+<h2 class="font-semibold text-lg">{{ item.title }}</h2>
+<p class="font-bold">${{ item.price }}/night</p>
+</div>
+</div>
+<div class="space-y-8">
+<!-- continue searching row -->
+<div class="bg-white rounded-xl shadow p-4 flex items-center justify-between">
+<div class="text-center w-full">Continue searching for homes in <strong>{{ continueLocation }}</strong> — Dec 4 - 5 · 3 guests</div>
+<div class="w-20">
+<img src="assets/avatar.jpg" class="w-12 h-12 rounded-full" />
+</div>
+</div>
 
-  <!-- 🔍 Search Bar -->
-  <div class="w-full flex items-center justify-center">
-    <div class="flex items-center bg-white border rounded-full px-4 py-2 gap-4 shadow-md w-full max-w-4xl">
 
-      <!-- Where -->
-      <button class="flex flex-col text-left px-2 hover:bg-gray-100 rounded-xl transition">
-        <span class="text-[11px] font-bold">Where</span>
-        <span class="text-gray-500 text-[11px]">Search destinations</span>
-      </button>
+<!-- first carousel -->
+<app-carousel [title]="'Stay near التجمع الخامس'" [items]="sampleStays"></app-carousel>
 
-      <div class="border-l h-6"></div>
 
-      <!-- Check-in -->
-      <button class="flex flex-col text-left px-2 hover:bg-gray-100 rounded-xl transition">
-        <span class="text-[11px] font-bold">Check in</span>
-        <span class="text-gray-500 text-[11px]">Add dates</span>
-      </button>
+<!-- price bubble over content (example) -->
+<div class="relative">
+<div class="absolute left-1/2 transform -translate-x-1/2 -mt-10">
+<div class="bg-white px-4 py-2 rounded-full shadow">Prices include all fees</div>
+</div>
+</div>
 
-      <div class="border-l h-6"></div>
 
-      <!-- Check-out -->
-      <button class="flex flex-col text-left px-2 hover:bg-gray-100 rounded-xl transition">
-        <span class="text-[11px] font-bold">Check out</span>
-        <span class="text-gray-500 text-[11px]">Add dates</span>
-      </button>
+<!-- second carousel -->
+<app-carousel [title]="'Available for similar dates'" [items]="sampleSimilar"></app-carousel>
 
-      <div class="border-l h-6"></div>
-
-      <!-- Who -->
-      <button class="flex flex-col text-left px-2 hover:bg-gray-100 rounded-xl transition">
-        <span class="text-[11px] font-bold">Who</span>
-        <span class="text-gray-500 text-[11px]">Add guests</span>
-      </button>
-
-      <!-- Search Button -->
-      <button class="bg-red-500 text-white px-5 py-2 rounded-full text-xs hover:bg-red-600 transition flex items-center gap-1">
-        <span>Search</span>
-        <i class="bi bi-search text-xs"></i>
-      </button>
-
-    </div>
-  </div>
-
-  <!-- 🧭 Filters Bar -->
-  <div class="w-full overflow-x-auto whitespace-nowrap flex gap-6 px-2 py-3 border-b bg-white no-scrollbar">
-    <div
-      *ngFor="let item of filters"
-      class="flex flex-col items-center cursor-pointer text-gray-600 hover:text-black transition min-w-[60px]"
-    >
-      <div class="text-2xl">{{ item.icon }}</div>
-      <span class="text-xs mt-1">{{ item.name }}</span>
-    </div>
-  </div>
-
-  <!-- 🏠 Listings Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-4">
-    <div
-      *ngFor="let item of listings"
-      class="border rounded-xl p-3 shadow-sm hover:shadow-lg transition duration-200 cursor-pointer"
-    >
-      <img [src]="item.image" alt="image" class="rounded-lg mb-3 h-52 w-full object-cover" />
-
-      <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-[15px]">{{ item.title }}</h2>
-        <i class="bi bi-heart text-xl hover:text-red-500 transition"></i>
-      </div>
-
-      <p class="text-gray-500 text-sm">{{ item.location }}</p>
-
-      <p class="font-bold mt-1">${{ item.price }} <span class="text-sm font-normal text-gray-600">/night</span></p>
-    </div>
-  </div>
 
 </div>
