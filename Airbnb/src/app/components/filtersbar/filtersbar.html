@@ -1,0 +1,10 @@
+<div class="mt-6">
+<div class="flex gap-4 overflow-x-auto no-scrollbar py-3">
+<div *ngFor="let f of filters" (click)="select(f)" class="flex-shrink-0 cursor-pointer select-none">
+<div [ngClass]="{'ring-2 ring-red-200': active===f.name}" class="flex flex-col items-center p-3 rounded-2xl bg-white shadow-sm hover:shadow-md">
+<div class="text-2xl">{{ f.icon }}</div>
+<div class="text-xs mt-2 text-gray-700">{{ f.name }}</div>
+</div>
+</div>
+</div>
+</div>
