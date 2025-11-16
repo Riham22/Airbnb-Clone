@@ -1,0 +1,18 @@
+<div class="min-h-screen bg-gray-50">
+<app-navbar></app-navbar>
+
+
+<!-- large floating search area -->
+<div class="max-w-6xl mx-auto px-4">
+<app-search-bar (onSearch)="onSearch($event)"></app-search-bar>
+<app-filtersbar ></app-filtersbar>
+</div>
+
+
+<main class="max-w-6xl mx-auto px-4 mt-6">
+<router-outlet></router-outlet>
+</main>
+
+
+<app-footer></app-footer>
+</div>
