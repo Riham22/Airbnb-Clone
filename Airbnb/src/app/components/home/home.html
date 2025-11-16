@@ -1,1 +1,54 @@
 
+<div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="w-full flex items-center justify-center mt-4">
+<div class="flex items-center bg-white border shadow-md rounded-full px-4 py-2 gap-4 w-full max-w-3xl">
+<button class="flex flex-col text-left">
+<span class="text-xs font-bold">Where</span>
+<span class="text-gray-500 text-xs">Search destinations</span>
+</button>
+
+
+<div class="border-l h-6"></div>
+
+
+<button class="flex flex-col text-left">
+<span class="text-xs font-bold">Check in</span>
+<span class="text-gray-500 text-xs">Add dates</span>
+</button>
+
+
+<div class="border-l h-6"></div>
+
+
+<button class="flex flex-col text-left">
+<span class="text-xs font-bold">Check out</span>
+<span class="text-gray-500 text-xs">Add dates</span>
+</button>
+
+
+<div class="border-l h-6"></div>
+
+
+<button class="flex flex-col text-left">
+<span class="text-xs font-bold">Who</span>
+<span class="text-gray-500 text-xs">Add guests</span>
+</button>
+
+
+<button class="bg-red-500 text-white px-4 py-2 rounded-full text-xs hover:bg-red-600">
+Search
+</button>
+</div>
+</div>
+<div class="w-full overflow-x-auto whitespace-nowrap flex gap-6 px-4 py-3 border-b bg-white">
+<div *ngFor="let item of filters" class="flex flex-col items-center cursor-pointer text-gray-600 hover:text-black">
+<div class="text-2xl">{{ item.icon }}</div>
+<span class="text-xs mt-1">{{ item.name }}</span>
+</div>
+</div>
+<div *ngFor="let item of listings" class="border rounded-xl p-3 shadow-sm hover:shadow-md transition">
+<img [src]="item.image" class="rounded-lg mb-3 h-48 w-full object-cover" />
+<h2 class="font-semibold text-lg">{{ item.title }}</h2>
+<p class="font-bold">${{ item.price }}/night</p>
+</div>
+</div>
