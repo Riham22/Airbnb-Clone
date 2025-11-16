@@ -1,3 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+/* styles.css */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

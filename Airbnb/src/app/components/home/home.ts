@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
-export class HomeComponent {
+export class Home {
 listings = [
 { title: 'Cozy Apartment', price: 120, image: 'assets/img1.jpg' },
 { title: 'Beach House', price: 240, image: 'assets/img2.jpg' },
