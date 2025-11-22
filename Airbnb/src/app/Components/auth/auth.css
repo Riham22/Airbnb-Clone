@@ -1,0 +1,542 @@
+/* auth.component.css */
+.auth-container {
+  min-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.auth-header {
+  width: 100%;
+  padding: 24px 40px;
+  border-bottom: 1px solid #dddddd;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left:0;
+  right:0;
+  background: white;
+  z-index: 10;
+}
+
+.logo {
+  cursor: pointer;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.auth-card {
+  max-width: 568px;
+  width: 100%;
+  padding: 24px;
+  margin: 40px 0;
+}
+
+.auth-title {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #222222;
+  line-height: 36px;
+  letter-spacing: -0.04em;
+}
+
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 23px;
+  border: 1px solid #222222;
+  border-radius: 8px;
+  background: white;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  position: relative;
+}
+
+.social-btn:hover:not(:disabled) {
+  background: #f7f7f7;
+  border-color: #000000;
+}
+
+.social-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.social-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.google-btn {
+  border-color: #222222;
+  color: #222222;
+}
+
+.facebook-btn {
+  border-color: #1877F2;
+  color: #1877F2;
+}
+
+.facebook-btn:hover:not(:disabled) {
+  border-color: #166FE5;
+  background: #f0f4ff;
+}
+
+.apple-btn {
+  border-color: #222222;
+  color: #222222;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 32px 0;
+  color: #717171;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #ebebeb;
+}
+
+.divider span {
+  background: white;
+  padding: 0 16px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.name-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  width: 100%;
+  position: relative;
+}
+
+.form-group input, .birthday-fields select {
+  width: 100%;
+  padding: 13px 12px;
+  border: 1px solid #b0b0b0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  background: white;
+  box-sizing: border-box;
+}
+
+.form-group input:focus, .birthday-fields select:focus {
+  outline: none;
+  border-color: #222222;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #717171;
+  font-weight: 400;
+}
+
+.birthday-section {
+  margin: 24px 0 16px 0;
+  padding: 0;
+}
+
+.birthday-label {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #222222;
+  line-height: 20px;
+}
+
+.birthday-description {
+  font-size: 14px;
+  color: #717171;
+  margin-bottom: 16px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+.birthday-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.birthday-fields select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23222222'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.birthday-fields select:focus {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000000'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(to right, #E61E4D 0%, #E31C5F 50%, #D70466 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(to right, #D70466 0%, #E31C5F 50%, #E61E4D 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.toggle-mode {
+  text-align: center;
+  margin-top: 24px;
+  color: #222222;
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #222222;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 0;
+  margin-left: 4px;
+  font-family: inherit;
+}
+
+.toggle-btn:hover {
+  color: #000000;
+  text-decoration: none;
+}
+
+.error-message {
+  color: #C13515;
+  font-size: 14px;
+  margin-top: 8px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+/* Form validation styles */
+.form-group input.ng-invalid.ng-touched {
+  border-color: #C13515;
+}
+
+.form-group input.ng-valid.ng-touched {
+  border-color: #008A05;
+}
+
+/* Loading state */
+.submit-btn:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Focus styles for accessibility */
+.social-btn:focus-visible,
+.form-group input:focus-visible,
+.birthday-fields select:focus-visible,
+.submit-btn:focus-visible,
+.toggle-btn:focus-visible {
+  outline: 2px solid #222222;
+  outline-offset: 2px;
+}
+
+/* Responsive Design */
+@media (max-width: 743px) {
+  .auth-container {
+    min-height: 100vh;
+    background: white;
+  }
+
+  .auth-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #ebebeb;
+  }
+
+  .auth-card {
+    max-width: 100%;
+    padding: 0 24px;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .auth-title {
+    font-size: 26px;
+    line-height: 30px;
+    margin-bottom: 32px;
+  }
+
+  .name-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .birthday-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .social-buttons {
+    gap: 12px;
+  }
+
+  .social-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 744px) and (max-width: 1127px) {
+  .auth-card {
+    max-width: 500px;
+    border: 1px solid #ebebeb;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    margin: 80px auto;
+  }
+}
+
+@media (min-width: 1128px) {
+  .auth-card {
+    border: 1px solid #ebebeb;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    margin: 80px auto;
+  }
+}
+
+/* Additional Airbnb-specific styles */
+.auth-container {
+  color: #222222;
+}
+
+/* Input focus with Airbnb's specific style */
+.form-group input:focus {
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Placeholder text style */
+.form-group input::placeholder {
+  color: #717171;
+  font-weight: 400;
+}
+
+/* Select dropdown styling */
+.birthday-fields select {
+  color: #222222;
+  font-weight: 400;
+}
+
+.birthday-fields select:invalid {
+  color: #717171;
+}
+
+/* Social button hover effects */
+.social-btn {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.social-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+/* Submit button gradient animation */
+.submit-btn {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Error state animations */
+.error-message {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Logo animation */
+.logo {
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+/* Toggle button smooth transition */
+.toggle-btn {
+  transition: all 0.2s ease;
+}
+
+/* Form group focus states */
+.form-group {
+  transition: transform 0.2s ease;
+}
+
+.form-group:focus-within {
+  transform: translateY(-1px);
+}
+
+/* Birthday section spacing */
+.birthday-section {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 743px) {
+  .auth-title {
+    text-align: center;
+  }
+
+  .divider {
+    margin: 24px 0;
+  }
+
+  .toggle-mode {
+    margin-top: 32px;
+    padding-bottom: 40px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .social-btn {
+    border-width: 2px;
+  }
+
+  .form-group input,
+  .birthday-fields select {
+    border-width: 2px;
+  }
+
+  .submit-btn {
+    border: 2px solid #000000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .social-btn,
+  .submit-btn,
+  .logo,
+  .form-group,
+  .toggle-btn {
+    transition: none;
+    animation: none;
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

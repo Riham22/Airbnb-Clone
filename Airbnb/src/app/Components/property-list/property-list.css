@@ -1,0 +1,74 @@
+.property-list-section {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.property-list {
+      padding: 10px 0;
+    }
+
+    .list-header {
+      margin-bottom: 30px;
+      padding: 0 40px;
+    }
+
+    .list-title {
+      font-size: 32px;
+      font-weight: 600;
+      color: #222;
+      margin: 10px 20px;
+    }
+
+    .result-count {
+      font-size: 16px;
+      color: #717171;
+      margin: 0 0 16px 0;
+    }
+
+    .active-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tag {
+      background: white;
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #222;
+    }
+
+    .property-carousel {
+      margin: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 40px;
+    }
+
+    .empty-content h3 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #222;
+      margin: 0 0 8px 0;
+    }
+
+    .empty-content p {
+      font-size: 16px;
+      color: #717171;
+      margin: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .list-header {
+        padding: 0 20px;
+      }
+
+      .list-title {
+        font-size: 26px;
+      }
+    }

@@ -1,0 +1,348 @@
+<!-- become-host.html -->
+<div class="become-host-container">
+  <!-- Progress Header -->
+  <header class="host-header">
+    <div class="header-content">
+      <button class="back-button" (click)="previousStep()" *ngIf="currentStep > 1">
+        <svg viewBox="0 0 32 32">
+          <path d="M20 26l-10-10 10-10"></path>
+        </svg>
+      </button>
+      <h1>Become a Host</h1>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="progress"></div>
+        </div>
+        <span class="progress-text">Step {{ currentStep }} of {{ totalSteps }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="host-main">
+    <div class="step-container">
+      <!-- Step Header -->
+      <div class="step-header">
+        <h2>{{ getStepTitle() }}</h2>
+        <p class="step-description">{{ getStepDescription() }}</p>
+      </div>
+
+      <!-- Step 1: Property Type -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <div class="property-type-grid">
+          <div *ngFor="let type of propertyTypes"
+               class="property-type-card"
+               [class.selected]="listingData.propertyType === type.value"
+               (click)="selectPropertyType(type.value)">
+            <span class="property-icon">{{ type.icon }}</span>
+            <span class="property-label">{{ type.label }}</span>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="next-button"
+                  [disabled]="!listingData.propertyType"
+                  (click)="nextStep()">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Location -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <div class="location-input">
+          <label>Where's your place located?</label>
+          <input type="text"
+                 placeholder="Enter your address"
+                 [(ngModel)]="listingData.location"
+                 (input)="searchLocations($event.target.value)"
+                 class="location-search">
+
+          <div class="location-suggestions" *ngIf="locationSuggestions.length > 0">
+            <div *ngFor="let suggestion of locationSuggestions"
+                 class="suggestion-item"
+                 (click)="selectLocation(suggestion)">
+              📍 {{ suggestion }}
+            </div>
+          </div>
+        </div>
+
+        <div class="privacy-notice">
+          <div class="privacy-icon">🔒</div>
+          <div>
+            <strong>Your address is private</strong>
+            <p>Your exact address will only be shared with confirmed guests.</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="next-button"
+                  [disabled]="!listingData.location"
+                  (click)="nextStep()">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Capacity -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <div class="capacity-section">
+          <div class="capacity-item">
+            <div class="capacity-info">
+              <h3>Guests</h3>
+              <p>How many guests can your place accommodate?</p>
+            </div>
+            <div class="capacity-controls">
+              <button (click)="updateGuests(-1, 'guests')">−</button>
+              <span>{{ listingData.guests }}</span>
+              <button (click)="updateGuests(1, 'guests')">+</button>
+            </div>
+          </div>
+
+          <div class="capacity-item">
+            <div class="capacity-info">
+              <h3>Bedrooms</h3>
+              <p>How many separate bedrooms are available?</p>
+            </div>
+            <div class="capacity-controls">
+              <button (click)="updateGuests(-1, 'bedrooms')">−</button>
+              <span>{{ listingData.bedrooms }}</span>
+              <button (click)="updateGuests(1, 'bedrooms')">+</button>
+            </div>
+          </div>
+
+          <div class="capacity-item">
+            <div class="capacity-info">
+              <h3>Beds</h3>
+              <p>How many beds can guests use?</p>
+            </div>
+            <div class="capacity-controls">
+              <button (click)="updateGuests(-1, 'beds')">−</button>
+              <span>{{ listingData.beds }}</span>
+              <button (click)="updateGuests(1, 'beds')">+</button>
+            </div>
+          </div>
+
+          <div class="capacity-item">
+            <div class="capacity-info">
+              <h3>Bathrooms</h3>
+              <p>How many bathrooms are available?</p>
+            </div>
+            <div class="capacity-controls">
+              <button (click)="updateGuests(-1, 'bathrooms')">−</button>
+              <span>{{ listingData.bathrooms }}</span>
+              <button (click)="updateGuests(1, 'bathrooms')">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="next-button" (click)="nextStep()">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Amenities -->
+      <div class="step-content" *ngIf="currentStep === 4">
+        <div class="amenities-grid">
+          <div *ngFor="let amenity of amenitiesList"
+               class="amenity-card"
+               [class.selected]="isAmenitySelected(amenity.value)"
+               (click)="toggleAmenity(amenity.value)">
+            <span class="amenity-icon">{{ amenity.icon }}</span>
+            <span class="amenity-label">{{ amenity.label }}</span>
+            <span class="checkmark" *ngIf="isAmenitySelected(amenity.value)">✓</span>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="next-button" (click)="nextStep()">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 5: Description -->
+      <div class="step-content" *ngIf="currentStep === 5">
+        <div class="description-section">
+          <div class="form-group">
+            <label>Listing Title</label>
+            <input type="text"
+                   placeholder="e.g., Cozy apartment near downtown"
+                   [(ngModel)]="listingData.title"
+                   maxlength="50"
+                   class="title-input">
+            <span class="char-count">{{ listingData.title.length }}/50</span>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea
+              placeholder="Describe what makes your place special..."
+              [(ngModel)]="listingData.description"
+              rows="6"
+              maxlength="500"
+              class="description-textarea"></textarea>
+            <span class="char-count">{{ listingData.description.length }}/500</span>
+          </div>
+
+          <div class="photo-upload">
+            <label>Photos</label>
+            <p>Add at least 5 photos to showcase your space</p>
+            <div class="photo-grid">
+              <div *ngFor="let photo of listingData.photos; let i = index" class="photo-item">
+                <img [src]="photo" alt="Uploaded photo">
+                <button class="remove-photo" (click)="removePhoto(i)">×</button>
+              </div>
+              <div class="photo-upload-placeholder" *ngIf="listingData.photos.length < 10">
+                <input title="photo"  type="file"
+                       multiple
+                       accept="image/*"
+                       (change)="handlePhotoUpload($event)"
+                       class="photo-input">
+                <div class="upload-content">
+                  <span class="upload-icon">📷</span>
+                  <span>Add Photos</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button class="next-button"
+                  [disabled]="!listingData.title || !listingData.description || listingData.photos.length < 5"
+                  (click)="nextStep()">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 6: Price & Availability -->
+      <div class="step-content" *ngIf="currentStep === 6">
+        <div class="pricing-section">
+          <div class="price-input">
+            <label>Nightly Price ($)</label>
+            <div class="price-control">
+              <span class="currency">$</span>
+              <input title="price" type="number"
+                     [(ngModel)]="listingData.price"
+                     [placeholder]="getPriceSuggestion().toString()"
+                     min="10"
+                     max="10000">
+            </div>
+            <p class="price-suggestion">
+              Suggested price: ${{ getPriceSuggestion() }} per night
+            </p>
+          </div>
+
+          <div class="earnings-estimate">
+            <h3>Estimated Monthly Earnings</h3>
+            <div class="earnings-amount">
+              ${{ calculateEstimatedEarnings() }}
+            </div>
+            <p>Based on 20 booking days per month</p>
+          </div>
+
+          <div class="availability-settings">
+            <h3>Availability Settings</h3>
+
+            <div class="setting-item">
+              <label class="toggle-label">
+                <input type="checkbox"
+                       [(ngModel)]="listingData.availability.instantBook">
+                <span class="toggle-slider"></span>
+                Instant Book
+              </label>
+              <p>Guests can book without waiting for your approval</p>
+            </div>
+
+            <div class="setting-item">
+              <label>Check-in Window</label>
+              <div class="time-inputs">
+                <select title="checkInStart" name="checkInStart" [(ngModel)]="listingData.availability.checkInStart">
+                  <option *ngFor="let time of ['14:00', '15:00', '16:00', '17:00']" [value]="time">
+                    {{ time }}
+                  </option>
+                </select>
+                <span>to</span>
+                <select title="checkInEnd" name="checkInEnd" [(ngModel)]="listingData.availability.checkInEnd">
+                  <option *ngFor="let time of ['19:00', '20:00', '21:00', '22:00']" [value]="time">
+                    {{ time }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <label>Check-out Time</label>
+              <select name="checkOut" title="checkOut" [(ngModel)]="listingData.availability.checkOut">
+                <option *ngFor="let time of ['10:00', '11:00', '12:00']" [value]="time">
+                  {{ time }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions final-actions">
+          <button class="publish-button"
+                  [disabled]="isSubmitting"
+                  (click)="submitListing()">
+            <span *ngIf="!isSubmitting">Publish Listing</span>
+            <span *ngIf="isSubmitting">Publishing...</span>
+          </button>
+          <p class="publish-note">
+            By publishing, you agree to our Host Terms and Community Guidelines
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Benefits Sidebar -->
+  <aside class="host-benefits">
+    <div class="benefits-card">
+      <h3>Why host on Airbnb?</h3>
+
+      <div class="benefit-item">
+        <div class="benefit-icon">💰</div>
+        <div>
+          <h4>Earn extra income</h4>
+          <p>Hosts earn an average of $924 per month</p>
+        </div>
+      </div>
+
+      <div class="benefit-item">
+        <div class="benefit-icon">🌎</div>
+        <div>
+          <h4>Join a global community</h4>
+          <p>Connect with travelers from around the world</p>
+        </div>
+      </div>
+
+      <div class="benefit-item">
+        <div class="benefit-icon">🛡️</div>
+        <div>
+          <h4>Host protection</h4>
+          <p>$1 million in property damage protection</p>
+        </div>
+      </div>
+
+      <div class="benefit-item">
+        <div class="benefit-icon">📱</div>
+        <div>
+          <h4>Easy management</h4>
+          <p>Manage your listing with our mobile app</p>
+        </div>
+      </div>
+
+      <div class="support-info">
+        <h4>24/7 Support</h4>
+        <p>Our global community support team is here to help</p>
+        <button class="support-button">Contact Support</button>
+      </div>
+    </div>
+  </aside>
+</div>

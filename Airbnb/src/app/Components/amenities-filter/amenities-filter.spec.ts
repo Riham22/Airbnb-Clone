@@ -1,19 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MainLayoutComponent } from './main-layout';
 
+import { AmenitiesFilter } from './amenities-filter';
 
-
-describe('MainLayout', () => {
-  let component: MainLayoutComponent;
-  let fixture: ComponentFixture<MainLayoutComponent>;
+describe('AmenitiesFilter', () => {
+  let component: AmenitiesFilter;
+  let fixture: ComponentFixture<AmenitiesFilter>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MainLayoutComponent]
+      imports: [AmenitiesFilter]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MainLayoutComponent);
+    fixture = TestBed.createComponent(AmenitiesFilter);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,0 +1,148 @@
+<!-- property-list.component.html -->
+<div class="property-list-container">
+  <!-- Results Header -->
+  <!-- <div class="results-header" *ngIf="showResultCount">
+    <h2>{{ title }}</h2>
+    <div class="results-count">
+      {{ properties.length }} listings found
+      <span *ngIf="getActiveFilters().length > 0" class="active-filters">
+        • Filtered by: {{ getActiveFilters().join(', ') }}
+      </span>
+    </div>
+  </div> -->
+
+  <!-- PROPERTY CAROUSELS -->
+  <app-property-carousel
+    *ngIf="beachProperties.length > 0"
+    [title]="'🏖️ Beach Properties'"
+    [properties]="beachProperties"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="cityProperties.length > 0"
+    [title]="'🏙️ City Stays'"
+    [properties]="cityProperties"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="mountainProperties.length > 0"
+    [title]="'⛰️ Mountain Retreats'"
+    [properties]="mountainProperties"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="lakeProperties.length > 0"
+    [title]="'🏞️ Lake Houses'"
+    [properties]="lakeProperties"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="countrysideProperties.length > 0"
+    [title]="'🌾 Countryside Escapes'"
+    [properties]="countrysideProperties"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <!-- EXPERIENCE CAROUSELS -->
+  <app-property-carousel
+    *ngIf="foodExperiences.length > 0"
+    [title]="'🍷 Food & Drink'"
+    [properties]="foodExperiences"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="sportsExperiences.length > 0"
+    [title]="'⚽ Sports & Adventure'"
+    [properties]="sportsExperiences"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="artsExperiences.length > 0"
+    [title]="'🎨 Arts & Culture'"
+    [properties]="artsExperiences"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="outdoorExperiences.length > 0"
+    [title]="'🌲 Outdoor Activities'"
+    [properties]="outdoorExperiences"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="wellnessExperiences.length > 0"
+    [title]="'🧘 Wellness & Spa'"
+    [properties]="wellnessExperiences"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <!-- SERVICE CAROUSELS -->
+  <app-property-carousel
+    *ngIf="cleaningServices.length > 0"
+    [title]="'🧹 Cleaning Services'"
+    [properties]="cleaningServices"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="foodServices.length > 0"
+    [title]="'🍳 Food Services'"
+    [properties]="foodServices"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="fitnessServices.length > 0"
+    [title]="'💪 Fitness Services'"
+    [properties]="fitnessServices"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="beautyServices.length > 0"
+    [title]="'💅 Beauty Services'"
+    [properties]="beautyServices"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <app-property-carousel
+    *ngIf="transportServices.length > 0"
+    [title]="'🚗 Transport Services'"
+    [properties]="transportServices"
+    (propertyClick)="onPropertyClick($event)"
+    (wishlistChange)="onWishlistChange($event)">
+  </app-property-carousel>
+
+  <!-- No Results Message -->
+  <div *ngIf="properties.length === 0 && !hasAnyCategoryItems()" class="no-results">
+    <h3>No listings found</h3>
+    <p>Try adjusting your search filters or browse all categories</p>
+  </div>
+
+  <!-- Show message when filters remove all items but we have base data -->
+  <div *ngIf="properties.length > 0 && !hasAnyCategoryItems()" class="filtered-out">
+    <h3>No listings match your current filters</h3>
+    <p>Try relaxing your search criteria to see more options</p>
+  </div>
+</div>

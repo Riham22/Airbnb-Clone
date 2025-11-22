@@ -1,18 +1,18 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Navbar } from "./components/navbar/navbar";
-import { Footer } from "./components/footer/footer";
-import { Filtersbar } from "./components/filtersbar/filtersbar";
-import { SearchBarComponent } from "./components/searchbar/searchbar";
-import { HomeComponent } from "./components/home/home";
-import { MainLayout } from "./Layouts/main-layout/main-layout";
+import { AuthService } from './Services/auth';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Navbar, Footer, Filtersbar, SearchBarComponent, HomeComponent, MainLayout],
+  standalone: true,
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {
-  protected readonly title = signal('Airbnb');
+export class App  {
+  title = 'airbnb-clone';
+  constructor(private authService: AuthService) {
+
+    this.authService.checkAuthentication();
+  }
 }
