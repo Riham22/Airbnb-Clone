@@ -1,148 +1,181 @@
-<!-- property-list.component.html -->
+
 <div class="property-list-container">
-  <!-- Results Header -->
-  <!-- <div class="results-header" *ngIf="showResultCount">
-    <h2>{{ title }}</h2>
-    <div class="results-count">
-      {{ properties.length }} listings found
-      <span *ngIf="getActiveFilters().length > 0" class="active-filters">
-        • Filtered by: {{ getActiveFilters().join(', ') }}
-      </span>
+
+  <div class="list-header">
+    <div class="header-content">
+      <h1 class="list-title">{{ title }}</h1>
+      <div class="header-controls">
+        <div class="result-count" *ngIf="showResultCount">
+          <span class="count">{{ getTotalResults() }}</span> results
+        </div>
+        <div class="view-controls">
+          <button class="view-btn"
+                  [class.active]="viewMode === 'grid'"
+                  (click)="toggleViewMode()">
+            <span class="icon">⏹️</span> Grid
+          </button>
+          <button class="view-btn"
+                  [class.active]="viewMode === 'map'"
+                  (click)="toggleViewMode()">
+            <span class="icon">🗺️</span> Map
+          </button>
+        </div>
+      </div>
     </div>
-  </div> -->
 
-  <!-- PROPERTY CAROUSELS -->
-  <app-property-carousel
-    *ngIf="beachProperties.length > 0"
-    [title]="'🏖️ Beach Properties'"
-    [properties]="beachProperties"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="cityProperties.length > 0"
-    [title]="'🏙️ City Stays'"
-    [properties]="cityProperties"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="mountainProperties.length > 0"
-    [title]="'⛰️ Mountain Retreats'"
-    [properties]="mountainProperties"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="lakeProperties.length > 0"
-    [title]="'🏞️ Lake Houses'"
-    [properties]="lakeProperties"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="countrysideProperties.length > 0"
-    [title]="'🌾 Countryside Escapes'"
-    [properties]="countrysideProperties"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <!-- EXPERIENCE CAROUSELS -->
-  <app-property-carousel
-    *ngIf="foodExperiences.length > 0"
-    [title]="'🍷 Food & Drink'"
-    [properties]="foodExperiences"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="sportsExperiences.length > 0"
-    [title]="'⚽ Sports & Adventure'"
-    [properties]="sportsExperiences"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="artsExperiences.length > 0"
-    [title]="'🎨 Arts & Culture'"
-    [properties]="artsExperiences"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="outdoorExperiences.length > 0"
-    [title]="'🌲 Outdoor Activities'"
-    [properties]="outdoorExperiences"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="wellnessExperiences.length > 0"
-    [title]="'🧘 Wellness & Spa'"
-    [properties]="wellnessExperiences"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <!-- SERVICE CAROUSELS -->
-  <app-property-carousel
-    *ngIf="cleaningServices.length > 0"
-    [title]="'🧹 Cleaning Services'"
-    [properties]="cleaningServices"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="foodServices.length > 0"
-    [title]="'🍳 Food Services'"
-    [properties]="foodServices"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="fitnessServices.length > 0"
-    [title]="'💪 Fitness Services'"
-    [properties]="fitnessServices"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="beautyServices.length > 0"
-    [title]="'💅 Beauty Services'"
-    [properties]="beautyServices"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <app-property-carousel
-    *ngIf="transportServices.length > 0"
-    [title]="'🚗 Transport Services'"
-    [properties]="transportServices"
-    (propertyClick)="onPropertyClick($event)"
-    (wishlistChange)="onWishlistChange($event)">
-  </app-property-carousel>
-
-  <!-- No Results Message -->
-  <div *ngIf="properties.length === 0 && !hasAnyCategoryItems()" class="no-results">
-    <h3>No listings found</h3>
-    <p>Try adjusting your search filters or browse all categories</p>
+    <!-- Active Filters -->
+    <div class="active-filters" *ngIf="getActiveFilters().length > 0">
+      <div class="filters-container">
+        <span class="filters-label">Filters:</span>
+        <div class="filter-tags">
+          <span *ngFor="let filter of getActiveFilters()" class="filter-tag">
+            {{ filter.display }}
+            <button class="remove-filter"
+                    (click)="removeFilter(filter.type, filter.data)">
+              ×
+            </button>
+          </span>
+        </div>
+        <button class="clear-all-filters" (click)="clearAllFilters()">
+          Clear all
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Show message when filters remove all items but we have base data -->
-  <div *ngIf="properties.length > 0 && !hasAnyCategoryItems()" class="filtered-out">
-    <h3>No listings match your current filters</h3>
-    <p>Try relaxing your search criteria to see more options</p>
+  <!-- Main Listing Types -->
+  <section class="listing-types-section" *ngIf="hasAnyCategoryItems()">
+    <div class="section-header">
+      <h2 class="section-title">Explore by type</h2>
+      <p class="section-subtitle">Discover different ways to experience your destination</p>
+    </div>
+    <div class="listing-types-grid">
+      <!-- Fixed: Use ng-container to avoid multiple structural directives -->
+      <ng-container *ngFor="let type of listingTypes">
+        <div class="listing-type-card"
+             [class.has-items]="type.properties.length > 0"
+             (click)="type.properties.length > 0 ? onPropertyClick(type.properties[0]) : null"
+             *ngIf="type.properties.length > 0">
+          <div class="type-icon">{{ type.icon }}</div>
+          <div class="type-info">
+            <h3 class="type-title">{{ type.title }}</h3>
+            <p class="type-subtitle">{{ type.subtitle }}</p>
+            <span class="type-count">{{ type.properties.length }} available</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </section>
+
+  <!-- Properties by Category -->
+  <ng-container *ngFor="let category of categories">
+    <section class="category-section" *ngIf="category.properties.length > 0">
+      <div class="section-header">
+        <div class="section-title-container">
+          <span class="category-icon">{{ category.icon }}</span>
+          <div>
+            <h2 class="section-title">{{ category.title }}</h2>
+            <p class="section-subtitle">{{ category.subtitle }}</p>
+          </div>
+        </div>
+        <button class="see-all-btn">See all</button>
+      </div>
+
+      <app-property-carousel
+        [properties]="category.properties"
+        [title]="category.title"
+        (propertyClick)="onPropertyClick($event)"
+        (wishlistChange)="onWishlistChange($event)">
+      </app-property-carousel>
+    </section>
+  </ng-container>
+
+  <!-- Experiences Section -->
+  <section class="experiences-section" *ngIf="hasExperiences">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Unique Experiences</h2>
+        <p class="section-subtitle">Book activities led by local experts</p>
+      </div>
+      <button class="see-all-btn">See all experiences</button>
+    </div>
+
+    <ng-container *ngFor="let experience of experiences">
+      <div class="section-header" *ngIf="experience.properties.length > 0">
+        <div class="section-title-container">
+          <span class="category-icon">{{ experience.icon }}</span>
+          <div>
+            <h3 class="subsection-title">{{ experience.title }}</h3>
+            <p class="section-subtitle">{{ experience.subtitle }}</p>
+          </div>
+        </div>
+      </div>
+
+      <app-property-carousel
+        *ngIf="experience.properties.length > 0"
+        [properties]="experience.properties"
+        [title]="experience.title"
+        (propertyClick)="onPropertyClick($event)"
+        (wishlistChange)="onWishlistChange($event)">
+      </app-property-carousel>
+    </ng-container>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services-section" *ngIf="hasServices">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Professional Services</h2>
+        <p class="section-subtitle">Enhance your stay with premium services</p>
+      </div>
+      <button class="see-all-btn">See all services</button>
+    </div>
+
+    <ng-container *ngFor="let service of services">
+      <div class="section-header" *ngIf="service.properties.length > 0">
+        <div class="section-title-container">
+          <span class="category-icon">{{ service.icon }}</span>
+          <div>
+            <h3 class="subsection-title">{{ service.title }}</h3>
+            <p class="section-subtitle">{{ service.subtitle }}</p>
+          </div>
+        </div>
+      </div>
+
+      <app-property-carousel
+        *ngIf="service.properties.length > 0"
+        [properties]="service.properties"
+        [title]="service.title"
+        (propertyClick)="onPropertyClick($event)"
+        (wishlistChange)="onWishlistChange($event)">
+      </app-property-carousel>
+    </ng-container>
+  </section>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!hasAnyCategoryItems() && !isLoading">
+    <div class="empty-content">
+      <div class="empty-icon">🔍</div>
+      <h3>No listings found</h3>
+      <p>Try adjusting your filters or search criteria</p>
+      <button class="clear-filters-btn" (click)="clearAllFilters()">
+        Clear all filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p>Loading more listings...</p>
+    </div>
+  </div>
+
+  <!-- Load More Button -->
+  <div class="load-more-section" *ngIf="hasAnyCategoryItems() && !isLoading">
+    <button class="load-more-btn" (click)="loadMore()">
+      Show more
+    </button>
   </div>
 </div>

@@ -22,212 +22,196 @@ export class Data  {
   private bookings: Booking[] = [];
   private wishlist: number[] = []; // Property IDs
 
-  // KEEP YOUR EXISTING MOCK DATA - no changes needed here
-  getProperties(): RentalProperty[] {
-    return [
-   {
-    id: 1,
-    name: 'Cozy Beachfront Apartment',
-    location: 'Malibu, California',
-    price: 245,
-    rating: 4.92,
-    reviewCount: 128,
-    imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-    images: [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-      'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
-      'https://images.unsplash.com/photo-1554995207-c18c203602cb',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'
-    ],
-    type: 'beach',
-    maxGuests: 4,
-    bedrooms: 2,
-    beds: 3,
-    bathrooms: 1.5,
-    amenities: [
-      'WiFi', 'Kitchen', 'Parking', 'Beach Access',
-      'Air Conditioning', 'TV', 'Washer'
-    ],
-    host: {
-      name: 'Sarah Johnson',
-      joinedDate: '2018',
-      isSuperhost: true,
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786'
-    },
-    description:
-      'Beautiful beachfront apartment with stunning ocean views. Perfect for a relaxing getaway with direct beach access.',
-    highlights: [
-      'Beachfront location',
-      'Stunning ocean views',
-      'Modern amenities',
-      'Direct beach access'
-    ],
-    reviews: [
-      {
-        id: 1,
-        user: 'Michael T.',
-        date: '2024-01-15',
-        rating: 5,
-        comment:
-          'Absolutely stunning views! The apartment was even better than pictured.',
-        userAvatar:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'
+ getProperties(): RentalProperty[] {
+  return [
+    {
+      id: 1,
+      name: 'Cozy Beachfront Apartment',
+      location: 'Malibu, California',
+      price: 245,
+      rating: 4.92,
+      reviewCount: 128,
+      imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+      images: [
+        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
+        'https://images.unsplash.com/photo-1554995207-c18c203602cb',
+        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'
+      ],
+      type: 'property',
+      propertyType: 'beach', 
+      maxGuests: 4,
+      bedrooms: 2,
+      beds: 3,
+      bathrooms: 1.5,
+      amenities: [
+        'WiFi', 'Kitchen', 'Parking', 'Beach Access',
+        'Air Conditioning', 'TV', 'Washer'
+      ],
+      host: {
+        name: 'Sarah Johnson',
+        joinedDate: '2018',
+        isSuperhost: true,
+        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786'
       },
-      {
-        id: 2,
-        user: 'Jessica L.',
-        date: '2024-01-10',
-        rating: 5,
-        comment: 'Amazing stay! The sound of the waves was so relaxing.',
-        userAvatar:
-          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80'
-      }
-    ]
-  },
-
-  {
-    id: 2,
-    name: 'Modern City Loft',
-    location: 'New York City, New York',
-    price: 189,
-    rating: 4.78,
-    reviewCount: 95,
-    imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-    images: [
-      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
-      'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5',
-      'https://images.unsplash.com/photo-1505691938895-1758d7feb511'
-    ],
-    type: 'city',
-    maxGuests: 2,
-    bedrooms: 1,
-    beds: 1,
-    bathrooms: 1,
-    amenities: ['WiFi', 'Kitchen', 'Gym', 'City View', 'Heating'],
-    host: {
-      name: 'Daniel Price',
-      joinedDate: '2020',
-      isSuperhost: false,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'
+      description: 'Beautiful beachfront apartment with stunning ocean views. Perfect for a relaxing getaway with direct beach access.',
+      highlights: [
+        'Beachfront location',
+        'Stunning ocean views',
+        'Modern amenities',
+        'Direct beach access'
+      ],
+      reviews: [
+        {
+          id: 1,
+          user: 'Michael T.',
+          date: '2024-01-15',
+          rating: 5,
+          comment: 'Absolutely stunning views! The apartment was even better than pictured.',
+          userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'
+        }
+      ]
     },
-    description:
-      'Stylish loft located in the heart of NYC. Walking distance to major attractions and subway stations.',
-    highlights: [
-      'Central location',
-      'Modern interior',
-      'High-speed WiFi',
-      'Gym access'
-    ],
-    reviews: [
-      {
-        id: 1,
-        user: 'Emily R.',
-        date: '2024-02-02',
-        rating: 5,
-        comment: 'Perfect location & super clean!',
-        userAvatar:
-          'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e'
-      }
-    ]
-  },
-
-  {
-    id: 3,
-    name: 'Mountain Cabin Retreat',
-    location: 'Aspen, Colorado',
-    price: 320,
-    rating: 4.95,
-    reviewCount: 64,
-    imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000',
-    images: [
-      'https://images.unsplash.com/photo-1449824913935-59a10b8d2000',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-      'https://images.unsplash.com/photo-1615870216513-1a3896abbf7d',
-      'https://images.unsplash.com/photo-1615870719275-54c1e5bc9b25'
-    ],
-    type: 'mountain',
-    maxGuests: 6,
-    bedrooms: 3,
-    beds: 4,
-    bathrooms: 2,
-    amenities: ['WiFi', 'Fireplace', 'Mountain View', 'Parking', 'Hot Tub'],
-    host: {
-      name: 'Oliver Woods',
-      joinedDate: '2017',
-      isSuperhost: true,
-      avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36'
+    {
+      id: 2,
+      name: 'Modern City Loft',
+      location: 'New York City, New York',
+      price: 189,
+      rating: 4.78,
+      reviewCount: 95,
+      imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
+      images: [
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
+        'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
+        'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5',
+        'https://images.unsplash.com/photo-1505691938895-1758d7feb511'
+      ],
+      type: 'property', // ← FIXED
+      propertyType: 'city', // ← FIXED
+      maxGuests: 2,
+      bedrooms: 1,
+      beds: 1,
+      bathrooms: 1,
+      amenities: ['WiFi', 'Kitchen', 'Gym', 'City View', 'Heating'],
+      host: {
+        name: 'Daniel Price',
+        joinedDate: '2020',
+        isSuperhost: false,
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'
+      },
+      description: 'Stylish loft located in the heart of NYC. Walking distance to major attractions and subway stations.',
+      highlights: [
+        'Central location',
+        'Modern interior',
+        'High-speed WiFi',
+        'Gym access'
+      ],
+      reviews: [
+        {
+          id: 1,
+          user: 'Emily R.',
+          date: '2024-02-02',
+          rating: 5,
+          comment: 'Perfect location & super clean!',
+          userAvatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e'
+        }
+      ]
     },
-    description:
-      'A cozy wooden cabin with breathtaking mountain views and a private hot tub.',
-    highlights: ['Private cabin', 'Fireplace', 'Hot tub', 'Amazing views'],
-    reviews: []
-  },
-
-  {
-    id: 4,
-    name: 'Lakeside Villa',
-    location: 'Lake Tahoe, Nevada',
-    price: 275,
-    rating: 4.83,
-    reviewCount: 142,
-    imageUrl: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
-    images: [
-      'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
-      'https://images.unsplash.com/photo-1600585154207-362ad7a1f235',
-      'https://images.unsplash.com/photo-1560448075-bb46d1a1b6b1'
-    ],
-    type: 'lake',
-    maxGuests: 8,
-    bedrooms: 4,
-    beds: 6,
-    bathrooms: 3,
-    amenities: ['WiFi', 'Pool', 'Lake Access', 'Kitchen', 'Parking'],
-    host: {
-      name: 'Emma Davis',
-      joinedDate: '2019',
-      isSuperhost: true,
-      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
+    {
+      id: 3,
+      name: 'Mountain Cabin Retreat',
+      location: 'Aspen, Colorado',
+      price: 320,
+      rating: 4.95,
+      reviewCount: 64,
+      imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000',
+      images: [
+        'https://images.unsplash.com/photo-1449824913935-59a10b8d2000',
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+        'https://images.unsplash.com/photo-1615870216513-1a3896abbf7d',
+        'https://images.unsplash.com/photo-1615870719275-54c1e5bc9b25'
+      ],
+      type: 'property', // ← FIXED
+      propertyType: 'mountain', // ← FIXED
+      maxGuests: 6,
+      bedrooms: 3,
+      beds: 4,
+      bathrooms: 2,
+      amenities: ['WiFi', 'Fireplace', 'Mountain View', 'Parking', 'Hot Tub'],
+      host: {
+        name: 'Oliver Woods',
+        joinedDate: '2017',
+        isSuperhost: true,
+        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36'
+      },
+      description: 'A cozy wooden cabin with breathtaking mountain views and a private hot tub.',
+      highlights: ['Private cabin', 'Fireplace', 'Hot tub', 'Amazing views'],
+      reviews: []
     },
-    description: 'Luxury villa right on Lake Tahoe with private dock access.',
-    highlights: ['Lake access', 'Private dock', 'Spacious home'],
-    reviews: []
-  },
-
-  {
-    id: 5,
-    name: 'Countryside Farmhouse',
-    location: 'Napa Valley, California',
-    price: 180,
-    rating: 4.87,
-    reviewCount: 89,
-    imageUrl: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90',
-    images: [
-      'https://images.unsplash.com/photo-1513584684374-8bab748fbf90',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-      'https://images.unsplash.com/photo-1499696010180-027a47b30e23'
-    ],
-    type: 'countryside',
-    maxGuests: 5,
-    bedrooms: 3,
-    beds: 3,
-    bathrooms: 1.5,
-    amenities: ['WiFi', 'Garden', 'Country View', 'Kitchen'],
-    host: {
-      name: 'Hannah Lee',
-      joinedDate: '2022',
-      isSuperhost: false,
-      avatar: 'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7'
+    {
+      id: 4,
+      name: 'Lakeside Villa',
+      location: 'Lake Tahoe, Nevada',
+      price: 275,
+      rating: 4.83,
+      reviewCount: 142,
+      imageUrl: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
+      images: [
+        'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
+        'https://images.unsplash.com/photo-1600585154207-362ad7a1f235',
+        'https://images.unsplash.com/photo-1560448075-bb46d1a1b6b1'
+      ],
+      type: 'property', // ← FIXED
+      propertyType: 'lake', // ← FIXED
+      maxGuests: 8,
+      bedrooms: 4,
+      beds: 6,
+      bathrooms: 3,
+      amenities: ['WiFi', 'Pool', 'Lake Access', 'Kitchen', 'Parking'],
+      host: {
+        name: 'Emma Davis',
+        joinedDate: '2019',
+        isSuperhost: true,
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
+      },
+      description: 'Luxury villa right on Lake Tahoe with private dock access.',
+      highlights: ['Lake access', 'Private dock', 'Spacious home'],
+      reviews: []
     },
-    description:
-      'Relax in this quiet countryside farmhouse with large gardens and scenic valley views.',
-    highlights: ['Private garden', 'Quiet area', 'Rustic design'],
-    reviews: []
-  }
-    ];
-  }
+    {
+      id: 5,
+      name: 'Countryside Farmhouse',
+      location: 'Napa Valley, California',
+      price: 180,
+      rating: 4.87,
+      reviewCount: 89,
+      imageUrl: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90',
+      images: [
+        'https://images.unsplash.com/photo-1513584684374-8bab748fbf90',
+        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+        'https://images.unsplash.com/photo-1499696010180-027a47b30e23'
+      ],
+      type: 'property', // ← FIXED
+      propertyType: 'countryside', // ← FIXED
+      maxGuests: 5,
+      bedrooms: 3,
+      beds: 3,
+      bathrooms: 1.5,
+      amenities: ['WiFi', 'Garden', 'Country View', 'Kitchen'],
+      host: {
+        name: 'Hannah Lee',
+        joinedDate: '2022',
+        isSuperhost: false,
+        avatar: 'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7'
+      },
+      description: 'Relax in this quiet countryside farmhouse with large gardens and scenic valley views.',
+      highlights: ['Private garden', 'Quiet area', 'Rustic design'],
+      reviews: []
+    }
+  ];
+}
 
-  // services/data.service.ts - Enhanced with Experiences & Services
+
 
   getExperiences(): Experience[] {
     return [

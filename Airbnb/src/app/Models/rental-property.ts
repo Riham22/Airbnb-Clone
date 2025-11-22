@@ -1,6 +1,5 @@
 import { Review } from "./review";
 
-
 export interface RentalProperty {
   id: number;
   name: string;
@@ -10,7 +9,8 @@ export interface RentalProperty {
   reviewCount: number;
   imageUrl: string;
   images: string[];
-  type: string;
+  type: string; 
+  propertyType: string;
   maxGuests: number;
   bedrooms: number;
   beds: number;

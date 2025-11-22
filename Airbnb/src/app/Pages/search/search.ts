@@ -1,34 +1,36 @@
-// search-bar.component.ts - FIXED VERSION
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+// search.component.ts - Enhanced Airbnb-like version
+import { Component, Output, EventEmitter, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';
-import { RentalProperty } from '../../Models/rental-property';
-import { GuestCounts } from '../../Models/guest-counts';
-import { Data } from '../../Services/data';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Data } from '../../Services/data';
 import { AuthService } from '../../Services/auth';
-import {  FormsModule } from '@angular/forms';
+import { GuestCounts } from '../../Models/guest-counts';
+import { RentalProperty } from '../../Models/rental-property';
+import { Experience } from '../../Models/experience';
+import { Service } from '../../Models/service';
+import { DateRange } from '../../Models/DateRange';
 
 @Component({
   selector: 'app-search-bar',
   standalone: true,
-  imports: [CommonModule,FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './search.html',
-  styleUrl: './search.css'
+  styleUrls: ['./search.css']
 })
 export class SearchComponent implements OnInit {
   @Output() filteredPropertiesChange = new EventEmitter<any[]>();
   @Output() activeFiltersChange = new EventEmitter<any>();
 
-  private properties: any[] = [];
-  private experiences: any[] = [];
-  private services: any[] = [];
+  private properties: RentalProperty[] = [];
+  private experiences: Experience[] = [];
+  private services: Service[] = [];
 
   // Filter subjects
   private guestFilter$ = new BehaviorSubject<GuestCounts | null>(null);
   private locationFilter$ = new BehaviorSubject<string>('');
-  private dateFilter$ = new BehaviorSubject<{start: Date | null, end: Date | null}>({start: null, end: null});
-  private propertyTypeFilter$ = new BehaviorSubject<string>('all');
+private dateFilter$ = new BehaviorSubject<DateRange>({start: null, end: null, flexible: false});  private propertyTypeFilter$ = new BehaviorSubject<string>('all');
 
   // Simplified property types - only 3 main categories
   propertyTypes = [
@@ -41,11 +43,11 @@ export class SearchComponent implements OnInit {
   selectedPropertyType = 'all';
 
   currentFilters = {
-    location: '',
-    dates: { start: null as Date | null, end: null as Date | null },
-    guests: { adults: 0, children: 0, infants: 0, pets: 0 },
-    propertyType: 'all'
-  };
+  location: '',
+  dates: { start: null as Date | null, end: null as Date | null, flexible: false } as DateRange,
+  guests: { adults: 0, children: 0, infants: 0, pets: 0 },
+  propertyType: 'all'
+};
 
   activePanel: string | null = null;
 
@@ -113,6 +115,37 @@ export class SearchComponent implements OnInit {
   showLanguagePanel = false;
   showMenuPanel = false;
 
+  // Enhanced Airbnb-like search state
+  searchQuery: string = '';
+  isSearchFocused = false;
+  showSearchSuggestions = false;
+  searchSuggestions: any[] = [];
+
+  // Enhanced quick filters (Airbnb-like)
+  quickFilters = [
+    { label: 'Free cancellation', value: 'free_cancellation' },
+    { label: 'WiFi', value: 'wifi' },
+    { label: 'Kitchen', value: 'kitchen' },
+    { label: 'Washer', value: 'washer' },
+    { label: 'Pool', value: 'pool' },
+    { label: 'Hot tub', value: 'hot_tub' },
+    { label: 'Pet friendly', value: 'pets' },
+    { label: 'Beachfront', value: 'beachfront' }
+  ];
+
+  selectedQuickFilters: string[] = [];
+
+  // Enhanced mobile responsiveness
+  isMobileView = false;
+
+  // New properties for advanced filters
+  showAdvancedFilters = false;
+  priceRange = { min: 0, max: 1000 };
+  selectedAmenities: string[] = [];
+  selectedCategories: string[] = [];
+  instantBookOnly = false;
+  superhostOnly = false;
+
   constructor(
     private dataService: Data,
     private router: Router,
@@ -124,6 +157,7 @@ export class SearchComponent implements OnInit {
     this.loadAllData();
     this.generateAvailableYears();
     this.generateAvailableDecades();
+    this.checkMobileView();
 
     // Setup enhanced filtering logic for all types
     combineLatest([
@@ -156,6 +190,133 @@ export class SearchComponent implements OnInit {
 
     this.authService.checkAuthentication();
   }
+
+  // Enhanced search functionality
+  onSearchInput(): void {
+    if (this.searchQuery.length > 2) {
+      this.showSearchSuggestions = true;
+      this.updateSearchSuggestions();
+    } else {
+      this.showSearchSuggestions = false;
+    }
+  }
+
+  private updateSearchSuggestions(): void {
+    const allListings = this.getAllListings();
+    this.searchSuggestions = allListings
+      .filter(listing =>
+        listing.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        listing.location.toLowerCase().includes(this.searchQuery.toLowerCase())
+      )
+      .slice(0, 5);
+  }
+
+  selectSuggestion(suggestion: any): void {
+    this.searchQuery = suggestion.name;
+    this.showSearchSuggestions = false;
+    this.isSearchFocused = false;
+    // Optionally apply this as a location filter
+    this.selectLocation(this.searchQuery);
+  }
+
+  toggleQuickFilter(filter: string): void {
+    const index = this.selectedQuickFilters.indexOf(filter);
+    if (index > -1) {
+      this.selectedQuickFilters.splice(index, 1);
+    } else {
+      this.selectedQuickFilters.push(filter);
+    }
+    this.applyQuickFilters();
+  }
+
+  private applyQuickFilters(): void {
+    // Implement quick filter logic
+    console.log('Applied quick filters:', this.selectedQuickFilters);
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkMobileView();
+  }
+
+  private checkMobileView(): void {
+    this.isMobileView = window.innerWidth < 768;
+  }
+
+  // Enhanced panel management for mobile
+  openMobilePanel(panel: string): void {
+    if (this.isMobileView) {
+      this.activePanel = panel;
+    } else {
+      this.openPanel(panel);
+    }
+  }
+
+  // Enhanced date selection with Airbnb-like features
+  getPopularDateRanges() {
+    return [
+      { label: 'Next weekend', getDates: () => this.getNextWeekend() },
+      { label: 'Next week', getDates: () => this.getNextWeek() },
+      { label: 'Next month', getDates: () => this.getNextMonth() },
+      { label: 'Flexible dates', getDates: () => ({ start: null, end: null, flexible: true }) }
+    ];
+  }
+
+  selectPopularDateRange(range: any): void {
+    const dates = range.getDates();
+    if (dates.flexible) {
+      // Handle flexible dates
+      this.currentFilters.dates = { start: null, end: null, flexible: true };
+    } else {
+      this.dateSelection.start = dates.start;
+      this.dateSelection.end = dates.end;
+      this.currentFilters.dates = { start: dates.start, end: dates.end, flexible: false };
+    }
+    this.dateFilter$.next(this.currentFilters.dates);
+    this.activeFiltersChange.emit(this.currentFilters);
+  }
+private getNextWeek(): { start: Date, end: Date } {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() + 1); // Start from tomorrow
+
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6); // 7 days total (1 week)
+
+  return { start: startDate, end: endDate };
+}
+
+// Missing method: getNextMonth
+private getNextMonth(): { start: Date, end: Date } {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() + 1); // Start from tomorrow
+
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + 1);
+  endDate.setDate(endDate.getDate() - 1); // Last day of next month
+
+  return { start: startDate, end: endDate };
+}
+
+  private getNextWeekend(): { start: Date, end: Date } {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+    const friday = new Date(today);
+    friday.setDate(today.getDate() + daysUntilFriday);
+
+    const sunday = new Date(friday);
+    sunday.setDate(friday.getDate() + 2);
+
+    return { start: friday, end: sunday };
+  }
+
+  // Enhanced guest selection with Airbnb-like room types
+  roomTypes = [
+    { type: 'adults', label: 'Adults', description: 'Ages 13 or above' },
+    { type: 'children', label: 'Children', description: 'Ages 2-12' },
+    { type: 'infants', label: 'Infants', description: 'Under 2' },
+    { type: 'pets', label: 'Pets', description: 'Bringing a service animal?' }
+  ];
 
   // Load all data types
   private loadAllData(): void {
@@ -718,19 +879,6 @@ export class SearchComponent implements OnInit {
     this.closeAllPanels();
   }
 
-
-
-
-
-
-    // New properties for advanced filters
-  showAdvancedFilters = false;
-  priceRange = { min: 0, max: 1000 };
-  selectedAmenities: string[] = [];
-  selectedCategories: string[] = [];
-  instantBookOnly = false;
-  superhostOnly = false;
-
   // Get all available amenities from your data service
   get availableAmenities(): string[] {
     return this.dataService.getAmenities();
@@ -841,3 +989,5 @@ export class SearchComponent implements OnInit {
     }
   }
 }
+
+

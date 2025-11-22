@@ -14,10 +14,10 @@ export class PropertyCarousel implements AfterViewInit, OnChanges {
   @Input({ required: true }) properties: RentalProperty[] = [];
   @Input() title: string = 'Featured Properties';
   @Input() showControls: boolean = true;
-
+@Input() showType: boolean = false;
   // @Output() propertyClick = new EventEmitter<RentalProperty>();
-  @Output() wishlistChange = new EventEmitter<{property: RentalProperty, isWishlisted: boolean}>();
-
+@Output() propertyClick = new EventEmitter<any>();
+  @Output() wishlistChange = new EventEmitter<any>();
   @ViewChild('carouselContainer', { static: false }) carouselContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('carouselTrack', { static: false }) carouselTrack!: ElementRef<HTMLDivElement>;
   ngOnInit() {
@@ -70,7 +70,7 @@ export class PropertyCarousel implements AfterViewInit, OnChanges {
     }
   }
 
- @Output() propertyClick = new EventEmitter<RentalProperty>();
+//  @Output() propertyClick = new EventEmitter<RentalProperty>();
 
 onPropertyClick(p: RentalProperty) {
   this.propertyClick.emit(p);
