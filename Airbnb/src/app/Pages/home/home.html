@@ -1,0 +1,54 @@
+<!-- home.html -->
+<div class="home-container">
+  <!-- Search Bar -->
+  <app-search-bar
+    (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+    (activeFiltersChange)="onActiveFiltersChange($event)">
+  </app-search-bar>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Hero Section -->
+    <!-- <section class="hero-section">
+      <div class="hero-content">
+        <h1>Find your next getaway</h1>
+        <p>Discover homes, experiences, and unique stays tailored just for you.</p>
+      </div>
+    </section> -->
+<app-search-bar
+  (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+  (activeFiltersChange)="onActiveFiltersChange($event)">
+</app-search-bar>
+
+<app-property-list
+  [properties]="filteredProperties"
+  [filters]="activeFilters"
+  (propertyClick)="onPropertyClick($event)"
+  (wishlistChange)="onWishlistChange($event)">
+</app-property-list>
+    <!-- Search Results Section -->
+    <!-- <section class="search-results-section">
+    <app-property-list
+    [properties]="filteredProperties"
+    [title]="getResultsTitle()"
+    [filters]="activeFilters"
+    (propertyClick)="onPropertyClick($event)"
+
+></app-property-list>
+
+    </section> -->
+
+    <!-- Categories Section -->
+    <!-- <section class="categories-section">
+      <div class="container">
+        <h2>Browse by category</h2>
+        <div class="categories-grid">
+          <div class="category-card" *ngFor="let category of categories">
+            <div class="category-icon">{{ category.icon }}</div>
+            <h3>{{ category.name }}</h3>
+          </div>
+        </div>
+      </div>
+    </section> -->
+  </main>
+</div>

@@ -1,0 +1,600 @@
+/* property-carousel.css - Enhanced Airbnb-like styling */
+:host {
+  --airbnb-red: #ff385c;
+  --airbnb-dark: #222222;
+  --airbnb-light-gray: #f7f7f7;
+  --airbnb-gray: #dddddd;
+  --airbnb-dark-gray: #717171;
+  --airbnb-white: #ffffff;
+  --shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+  --shadow-hover: 0 4px 24px rgba(0, 0, 0, 0.16);
+  --border-radius: 12px;
+  --transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.carousel-section {
+  margin: 0;
+  position: relative;
+  width: 100%;
+  padding: 48px 0 32px 0;
+  background: var(--airbnb-white);
+}
+
+.carousel-header {
+  margin-bottom: 24px;
+  padding: 0 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.carousel-title-section {
+  flex: 1;
+}
+
+.carousel-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.carousel-subtitle {
+  font-size: 16px;
+  color: var(--airbnb-dark-gray);
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.carousel-controls {
+  display: flex;
+  gap: 8px;
+  margin-left: 24px;
+  flex-shrink: 0;
+}
+
+.carousel-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--airbnb-gray);
+  border-radius: 50%;
+  background: var(--airbnb-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.carousel-button:hover:not(.hidden) {
+  border-color: var(--airbnb-dark);
+  box-shadow: var(--shadow);
+  transform: scale(1.06);
+}
+
+.carousel-button.hidden {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.carousel-button svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  overflow: visible;
+}
+
+.carousel-container {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 80px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
+  cursor: grab;
+  scroll-behavior: smooth;
+}
+
+.carousel-container:active {
+  cursor: grabbing;
+}
+
+.carousel-container::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  padding: 4px 0 16px 0;
+  min-width: 100%;
+}
+
+.carousel-item {
+  flex: 0 0 308px;
+  min-width: 308px;
+  animation: cardSlideIn 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Enhanced Empty State */
+.empty-state {
+  padding: 80px 40px;
+  text-align: center;
+  background: var(--airbnb-white);
+  border-radius: var(--border-radius);
+  margin: 0 80px;
+  border: 1px solid var(--airbnb-gray);
+}
+
+.empty-content svg {
+  width: 64px;
+  height: 64px;
+  fill: var(--airbnb-gray);
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-content p {
+  font-size: 14px;
+  color: var(--airbnb-dark-gray);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Animations */
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Enhanced Property List Styles */
+.property-list-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.list-header {
+  padding: 32px 80px 24px 80px;
+  border-bottom: 1px solid var(--airbnb-gray);
+  background: var(--airbnb-white);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.list-title {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+
+.header-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.result-count {
+  font-size: 14px;
+  color: var(--airbnb-dark-gray);
+  font-weight: 400;
+}
+
+.count {
+  font-weight: 600;
+  color: var(--airbnb-dark);
+}
+
+.view-controls {
+  display: flex;
+  gap: 8px;
+  background: var(--airbnb-light-gray);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.view-btn {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.view-btn.active {
+  background: var(--airbnb-white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.view-btn .icon {
+  font-size: 16px;
+}
+
+/* Enhanced Active Filters */
+.active-filters {
+  background: var(--airbnb-light-gray);
+  padding: 16px;
+  border-radius: var(--border-radius);
+  margin-top: 16px;
+}
+
+.filters-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filters-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+}
+
+.filter-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-tag {
+  background: var(--airbnb-white);
+  border: 1px solid var(--airbnb-gray);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.filter-tag:hover {
+  border-color: var(--airbnb-dark);
+}
+
+.remove-filter {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--airbnb-dark-gray);
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.remove-filter:hover {
+  background: var(--airbnb-light-gray);
+  color: var(--airbnb-dark);
+}
+
+.clear-all-filters {
+  background: none;
+  border: none;
+  color: var(--airbnb-red);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-left: auto;
+}
+
+/* Enhanced Listing Types */
+.listing-types-section {
+  padding: 48px 80px;
+  background: var(--airbnb-white);
+}
+
+.section-header {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0 0 4px 0;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: var(--airbnb-dark-gray);
+  margin: 0;
+}
+
+.listing-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.listing-type-card {
+  background: var(--airbnb-white);
+  border: 1px solid var(--airbnb-gray);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.listing-type-card:hover {
+  border-color: var(--airbnb-dark);
+  box-shadow: var(--shadow);
+}
+
+.type-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.type-info {
+  flex: 1;
+}
+
+.type-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0 0 4px 0;
+}
+
+.type-subtitle {
+  font-size: 14px;
+  color: var(--airbnb-dark-gray);
+  margin: 0 0 8px 0;
+}
+
+.type-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--airbnb-red);
+}
+
+/* Enhanced Category Sections */
+.category-section,
+.experiences-section,
+.services-section {
+  padding: 0 80px 48px 80px;
+}
+
+.section-title-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.category-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.see-all-btn {
+  background: none;
+  border: none;
+  color: var(--airbnb-dark);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 8px 0;
+}
+
+.subsection-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0 0 4px 0;
+}
+
+/* Enhanced Empty and Loading States */
+.empty-state {
+  padding: 120px 40px;
+  text-align: center;
+  background: var(--airbnb-white);
+}
+
+.empty-content .empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-content h3 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--airbnb-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-content p {
+  font-size: 16px;
+  color: var(--airbnb-dark-gray);
+  margin: 0 0 20px 0;
+}
+
+.clear-filters-btn {
+  background: var(--airbnb-red);
+  color: var(--airbnb-white);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.clear-filters-btn:hover {
+  background: #e0003a;
+}
+
+.loading-state {
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--airbnb-gray);
+  border-top: 3px solid var(--airbnb-red);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.load-more-section {
+  padding: 32px 80px;
+  text-align: center;
+  border-top: 1px solid var(--airbnb-gray);
+}
+
+.load-more-btn {
+  background: var(--airbnb-dark);
+  color: var(--airbnb-white);
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.load-more-btn:hover {
+  background: #000000;
+}
+
+/* Responsive Design */
+@media (max-width: 1128px) {
+  .carousel-header,
+  .list-header,
+  .listing-types-section,
+  .category-section,
+  .experiences-section,
+  .services-section,
+  .load-more-section {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  .carousel-container {
+    padding: 0 40px;
+  }
+
+  .carousel-item {
+    flex: 0 0 280px;
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 743px) {
+  .carousel-header,
+  .list-header,
+  .listing-types-section,
+  .category-section,
+  .experiences-section,
+  .services-section,
+  .load-more-section {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .carousel-container {
+    padding: 0 24px;
+  }
+
+  .carousel-item {
+    flex: 0 0 260px;
+    min-width: 260px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .header-controls {
+    align-items: flex-start;
+  }
+
+  .listing-types-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+  .carousel-header,
+  .list-header,
+  .listing-types-section,
+  .category-section,
+  .experiences-section,
+  .services-section,
+  .load-more-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .carousel-container {
+    padding: 0 16px;
+  }
+
+  .carousel-item {
+    flex: 0 0 240px;
+    min-width: 240px;
+  }
+}

@@ -1,0 +1,56 @@
+
+<div class="guest-filter-container">
+  <h4>Who</h4>
+
+  <!-- Adults Row -->
+  <div class="guest-row">
+    <div>
+      <div class="guest-type-title">Adults</div>
+      <div class="guest-type-subtitle">Ages 13 or above</div>
+    </div>
+    <div class="quantity-controls">
+      <button (click)="updateCount('adults', -1)" [disabled]="counts.adults === 0" class="control-btn">-</button>
+      <span>{{ counts.adults }}</span>
+      <button (click)="updateCount('adults', 1)" class="control-btn">+</button>
+    </div>
+  </div>
+
+  <!-- Children Row -->
+  <div class="guest-row">
+    <div>
+      <div class="guest-type-title">Children</div>
+      <div class="guest-type-subtitle">Ages 2–12</div>
+    </div>
+    <div class="quantity-controls">
+      <button (click)="updateCount('children', -1)" [disabled]="counts.children === 0" class="control-btn">-</button>
+      <span>{{ counts.children }}</span>
+      <button (click)="updateCount('children', 1)" class="control-btn">+</button>
+    </div>
+  </div>
+
+  <!-- Infants Row -->
+  <div class="guest-row">
+    <div>
+      <div class="guest-type-title">Infants</div>
+      <div class="guest-type-subtitle">Under 2</div>
+    </div>
+    <div class="quantity-controls">
+      <button (click)="updateCount('infants', -1)" [disabled]="counts.infants === 0" class="control-btn">-</button>
+      <span>{{ counts.infants }}</span>
+      <button (click)="updateCount('infants', 1)" class="control-btn">+</button>
+    </div>
+  </div>
+
+  <!-- Pets Row -->
+  <div class="guest-row">
+    <div>
+      <div class="guest-type-title">Pets</div>
+      <div class="guest-type-subtitle">Bringing a service animal?</div>
+    </div>
+    <div class="quantity-controls">
+      <button (click)="updateCount('pets', -1)" [disabled]="counts.pets === 0" class="control-btn">-</button>
+      <span>{{ counts.pets }}</span>
+      <button (click)="updateCount('pets', 1)" class="control-btn">+</button>
+    </div>
+  </div>
+</div>

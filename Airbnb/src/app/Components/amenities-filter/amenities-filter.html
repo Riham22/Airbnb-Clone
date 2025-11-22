@@ -1,0 +1,7 @@
+<div class="filter-box">
+      <h4>Amenities</h4>
+      <label *ngFor="let amenity of allAmenities">
+        <input type="checkbox" [value]="amenity" (change)="onCheckboxChange($event)">
+        {{ amenity }}
+      </label>
+    </div>

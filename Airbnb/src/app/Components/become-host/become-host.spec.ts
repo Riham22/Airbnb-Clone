@@ -1,19 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MainLayoutComponent } from './main-layout';
 
+import { BecomeHost } from './become-host';
 
-
-describe('MainLayout', () => {
-  let component: MainLayoutComponent;
-  let fixture: ComponentFixture<MainLayoutComponent>;
+describe('BecomeHost', () => {
+  let component: BecomeHost;
+  let fixture: ComponentFixture<BecomeHost>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MainLayoutComponent]
+      imports: [BecomeHost]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MainLayoutComponent);
+    fixture = TestBed.createComponent(BecomeHost);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
