@@ -44,14 +44,14 @@
   </div>
 
   <!-- Main Listing Types -->
-  <section class="listing-types-section" *ngIf="hasAnyCategoryItems()">
+  <!-- <section class="listing-types-section" *ngIf="hasAnyCategoryItems()">
     <div class="section-header">
       <h2 class="section-title">Explore by type</h2>
       <p class="section-subtitle">Discover different ways to experience your destination</p>
     </div>
     <div class="listing-types-grid">
-      <!-- Fixed: Use ng-container to avoid multiple structural directives -->
-      <ng-container *ngFor="let type of listingTypes">
+        Fixed: Use ng-container to avoid multiple structural directives -->
+      <!-- <ng-container *ngFor="let type of listingTypes">
         <div class="listing-type-card"
              [class.has-items]="type.properties.length > 0"
              (click)="type.properties.length > 0 ? onPropertyClick(type.properties[0]) : null"
@@ -65,12 +65,12 @@
         </div>
       </ng-container>
     </div>
-  </section>
+  </section>  -->
 
   <!-- Properties by Category -->
   <ng-container *ngFor="let category of categories">
     <section class="category-section" *ngIf="category.properties.length > 0">
-      <div class="section-header">
+      <!-- <div class="section-header">
         <div class="section-title-container">
           <span class="category-icon">{{ category.icon }}</span>
           <div>
@@ -79,7 +79,7 @@
           </div>
         </div>
         <button class="see-all-btn">See all</button>
-      </div>
+      </div> -->
 
       <app-property-carousel
         [properties]="category.properties"

@@ -1,0 +1,197 @@
+<!-- components/admin-dashboard/admin-dashboard.component.html -->
+<div class="admin-dashboard">
+  <!-- Header -->
+  <header class="admin-header">
+    <h1>Admin Dashboard</h1>
+    <div class="admin-actions">
+      <button class="btn-primary">Refresh Data</button>
+      <button class="btn-secondary">Export Reports</button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="admin-tabs">
+    <button
+      [class.active]="activeTab === 'overview'"
+      (click)="setActiveTab('overview')">
+      📊 Overview
+    </button>
+    <button
+      [class.active]="activeTab === 'users'"
+      (click)="setActiveTab('users')">
+      👥 Users
+    </button>
+    <button
+      [class.active]="activeTab === 'listings'"
+      (click)="setActiveTab('listings')">
+      🏠 Listings
+    </button>
+    <button
+      [class.active]="activeTab === 'analytics'"
+      (click)="setActiveTab('analytics')">
+      📈 Analytics
+    </button>
+  </nav>
+
+  <!-- Overview Tab -->
+  <div *ngIf="activeTab === 'overview'" class="tab-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalUsers }}</h3>
+          <p>Total Users</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalListings }}</h3>
+          <p>Total Listings</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+          <h3>${{ stats.totalRevenue | number }}</h3>
+          <p>Total Revenue</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+          <h3>{{ stats.pendingVerifications }}</h3>
+          <p>Pending Verifications</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-activity">
+      <h3>Recent Activity</h3>
+      <div class="activity-list">
+        <!-- Activity items would go here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div *ngIf="activeTab === 'users'" class="tab-content">
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Listings</th>
+            <th>Bookings</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>
+              <div class="user-info">
+                <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+                <span>{{ user.email }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [class.badge-host]="user.role === 'host'">
+                {{ user.role }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class.status-active]="user.status === 'active'">
+                {{ user.status }}
+              </span>
+            </td>
+            <td>{{ user.listingsCount }}</td>
+            <td>{{ user.bookingsCount }}</td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  *ngIf="user.status === 'active'"
+                  (click)="suspendUser(user.id)"
+                  class="btn-warning">
+                  Suspend
+                </button>
+                <button
+                  *ngIf="user.status === 'suspended'"
+                  (click)="activateUser(user.id)"
+                  class="btn-success">
+                  Activate
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Listings Tab -->
+  <div *ngIf="activeTab === 'listings'" class="tab-content">
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Listing</th>
+            <th>Host</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let listing of listings">
+            <td>
+              <div class="listing-info">
+                <strong>{{ listing.title }}</strong>
+                <span>{{ listing.location }}</span>
+              </div>
+            </td>
+            <td>{{ listing.host }}</td>
+            <td>
+              <span class="badge">{{ listing.type }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [class.status-pending]="listing.status === 'pending'">
+                {{ listing.status }}
+              </span>
+            </td>
+            <td>${{ listing.price }}/night</td>
+            <td>
+              <div class="rating">
+                ⭐ {{ listing.rating }} ({{ listing.reviewCount }})
+              </div>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  *ngIf="listing.status === 'pending'"
+                  (click)="approveListing(listing.id)"
+                  class="btn-success">
+                  Approve
+                </button>
+                <button
+                  *ngIf="listing.status === 'active'"
+                  (click)="suspendListing(listing.id)"
+                  class="btn-warning">
+                  Suspend
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
