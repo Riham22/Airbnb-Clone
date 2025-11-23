@@ -1,0 +1,322 @@
+<!-- components/payment/payment.component.html -->
+<div class="payment-container">
+  <!-- Header -->
+  <header class="payment-header">
+    <h1 class="payment-title">Payment & Payouts</h1>
+    <div class="balance-display">
+      <div class="balance-amount">${{ availableBalance | number:'1.2-2' }}</div>
+      <div class="balance-label">Available Balance</div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="payment-tabs">
+    <button
+      type="button"
+      [class.active]="activeTab === 'methods'"
+      (click)="setActiveTab('methods')"
+      class="tab-button">
+      <span class="tab-icon">💳</span>
+      Payment Methods
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'transactions'"
+      (click)="setActiveTab('transactions')"
+      class="tab-button">
+      <span class="tab-icon">📊</span>
+      Transactions
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'payouts'"
+      (click)="setActiveTab('payouts')"
+      class="tab-button">
+      <span class="tab-icon">💰</span>
+      Payouts
+    </button>
+  </nav>
+
+  <!-- Payment Methods Tab -->
+  <section *ngIf="activeTab === 'methods'" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Your Payment Methods</h2>
+      <button
+        type="button"
+        (click)="showAddCard = true"
+        class="btn-primary"
+        *ngIf="!showAddCard">
+        + Add Payment Method
+      </button>
+    </div>
+
+    <!-- Add Card Form -->
+    <div *ngIf="showAddCard" class="add-card-form">
+      <div class="form-header">
+        <h3 class="form-title">Add Credit Card</h3>
+        <button
+          type="button"
+          (click)="showAddCard = false; resetCardForm()"
+          class="close-btn"
+          aria-label="Close form">
+          ×
+        </button>
+      </div>
+
+      <form (ngSubmit)="addCard()" class="card-form" #cardForm="ngForm">
+        <div class="form-group">
+          <label for="cardNumber" class="form-label">Card Number</label>
+          <input
+            type="text"
+            id="cardNumber"
+            [(ngModel)]="newCard.number"
+            name="cardNumber"
+            placeholder="1234 5678 9012 3456"
+            maxlength="16"
+            class="form-input"
+            required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="expiryDate" class="form-label">Expiry Date</label>
+            <input
+              type="text"
+              id="expiryDate"
+              [(ngModel)]="newCard.expiry"
+              name="expiryDate"
+              placeholder="MM/YY"
+              maxlength="5"
+              class="form-input"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="cvc" class="form-label">CVC</label>
+            <input
+              type="text"
+              id="cvc"
+              [(ngModel)]="newCard.cvc"
+              name="cvc"
+              placeholder="123"
+              maxlength="3"
+              class="form-input"
+              required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="cardName" class="form-label">Name on Card</label>
+          <input
+            type="text"
+            id="cardName"
+            [(ngModel)]="newCard.name"
+            name="cardName"
+            placeholder="John Doe"
+            class="form-input"
+            required>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            (click)="showAddCard = false; resetCardForm()"
+            class="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="!validateCard()">
+            Add Card
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Payment Methods List -->
+    <div class="payment-methods-list">
+      <div *ngFor="let method of paymentMethods" class="payment-method-card">
+        <div class="method-info">
+          <div class="method-icon">
+            <span *ngIf="method.type === 'card'">💳</span>
+            <span *ngIf="method.type === 'paypal'">🔵</span>
+            <span *ngIf="method.type === 'bank_transfer'">🏦</span>
+          </div>
+
+          <div class="method-details">
+            <div class="method-type">
+              <strong>{{ method.provider }}</strong>
+              <span *ngIf="method.lastFour" class="card-number">•••• {{ method.lastFour }}</span>
+              <span *ngIf="method.expiryDate" class="expiry-date">Expires {{ method.expiryDate }}</span>
+            </div>
+            <div class="method-status">
+              <span *ngIf="method.isDefault" class="default-badge">Default</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="method-actions">
+          <button
+            type="button"
+            *ngIf="!method.isDefault"
+            (click)="setDefaultMethod(method.id)"
+            class="btn-outline">
+            Set as Default
+          </button>
+          <button
+            type="button"
+            (click)="removePaymentMethod(method.id)"
+            class="btn-text danger">
+            Remove
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="paymentMethods.length === 0 && !showAddCard" class="empty-state">
+        <div class="empty-icon">💳</div>
+        <h3 class="empty-title">No payment methods</h3>
+        <p class="empty-description">Add a payment method to start booking and receiving payments</p>
+        <button
+          type="button"
+          (click)="showAddCard = true"
+          class="btn-primary">
+          Add Payment Method
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Transactions Tab -->
+  <section *ngIf="activeTab === 'transactions'" class="tab-content">
+    <div class="section-header">
+      <h2 class="section-title">Transaction History</h2>
+      <div class="filter-options">
+        <select title="l" class="filter-select">
+          <option>All Transactions</option>
+          <option>Earnings</option>
+          <option>Payouts</option>
+          <option>Refunds</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="transactions-list">
+      <div *ngFor="let transaction of transactions" class="transaction-item">
+        <div class="transaction-icon">
+          <span *ngIf="transaction.type === 'earning'" class="earning">💰</span>
+          <span *ngIf="transaction.type === 'payout'" class="payout">💸</span>
+          <span *ngIf="transaction.type === 'refund'" class="refund">↩️</span>
+        </div>
+
+        <div class="transaction-details">
+          <div class="transaction-info">
+            <strong class="transaction-description">{{ transaction.description }}</strong>
+            <span class="transaction-date">{{ transaction.date | date:'MMM d, yyyy' }}</span>
+            <span *ngIf="transaction.bookingId" class="booking-id">Booking #{{ transaction.bookingId }}</span>
+          </div>
+
+          <div class="transaction-amount" [class.negative]="transaction.type !== 'earning'">
+            <span *ngIf="transaction.type === 'earning'" class="positive">+</span>
+            <span *ngIf="transaction.type !== 'earning'" class="negative">-</span>
+            ${{ transaction.amount | number:'1.2-2' }}
+          </div>
+        </div>
+
+        <div class="transaction-status">
+          <span [class]="'status-badge ' + transaction.status">
+            {{ transaction.status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="transactions.length === 0" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3 class="empty-title">No transactions yet</h3>
+        <p class="empty-description">Your transaction history will appear here</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Payouts Tab -->
+  <section *ngIf="activeTab === 'payouts'" class="tab-content">
+    <div class="payouts-header">
+      <div class="payouts-info">
+        <h2 class="section-title">Payouts</h2>
+        <p class="section-description">Transfer your earnings to your bank account</p>
+      </div>
+
+      <div class="payout-actions" *ngIf="availableBalance > 0">
+        <div class="payout-input-group">
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <input
+              type="number"
+              [(ngModel)]="payoutAmount"
+              [max]="availableBalance"
+              min="1"
+              placeholder="0.00"
+              class="payout-amount-input">
+          </div>
+          <button
+            type="button"
+            (click)="requestPayout()"
+            [disabled]="payoutAmount <= 0 || payoutAmount > availableBalance"
+            class="btn-primary">
+            Request Payout
+          </button>
+        </div>
+        <div class="balance-info">
+          Available: ${{ availableBalance | number:'1.2-2' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Payout Methods -->
+    <div class="payout-methods">
+      <h3 class="subsection-title">Payout Methods</h3>
+      <div class="payout-method-card">
+        <div class="method-info">
+          <div class="method-icon">🏦</div>
+          <div class="method-details">
+            <strong>Bank Transfer</strong>
+            <span>•••• 1234 (Chase Bank)</span>
+          </div>
+        </div>
+        <button type="button" class="btn-outline">Edit</button>
+      </div>
+    </div>
+
+    <!-- Payouts History -->
+    <div class="payouts-history">
+      <h3 class="subsection-title">Payout History</h3>
+      <div class="payouts-list">
+        <div *ngFor="let payout of payouts" class="payout-item">
+          <div class="payout-info">
+            <div class="payout-date">{{ payout.date | date:'MMM d, yyyy' }}</div>
+            <div class="payout-method">{{ payout.method }}</div>
+          </div>
+
+          <div class="payout-amount">
+            ${{ payout.amount | number:'1.2-2' }}
+          </div>
+
+          <div class="payout-status">
+            <span [class]="'status-badge ' + payout.status">
+              {{ payout.status }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="payouts.length === 0" class="empty-state">
+          <div class="empty-icon">💰</div>
+          <h3 class="empty-title">No payouts yet</h3>
+          <p class="empty-description">Your payout history will appear here</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
