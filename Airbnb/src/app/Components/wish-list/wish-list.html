@@ -1,0 +1,176 @@
+<!-- components/wishlist/wishlist.component.html -->
+<div class="wishlist-container">
+  <!-- Header -->
+  <header class="wishlist-header">
+    <div class="container">
+      <h1 class="wishlist-title">Wishlists</h1>
+      <p class="wishlist-subtitle">Save your favorite places and experiences</p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="wishlist-main">
+    <div class="container">
+      <!-- Wishlists Grid -->
+      <section *ngIf="!selectedWishlist" class="wishlists-section">
+        <div class="section-header">
+          <h2 class="section-title">Your wishlists</h2>
+          <button
+            (click)="showCreateForm = true"
+            class="btn-primary">
+            + Create new wishlist
+          </button>
+        </div>
+
+        <!-- Create Wishlist Form -->
+        <div *ngIf="showCreateForm" class="create-form">
+          <h3>Create new wishlist</h3>
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input
+              type="text"
+              [(ngModel)]="newWishlistName"
+              placeholder="e.g., Beach houses, Europe trip..."
+              class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description (optional)</label>
+            <textarea
+              [(ngModel)]="newWishlistDescription"
+              placeholder="Add a description..."
+              class="form-textarea"
+              rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="newWishlistIsPublic"
+                class="checkbox">
+              <span>Make wishlist public</span>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button
+              (click)="cancelCreate()"
+              class="btn-secondary">
+              Cancel
+            </button>
+            <button
+              (click)="createWishlist()"
+              [disabled]="!newWishlistName"
+              class="btn-primary">
+              Create
+            </button>
+          </div>
+        </div>
+
+        <!-- Wishlists Grid -->
+        <div class="wishlists-grid">
+          <div
+            *ngFor="let wishlist of wishlists"
+            (click)="selectWishlist(wishlist)"
+            class="wishlist-card">
+            <div class="wishlist-image">
+              <div class="wishlist-icon">❤️</div>
+              <div class="wishlist-count">{{ wishlist.itemCount }} saved</div>
+            </div>
+            <div class="wishlist-info">
+              <h3 class="wishlist-name">{{ wishlist.name }}</h3>
+              <p class="wishlist-description">{{ wishlist.description }}</p>
+              <div class="wishlist-meta">
+                <span class="privacy-badge" [class.private]="!wishlist.isPublic">
+                  {{ wishlist.isPublic ? 'Public' : 'Private' }}
+                </span>
+                <span class="created-date">
+                  Created {{ wishlist.createdAt | date:'MMM yyyy' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="wishlists.length === 0" class="empty-state">
+          <div class="empty-icon">❤️</div>
+          <h3>No wishlists yet</h3>
+          <p>Create your first wishlist to start saving favorite places</p>
+          <button
+            (click)="showCreateForm = true"
+            class="btn-primary">
+            Create wishlist
+          </button>
+        </div>
+      </section>
+
+      <!-- Wishlist Detail -->
+      <section *ngIf="selectedWishlist" class="wishlist-detail">
+        <div class="detail-header">
+          <button (click)="backToWishlists()" class="back-button">
+            ← Back to wishlists
+          </button>
+          <div class="header-actions">
+            <button
+              (click)="shareWishlist(selectedWishlist!)"
+              class="btn-outline">
+              Share
+            </button>
+            <button
+              (click)="deleteWishlist(selectedWishlist.id)"
+              class="btn-text danger">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="wishlist-info">
+          <h1 class="wishlist-title">{{ selectedWishlist.name }}</h1>
+          <p class="wishlist-description">{{ selectedWishlist.description }}</p>
+          <div class="wishlist-stats">
+            <span class="item-count">{{ selectedWishlist.itemCount }} saved places</span>
+            <span class="privacy-badge" [class.private]="!selectedWishlist.isPublic">
+              {{ selectedWishlist.isPublic ? 'Public' : 'Private' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Listings Grid -->
+        <div class="listings-grid">
+          <div
+            *ngFor="let listing of selectedWishlist.listings"
+            class="listing-card">
+            <div class="listing-image">
+              <button
+                (click)="removeFromWishlist(listing.id)"
+                class="remove-button"
+                title="Remove from wishlist">
+                ♥
+              </button>
+            </div>
+            <div class="listing-info">
+              <h3 class="listing-title">{{ listing.title }}</h3>
+              <p class="listing-location">{{ listing.location }}</p>
+              <p class="listing-dates">{{ listing.dates }} · {{ listing.guests }} guests</p>
+              <div class="listing-price">
+                <strong>${{ listing.price }}</strong> night
+              </div>
+              <div class="listing-rating">
+                <span class="rating-star">⭐</span>
+                <span class="rating-value">{{ listing.rating }}</span>
+                <span class="review-count">({{ listing.reviewCount }})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty Wishlist -->
+        <div *ngIf="selectedWishlist.itemCount === 0" class="empty-wishlist">
+          <div class="empty-icon">❤️</div>
+          <h3>No places saved yet</h3>
+          <p>Start browsing and save your favorite places to this wishlist</p>
+          <button class="btn-primary">Explore homes</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>

@@ -1,58 +1,72 @@
-<!-- components/admin-dashboard/admin-dashboard.component.html -->
+
 <div class="admin-dashboard">
-  <!-- Header -->
+
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-spinner">Loading...</div>
+  </div>
+
+
   <header class="admin-header">
     <h1>Admin Dashboard</h1>
     <div class="admin-actions">
-      <button class="btn-primary">Refresh Data</button>
-      <button class="btn-secondary">Export Reports</button>
+      <button class="btn-primary" (click)="loadDashboardData()" [disabled]="loading">
+        Refresh Data
+      </button>
     </div>
   </header>
 
-  <!-- Navigation Tabs -->
+
   <nav class="admin-tabs">
     <button
       [class.active]="activeTab === 'overview'"
-      (click)="setActiveTab('overview')">
+      (click)="setActiveTab('overview')"
+      class="tab-button">
       📊 Overview
     </button>
     <button
       [class.active]="activeTab === 'users'"
-      (click)="setActiveTab('users')">
+      (click)="setActiveTab('users')"
+      class="tab-button">
       👥 Users
     </button>
     <button
       [class.active]="activeTab === 'listings'"
-      (click)="setActiveTab('listings')">
+      (click)="setActiveTab('listings')"
+      class="tab-button">
       🏠 Listings
     </button>
     <button
       [class.active]="activeTab === 'analytics'"
-      (click)="setActiveTab('analytics')">
+      (click)="setActiveTab('analytics')"
+      class="tab-button">
       📈 Analytics
     </button>
   </nav>
 
   <!-- Overview Tab -->
-  <div *ngIf="activeTab === 'overview'" class="tab-content">
-    <!-- Stats Cards -->
+  <section *ngIf="activeTab === 'overview' && stats" class="tab-content">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">👥</div>
         <div class="stat-info">
-          <h3>{{ stats.totalUsers }}</h3>
+          <h3>{{ stats.totalUsers | number }}</h3>
           <p>Total Users</p>
         </div>
       </div>
-
       <div class="stat-card">
         <div class="stat-icon">🏠</div>
         <div class="stat-info">
-          <h3>{{ stats.totalListings }}</h3>
+          <h3>{{ stats.totalListings | number }}</h3>
           <p>Total Listings</p>
         </div>
       </div>
-
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalBookings | number }}</h3>
+          <p>Total Bookings</p>
+        </div>
+      </div>
       <div class="stat-card">
         <div class="stat-icon">💰</div>
         <div class="stat-info">
@@ -60,72 +74,129 @@
           <p>Total Revenue</p>
         </div>
       </div>
-
       <div class="stat-card">
         <div class="stat-icon">⏳</div>
         <div class="stat-info">
-          <h3>{{ stats.pendingVerifications }}</h3>
+          <h3>{{ stats.pendingVerifications | number }}</h3>
           <p>Pending Verifications</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🌟</div>
+        <div class="stat-info">
+          <h3>{{ stats.activeHosts | number }}</h3>
+          <p>Active Hosts</p>
         </div>
       </div>
     </div>
 
     <!-- Recent Activity -->
     <div class="recent-activity">
-      <h3>Recent Activity</h3>
-      <div class="activity-list">
-        <!-- Activity items would go here -->
+      <h2>Recent Activity</h2>
+      <div class="activity-grid">
+        <div class="recent-users">
+          <h3>Latest Users</h3>
+          <div *ngFor="let user of users.slice(0, 5)" class="activity-item">
+            <div class="user-avatar">
+              <img alt="" [src]="user.avatar || '/assets/default-avatar.png'" [alt]="user.firstName">
+            </div>
+            <div class="activity-info">
+              <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+              <span class="user-role" [class]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
+            </div>
+            <span class="activity-date">{{ user.joinedDate | date:'MMM d' }}</span>
+          </div>
+        </div>
+
+        <div class="recent-listings">
+          <h3>Latest Listings</h3>
+          <div *ngFor="let listing of listings.slice(0, 5)" class="activity-item">
+            <div class="listing-image">
+              <img alt="" [src]="listing.images[0] || '/assets/default-listing.jpg'" [alt]="listing.title">
+            </div>
+            <div class="activity-info">
+              <strong>{{ listing.title }}</strong>
+              <span class="listing-location">{{ listing.location }}</span>
+            </div>
+            <span class="activity-date">{{ listing.createdAt | date:'MMM d' }}</span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Users Tab -->
-  <div *ngIf="activeTab === 'users'" class="tab-content">
+  <section *ngIf="activeTab === 'users'" class="tab-content">
+    <div class="section-header">
+      <h2>User Management</h2>
+      <div class="table-actions">
+        <input type="text" placeholder="Search users..." class="search-input">
+        <select title="l" class="filter-select">
+          <option>All Roles</option>
+          <option>Hosts</option>
+          <option>Guests</option>
+        </select>
+      </div>
+    </div>
+
     <div class="table-container">
       <table class="admin-table">
         <thead>
           <tr>
             <th>User</th>
             <th>Role</th>
-            <th>Status</th>
+            <th>Joined</th>
             <th>Listings</th>
             <th>Bookings</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let user of users">
-            <td>
+            <td class="user-cell">
+              <div class="user-avatar">
+                <img alt="" [src]="user.avatar || '/assets/default-avatar.png'" [alt]="user.firstName">
+              </div>
               <div class="user-info">
                 <strong>{{ user.firstName }} {{ user.lastName }}</strong>
-                <span>{{ user.email }}</span>
+                <span class="user-email">{{ user.email }}</span>
               </div>
             </td>
             <td>
-              <span class="badge" [class.badge-host]="user.role === 'host'">
+              <span [class]="'badge ' + getRoleBadgeClass(user.role)">
                 {{ user.role }}
               </span>
             </td>
+            <td>{{ user.joinedDate | date:'MMM d, yyyy' }}</td>
+            <td>{{ user.listingsCount }}</td>
+            <td>{{ user.bookingsCount }}</td>
             <td>
-              <span class="status-badge" [class.status-active]="user.status === 'active'">
+              <span [class]="'status-badge ' + getUserStatusClass(user.status)">
                 {{ user.status }}
               </span>
             </td>
-            <td>{{ user.listingsCount }}</td>
-            <td>{{ user.bookingsCount }}</td>
             <td>
               <div class="action-buttons">
                 <button
                   *ngIf="user.status === 'active'"
                   (click)="suspendUser(user.id)"
-                  class="btn-warning">
+                  class="btn-warning"
+                  title="Suspend User">
                   Suspend
                 </button>
                 <button
                   *ngIf="user.status === 'suspended'"
                   (click)="activateUser(user.id)"
-                  class="btn-success">
+                  class="btn-success"
+                  title="Activate User">
                   Activate
+                </button>
+                <button
+                  (click)="deleteUser(user.id)"
+                  class="btn-danger"
+                  title="Delete User">
+                  Delete
                 </button>
               </div>
             </td>
@@ -133,10 +204,30 @@
         </tbody>
       </table>
     </div>
-  </div>
+
+    <!-- Empty State -->
+    <div *ngIf="users.length === 0" class="empty-state">
+      <div class="empty-icon">👥</div>
+      <h3>No users found</h3>
+      <p>There are no users in the system yet.</p>
+    </div>
+  </section>
 
   <!-- Listings Tab -->
-  <div *ngIf="activeTab === 'listings'" class="tab-content">
+  <section *ngIf="activeTab === 'listings'" class="tab-content">
+    <div class="section-header">
+      <h2>Listing Management</h2>
+      <div class="table-actions">
+        <input type="text" placeholder="Search listings..." class="search-input">
+        <select title="k" class="filter-select">
+          <option>All Status</option>
+          <option>Active</option>
+          <option>Suspended</option>
+          <option>Pending</option>
+        </select>
+      </div>
+    </div>
+
     <div class="table-container">
       <table class="admin-table">
         <thead>
@@ -144,29 +235,25 @@
             <th>Listing</th>
             <th>Host</th>
             <th>Type</th>
-            <th>Status</th>
             <th>Price</th>
             <th>Rating</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let listing of listings">
-            <td>
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img alt="" [src]="listing.images[0] || '/assets/default-listing.jpg'" [alt]="listing.title">
+              </div>
               <div class="listing-info">
                 <strong>{{ listing.title }}</strong>
-                <span>{{ listing.location }}</span>
+                <span class="listing-location">{{ listing.location }}</span>
               </div>
             </td>
             <td>{{ listing.host }}</td>
-            <td>
-              <span class="badge">{{ listing.type }}</span>
-            </td>
-            <td>
-              <span class="status-badge" [class.status-pending]="listing.status === 'pending'">
-                {{ listing.status }}
-              </span>
-            </td>
+            <td>{{ listing.type }}</td>
             <td>${{ listing.price }}/night</td>
             <td>
               <div class="rating">
@@ -174,18 +261,31 @@
               </div>
             </td>
             <td>
+              <span [class]="'status-badge ' + getListingStatusClass(listing.status)">
+                {{ listing.status }}
+              </span>
+            </td>
+            <td>
               <div class="action-buttons">
-                <button
-                  *ngIf="listing.status === 'pending'"
-                  (click)="approveListing(listing.id)"
-                  class="btn-success">
-                  Approve
-                </button>
                 <button
                   *ngIf="listing.status === 'active'"
                   (click)="suspendListing(listing.id)"
-                  class="btn-warning">
+                  class="btn-warning"
+                  title="Suspend Listing">
                   Suspend
+                </button>
+                <button
+                  *ngIf="listing.status === 'pending' || listing.status === 'suspended'"
+                  (click)="approveListing(listing.id)"
+                  class="btn-success"
+                  title="Approve Listing">
+                  Approve
+                </button>
+                <button
+                  (click)="deleteListing(listing.id)"
+                  class="btn-danger"
+                  title="Delete Listing">
+                  Delete
                 </button>
               </div>
             </td>
@@ -193,5 +293,22 @@
         </tbody>
       </table>
     </div>
-  </div>
+
+    <!-- Empty State -->
+    <div *ngIf="listings.length === 0" class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <h3>No listings found</h3>
+      <p>There are no listings in the system yet.</p>
+    </div>
+  </section>
+
+  <!-- Analytics Tab -->
+  <section *ngIf="activeTab === 'analytics'" class="tab-content">
+    <div class="analytics-placeholder">
+      <div class="placeholder-icon">📈</div>
+      <h3>Analytics Dashboard</h3>
+      <p>Advanced analytics and reporting features coming soon.</p>
+      <p>This section will include charts, graphs, and detailed performance metrics.</p>
+    </div>
+  </section>
 </div>

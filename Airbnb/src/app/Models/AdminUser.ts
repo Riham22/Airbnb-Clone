@@ -1,11 +1,15 @@
+// models/admin-user.model.ts
 export interface AdminUser {
-  id: number;
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'guest' | 'host' | 'admin';
-  joinedDate: string;
+  role: 'host' | 'guest' | 'admin';
+  joinedDate: Date;
   status: 'active' | 'suspended' | 'pending';
   listingsCount: number;
   bookingsCount: number;
+  lastActive?: Date;
+  avatar?: string;
+  updatedAt?: Date;
 }
