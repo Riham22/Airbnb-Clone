@@ -1,0 +1,222 @@
+<!-- components/cohost/cohost.component.html -->
+<div class="cohost-container">
+  <!-- Header -->
+  <header class="cohost-header">
+    <div class="container">
+      <h1 class="cohost-title">Find a Co-host</h1>
+      <p class="cohost-subtitle">Professional hosts to help manage your property</p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="cohost-main">
+    <div class="container">
+      <!-- Filters Sidebar -->
+      <aside *ngIf="!selectedCoHost" class="filters-sidebar">
+        <div class="filter-section">
+          <h3 class="filter-title">Location</h3>
+          <input
+            type="text"
+            [(ngModel)]="searchLocation"
+            placeholder="City, state, or zip code"
+            class="filter-input">
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Specialties</h3>
+          <div class="specialties-list">
+            <button
+              *ngFor="let specialty of specialties"
+              (click)="toggleSpecialty(specialty)"
+              [class.active]="selectedSpecialties.includes(specialty)"
+              class="specialty-tag">
+              {{ specialty }}
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Hourly Rate</h3>
+          <div class="rate-range">
+            <span class="rate-min">${{ hourlyRateRange[0] }}</span>
+            <span class="rate-max">${{ hourlyRateRange[1] }}+</span>
+          </div>
+          <input title="l"
+            type="range"
+            [(ngModel)]="hourlyRateRange[1]"
+            min="0"
+            max="100"
+            step="5"
+            class="rate-slider">
+        </div>
+
+        <button (click)="clearFilters()" class="btn-text">
+          Clear all filters
+        </button>
+      </aside>
+
+      <!-- Co-hosts List -->
+      <section *ngIf="!selectedCoHost" class="cohosts-list">
+        <div class="list-header">
+          <h2 class="section-title">
+            {{ filteredCoHosts.length }} Co-hosts available
+          </h2>
+          <div class="sort-options">
+            <select title="l" class="sort-select">
+              <option>Recommended</option>
+              <option>Highest rated</option>
+              <option>Price: low to high</option>
+              <option>Price: high to low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="cohosts-grid">
+          <div
+            *ngFor="let cohost of filteredCoHosts"
+            (click)="selectCoHost(cohost)"
+            class="cohost-card">
+            <div class="cohost-header">
+              <div class="cohost-avatar">
+                <img [src]="cohost.avatar" alt="cohost.name">
+                <span *ngIf="cohost.verified" class="verified-badge">✓</span>
+              </div>
+              <div class="cohost-info">
+                <h3 class="cohost-name">{{ cohost.name }}</h3>
+                <p class="cohost-location">{{ cohost.location }}</p>
+                <div class="cohost-rating">
+                  <span class="rating-star">⭐</span>
+                  <span class="rating-value">{{ cohost.rating }}</span>
+                  <span class="review-count">({{ cohost.reviewCount }})</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cohost-details">
+              <p class="cohost-description">{{ cohost.description }}</p>
+
+              <div class="cohost-stats">
+                <div class="stat">
+                  <span class="stat-value">{{ cohost.responseRate }}%</span>
+                  <span class="stat-label">Response rate</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">{{ cohost.responseTime }}</span>
+                  <span class="stat-label">Avg. response</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">{{ cohost.experience }}</span>
+                  <span class="stat-label">Experience</span>
+                </div>
+              </div>
+
+              <div class="cohost-specialties">
+                <span
+                  *ngFor="let specialty of cohost.specialties"
+                  class="specialty-tag small">
+                  {{ specialty }}
+                </span>
+              </div>
+
+              <div class="cohost-footer">
+                <div class="hourly-rate">
+                  <strong>${{ cohost.hourlyRate }}</strong>/hour
+                </div>
+                <button
+                  (click)="contactCoHost(cohost); $event.stopPropagation()"
+                  class="btn-outline">
+                  Contact
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Results -->
+        <div *ngIf="filteredCoHosts.length === 0" class="no-results">
+          <div class="no-results-icon">👥</div>
+          <h3>No co-hosts found</h3>
+          <p>Try adjusting your filters or search in a different location</p>
+          <button (click)="clearFilters()" class="btn-primary">
+            Clear filters
+          </button>
+        </div>
+      </section>
+
+      <!-- Co-host Detail -->
+      <section *ngIf="selectedCoHost" class="cohost-detail">
+        <div class="detail-header">
+          <button (click)="backToList()" class="back-button">
+            ← Back to co-hosts
+          </button>
+        </div>
+
+        <div class="cohost-profile">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <img [src]="selectedCoHost.avatar" alt="selectedCoHost.name">
+              <span *ngIf="selectedCoHost.verified" class="verified-badge large">✓</span>
+            </div>
+            <div class="profile-info">
+              <h1 class="profile-name">{{ selectedCoHost.name }}</h1>
+              <p class="profile-location">{{ selectedCoHost.location }}</p>
+              <div class="profile-rating">
+                <span class="rating-star">⭐</span>
+                <span class="rating-value">{{ selectedCoHost.rating }}</span>
+                <span class="review-count">({{ selectedCoHost.reviewCount }} reviews)</span>
+              </div>
+            </div>
+            <div class="profile-actions">
+              <button
+                (click)="contactCoHost(selectedCoHost)"
+                class="btn-primary">
+                Contact Co-host
+              </button>
+              <div class="hourly-rate">
+                <strong>${{ selectedCoHost.hourlyRate }}</strong>/hour
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-content">
+            <div class="profile-section">
+              <h2>About</h2>
+              <p class="profile-description">{{ selectedCoHost.description }}</p>
+            </div>
+
+            <div class="profile-section">
+              <h2>Services & Specialties</h2>
+              <div class="specialties-grid">
+                <div
+                  *ngFor="let specialty of selectedCoHost.specialties"
+                  class="specialty-card">
+                  <span class="specialty-icon">✅</span>
+                  <span class="specialty-name">{{ specialty }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-stats-grid">
+              <div class="stat-card">
+                <div class="stat-value">{{ selectedCoHost.responseRate }}%</div>
+                <div class="stat-label">Response Rate</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ selectedCoHost.responseTime }}</div>
+                <div class="stat-label">Response Time</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ selectedCoHost.experience }}</div>
+                <div class="stat-label">Experience</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ selectedCoHost.languages.join(', ') }}</div>
+                <div class="stat-label">Languages</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>

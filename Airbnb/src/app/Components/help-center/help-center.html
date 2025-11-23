@@ -1,0 +1,114 @@
+<!-- components/help-center/help-center.component.html -->
+<div class="help-center">
+  <!-- Header -->
+  <header class="help-header">
+    <div class="container">
+      <h1 class="help-title">How can we help you?</h1>
+      <div class="search-container">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Search for help articles..."
+            class="search-input">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="help-main">
+    <div class="container">
+      <!-- Popular Articles -->
+      <section *ngIf="!selectedCategory && !selectedArticle" class="popular-section">
+        <h2 class="section-title">Popular help topics</h2>
+        <div class="popular-grid">
+          <button
+            *ngFor="let article of popularArticles"
+            (click)="selectArticle(article)"
+            class="popular-card">
+            <span class="article-icon">📖</span>
+            <span class="article-title">{{ article.title }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Categories Grid -->
+      <section *ngIf="!selectedCategory && !selectedArticle" class="categories-section">
+        <h2 class="section-title">Browse help categories</h2>
+        <div class="categories-grid">
+          <div
+            *ngFor="let category of filteredCategories"
+            (click)="selectCategory(category)"
+            class="category-card">
+            <div class="category-icon">{{ category.icon }}</div>
+            <h3 class="category-title">{{ category.title }}</h3>
+            <p class="category-description">{{ category.description }}</p>
+            <span class="article-count">{{ category.articles.length }} articles</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Articles List -->
+      <section *ngIf="selectedCategory && !selectedArticle" class="articles-section">
+        <div class="section-header">
+          <button (click)="backToCategories()" class="back-button">
+            ← Back to categories
+          </button>
+          <h2 class="section-title">{{ selectedCategory.title }}</h2>
+        </div>
+
+        <div class="articles-list">
+          <div
+            *ngFor="let article of selectedCategory.articles"
+            (click)="selectArticle(article)"
+            class="article-item">
+            <div class="article-info">
+              <h3 class="article-title">{{ article.title }}</h3>
+              <span *ngIf="article.popular" class="popular-badge">Popular</span>
+            </div>
+            <span class="arrow">→</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Article Detail -->
+      <section *ngIf="selectedArticle" class="article-detail">
+        <div class="section-header">
+          <button (click)="backToArticles()" class="back-button">
+            ← Back to articles
+          </button>
+        </div>
+
+        <article class="article-content">
+          <h1 class="article-title">{{ selectedArticle.title }}</h1>
+          <div class="article-body">
+            <p>{{ selectedArticle.content }}</p>
+          </div>
+
+          <div class="article-actions">
+            <button (click)="contactSupport()" class="btn-primary">
+              Contact Support
+            </button>
+            <div class="feedback-buttons">
+              <span>Was this helpful?</span>
+              <button class="btn-text">Yes</button>
+              <button class="btn-text">No</button>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- No Results -->
+      <div *ngIf="filteredCategories.length === 0" class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h3>No results found</h3>
+        <p>Try different keywords or contact our support team</p>
+        <button (click)="contactSupport()" class="btn-primary">
+          Contact Support
+        </button>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,13 +1,21 @@
+// models/admin-listing.model.ts
 export interface AdminListing {
-  id: number;
+  id: string;
   title: string;
   host: string;
-  type: 'property' | 'experience' | 'service';
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
+  hostId: string;
+  type: string;
+  status: 'active' | 'suspended' | 'pending';
   price: number;
   location: string;
   rating: number;
   reviewCount: number;
-  createdAt: string;
-  lastBooking: string;
+  createdAt: Date;
+  lastBooking: Date;
+  bedrooms?: number;
+  bathrooms?: number;
+  maxGuests?: number;
+  images: string[];
+  amenities: string[];
+  updatedAt?: Date;
 }
