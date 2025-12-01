@@ -2,9 +2,13 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { RentalProperty } from '../../Models/rental-property';
 import { Router } from '@angular/router';
 
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-property-card',
   standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './property-card.html',
   styleUrl: './property-card.css'
 })
@@ -17,14 +21,14 @@ export class PropertyCardComponent {
     property: RentalProperty;
     isWishlisted: boolean;
   }>();
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   isWishlisted = false;
 
-   onCardClick() {
+  onCardClick() {
 
     this.router.navigate(['/property', this.property.id]);
-   }
+  }
 
   toggleWishlist(event: MouseEvent) {
     event.stopPropagation();
@@ -53,5 +57,11 @@ export class PropertyCardComponent {
   isInstantBook(): boolean {
     // Mock instant book status
     return Math.random() > 0.3;
+  }
+
+  showImageIndicators = true;
+
+  getImageIndicators(): any[] {
+    return this.property.images ? new Array(this.property.images.length) : [];
   }
 }

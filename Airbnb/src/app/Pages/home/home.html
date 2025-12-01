@@ -1,8 +1,7 @@
 <!-- home.html -->
 <div class="home-container">
   <!-- Search Bar -->
-  <app-search-bar
-    (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+  <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
     (activeFiltersChange)="onActiveFiltersChange($event)">
   </app-search-bar>
 
@@ -15,17 +14,19 @@
         <p>Discover homes, experiences, and unique stays tailored just for you.</p>
       </div>
     </section> -->
-<app-search-bar
-  (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-  (activeFiltersChange)="onActiveFiltersChange($event)">
-</app-search-bar>
+    <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+      (activeFiltersChange)="onActiveFiltersChange($event)">
+    </app-search-bar>
 
-<app-property-list
-  [properties]="filteredProperties"
-  [filters]="activeFilters"
-  (propertyClick)="onPropertyClick($event)"
-  (wishlistChange)="onWishlistChange($event)">
-</app-property-list>
+    <app-category-bar (categorySelect)="onCategorySelect($event)" (openFilters)="openFilters()">
+    </app-category-bar>
+
+    <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">
+    </app-filter-modal>
+
+    <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
+      (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)">
+    </app-property-list>
     <!-- Search Results Section -->
     <!-- <section class="search-results-section">
     <app-property-list

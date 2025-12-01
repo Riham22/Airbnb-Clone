@@ -24,6 +24,10 @@ export const routes: Routes = [
         component: AuthComponent
       },
       {
+        path: 'forget-password',
+        loadComponent: () => import('./Components/forget-password/forget-password.component').then(m => m.ForgetPasswordComponent)
+      },
+      {
         path: 'become-host',
         component: BecomeHostComponent,
         canActivate: [AuthGuard]
@@ -42,7 +46,7 @@ export const routes: Routes = [
         path: 'admin',
         loadComponent: () => import('./Components/admin-dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['admin'] }
+        data: { roles: ['Admin'] }
       },
       {
         path: '**',

@@ -1,6 +1,8 @@
 // services/admin.service.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, delay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { AdminStats } from '../Models/AdminStats';
 import { AdminUser } from '../Models/AdminUser';
 import { AdminListing } from '../Models/AdminListing';
@@ -9,23 +11,87 @@ import { AdminListing } from '../Models/AdminListing';
   providedIn: 'root'
 })
 export class AdminService {
+  private apiUrl = 'https://localhost:7020/api';
   private statsSubject = new BehaviorSubject<AdminStats>(this.getInitialStats());
-  private usersSubject = new BehaviorSubject<AdminUser[]>(this.generateMockUsers());
-  private listingsSubject = new BehaviorSubject<AdminListing[]>(this.generateMockListings());
+  private usersSubject = new BehaviorSubject<AdminUser[]>([]);
+  private listingsSubject = new BehaviorSubject<AdminListing[]>([]);
   private loadingSubject = new BehaviorSubject<boolean>(false);
 
-  constructor() {}
+  constructor(private http: HttpClient) { }
 
-  // Stats Management
+  // Stats Management - Calculated from data
   getStats(): Observable<AdminStats> {
     this.setLoading(true);
-    // Simulate API call delay
+    // Calculate stats from users, properties, and bookings
     return new Observable<AdminStats>(observer => {
-      setTimeout(() => {
-        observer.next(this.statsSubject.value);
-        observer.complete();
-        this.setLoading(false);
-      }, 500);
+      let totalUsers = 0;
+      let totalListings = 0;
+      let totalBookings = 0;
+
+      // Get users count
+      this.http.get<any>(`${this.apiUrl}/User`).subscribe({
+        next: (users) => {
+          totalUsers = users.length || 0;
+
+          // Get properties count
+          this.http.get<any>(`${this.apiUrl}/properties`).subscribe({
+            next: (props) => {
+              totalListings = props.length || 0;
+
+              // Get bookings count (requires auth)
+              this.http.get<any>(`${this.apiUrl}/Booking`).subscribe({
+                next: (bookings) => {
+                  const bookingsData = bookings.data || bookings || [];
+                  totalBookings = bookingsData.length || 0;
+
+                  const stats: AdminStats = {
+                    totalUsers,
+                    totalListings,
+                    totalBookings,
+                    totalRevenue: totalBookings * 150, // Estimated
+                    pendingVerifications: 0,
+                    activeHosts: Math.floor(totalUsers * 0.3), // Estimated
+                    monthlyGrowth: 0,
+                    weeklyRevenue: 0,
+                    activeBookings: totalBookings
+                  };
+
+                  this.statsSubject.next(stats);
+                  observer.next(stats);
+                  observer.complete();
+                  this.setLoading(false);
+                },
+                error: () => {
+                  // Use partial stats if bookings fail
+                  const stats: AdminStats = {
+                    totalUsers,
+                    totalListings,
+                    totalBookings: 0,
+                    totalRevenue: 0,
+                    pendingVerifications: 0,
+                    activeHosts: Math.floor(totalUsers * 0.3),
+                    monthlyGrowth: 0,
+                    weeklyRevenue: 0,
+                    activeBookings: 0
+                  };
+                  this.statsSubject.next(stats);
+                  observer.next(stats);
+                  observer.complete();
+                  this.setLoading(false);
+                }
+              });
+            },
+            error: () => {
+              observer.error('Failed to load properties');
+              this.setLoading(false);
+            }
+          });
+        },
+        error: () => {
+          observer.error('Failed to load users');
+          this.setLoading(false);
+        }
+      });
     });
   }
 
@@ -34,19 +100,35 @@ export class AdminService {
     this.statsSubject.next({ ...current, ...updates });
   }
 
-  // Users Management
+  // Users Management - Connected to backend
   getUsers(): Observable<AdminUser[]> {
     this.setLoading(true);
-    return new Observable<AdminUser[]>(observer => {
-      setTimeout(() => {
-        observer.next(this.usersSubject.value);
-        observer.complete();
-        this.setLoading(false);
-      }, 800);
-    });
+    return this.http.get<any>(`${this.apiUrl}/User`).pipe(
+      map((users: any[]) => {
+        // Map backend users to AdminUser format
+        const adminUsers: AdminUser[] = users.map(u => ({
+          id: u.id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          role: u.roles?.[0] || 'guest', // First role
+          joinedDate: new Date(), // Not in backend response
+          status: 'active', // Default status
+          listingsCount: 0, // Not available from backend
+          bookingsCount: 0, // Not available from backend
+          lastActive: new Date(), // Not available from backend
+          avatar: u.photoURL || ''
+        }));
+        this.usersSubject.next(adminUsers);
+        return adminUsers;
+      }),
+      tap(() => this.setLoading(false))
+    );
   }
 
   updateUserStatus(userId: string, status: 'active' | 'suspended'): Observable<AdminUser> {
+    // Backend doesn't have status update endpoint
+    // Update local state only
     return new Observable<AdminUser>(observer => {
       setTimeout(() => {
         const users = this.usersSubject.value.map(user =>
@@ -66,8 +148,8 @@ export class AdminService {
   }
 
   deleteUser(userId: string): Observable<boolean> {
-    return new Observable<boolean>(observer => {
-      setTimeout(() => {
+    return this.http.delete(`${this.apiUrl}/User/${userId}`).pipe(
+      tap(() => {
         const users = this.usersSubject.value.filter(user => user.id !== userId);
         this.usersSubject.next(users);
 
@@ -77,26 +159,46 @@ export class AdminService {
           ...stats,
           totalUsers: stats.totalUsers - 1
         });
-
-        observer.next(true);
-        observer.complete();
-      }, 400);
-    });
+      }),
+      map(() => true)
+    );
   }
 
-  // Listings Management
+  // Listings Management - Connected to backend
   getListings(): Observable<AdminListing[]> {
     this.setLoading(true);
-    return new Observable<AdminListing[]>(observer => {
-      setTimeout(() => {
-        observer.next(this.listingsSubject.value);
-        observer.complete();
-        this.setLoading(false);
-      }, 700);
-    });
+    return this.http.get<any>(`${this.apiUrl}/properties`).pipe(
+      map((properties: any[]) => {
+        // Map backend properties to AdminListing format
+        const adminListings: AdminListing[] = properties.map(p => ({
+          id: p.id.toString(),
+          title: p.title || p.name,
+          host: 'Host', // Not available from backend
+          hostId: p.hostId || '1',
+          type: 'Property',
+          status: p.isPublished ? 'active' : 'pending',
+          price: p.pricePerNight || p.price,
+          location: p.city && p.country ? `${p.city}, ${p.country}` : p.location,
+          rating: p.averageRating || p.rating || 0,
+          reviewCount: p.reviewsCount || p.reviewCount || 0,
+          createdAt: new Date(), // Not in response
+          lastBooking: new Date(), // Not in response
+          bedrooms: p.bedrooms || 0,
+          bathrooms: p.bathrooms || 0,
+          maxGuests: p.maxGuests || 0,
+          images: [p.coverImageUrl || p.imageUrl],
+          amenities: p.amenities || []
+        }));
+        this.listingsSubject.next(adminListings);
+        return adminListings;
+      }),
+      tap(() => this.setLoading(false))
+    );
   }
 
   updateListingStatus(listingId: string, status: 'active' | 'suspended' | 'pending'): Observable<AdminListing> {
+    // Backend doesn't have property status update endpoint
+    // Update local state only
     return new Observable<AdminListing>(observer => {
       setTimeout(() => {
         const listings = this.listingsSubject.value.map(listing =>
@@ -116,6 +218,8 @@ export class AdminService {
   }
 
   deleteListing(listingId: string): Observable<boolean> {
+    // Backend doesn't have delete property endpoint yet
+    // Update local state only
     return new Observable<boolean>(observer => {
       setTimeout(() => {
         const listings = this.listingsSubject.value.filter(listing => listing.id !== listingId);
@@ -145,153 +249,15 @@ export class AdminService {
 
   private getInitialStats(): AdminStats {
     return {
-      totalUsers: 1250,
-      totalListings: 543,
-      totalBookings: 2897,
-      totalRevenue: 154230,
-      pendingVerifications: 23,
-      activeHosts: 287,
-      monthlyGrowth: 12.5,
-      weeklyRevenue: 25480,
-      activeBookings: 156
+      totalUsers: 0,
+      totalListings: 0,
+      totalBookings: 0,
+      totalRevenue: 0,
+      pendingVerifications: 0,
+      activeHosts: 0,
+      monthlyGrowth: 0,
+      weeklyRevenue: 0,
+      activeBookings: 0
     };
-  }
-
-  private generateMockUsers(): AdminUser[] {
-    return [
-      {
-        id: '1',
-        email: 'john.doe@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        role: 'host',
-        joinedDate: new Date('2024-01-15'),
-        status: 'active',
-        listingsCount: 3,
-        bookingsCount: 12,
-        lastActive: new Date('2024-03-20'),
-        avatar: 'https://example.com/avatar1.jpg'
-      },
-      {
-        id: '2',
-        email: 'sarah.smith@example.com',
-        firstName: 'Sarah',
-        lastName: 'Smith',
-        role: 'guest',
-        joinedDate: new Date('2024-02-20'),
-        status: 'active',
-        listingsCount: 0,
-        bookingsCount: 5,
-        lastActive: new Date('2024-03-18'),
-        avatar: 'https://example.com/avatar2.jpg'
-      },
-      {
-        id: '3',
-        email: 'mike.johnson@example.com',
-        firstName: 'Mike',
-        lastName: 'Johnson',
-        role: 'host',
-        joinedDate: new Date('2024-01-10'),
-        status: 'suspended',
-        listingsCount: 2,
-        bookingsCount: 8,
-        lastActive: new Date('2024-03-10'),
-        avatar: 'https://example.com/avatar3.jpg'
-      },
-      {
-        id: '4',
-        email: 'emily.wilson@example.com',
-        firstName: 'Emily',
-        lastName: 'Wilson',
-        role: 'guest',
-        joinedDate: new Date('2024-03-01'),
-        status: 'active',
-        listingsCount: 0,
-        bookingsCount: 2,
-        lastActive: new Date('2024-03-19'),
-        avatar: 'https://example.com/avatar4.jpg'
-      }
-    ];
-  }
-
-  private generateMockListings(): AdminListing[] {
-    return [
-      {
-        id: '1',
-        title: 'Luxury Beach Villa with Private Pool',
-        host: 'John Doe',
-        hostId: '1',
-        type: 'Entire Villa',
-        status: 'active',
-        price: 350,
-        location: 'Malibu, CA',
-        rating: 4.9,
-        reviewCount: 47,
-        createdAt: new Date('2024-01-20'),
-        lastBooking: new Date('2024-03-15'),
-        bedrooms: 4,
-        bathrooms: 3,
-        maxGuests: 8,
-        images: ['https://example.com/listing1-1.jpg'],
-        amenities: ['Pool', 'Ocean View', 'WiFi', 'Kitchen']
-      },
-      {
-        id: '2',
-        title: 'Cozy Downtown Apartment',
-        host: 'Mike Johnson',
-        hostId: '3',
-        type: 'Entire Apartment',
-        status: 'suspended',
-        price: 120,
-        location: 'New York, NY',
-        rating: 4.7,
-        reviewCount: 23,
-        createdAt: new Date('2024-02-15'),
-        lastBooking: new Date('2024-03-10'),
-        bedrooms: 1,
-        bathrooms: 1,
-        maxGuests: 2,
-        images: ['https://example.com/listing2-1.jpg'],
-        amenities: ['WiFi', 'Kitchen', 'Washer']
-      },
-      {
-        id: '3',
-        title: 'Mountain View Cabin',
-        host: 'John Doe',
-        hostId: '1',
-        type: 'Entire Cabin',
-        status: 'pending',
-        price: 200,
-        location: 'Aspen, CO',
-        rating: 4.8,
-        reviewCount: 15,
-        createdAt: new Date('2024-03-01'),
-        lastBooking: new Date('2024-03-18'),
-        bedrooms: 3,
-        bathrooms: 2,
-        maxGuests: 6,
-        images: ['https://example.com/listing3-1.jpg'],
-        amenities: ['Fireplace', 'Mountain View', 'Hot Tub', 'WiFi']
-      },
-      {
-        id: '4',
-        title: 'Modern City Loft',
-        host: 'Sarah Chen',
-        hostId: '5',
-        type: 'Entire Loft',
-        status: 'active',
-        price: 180,
-        location: 'Chicago, IL',
-        rating: 4.6,
-        reviewCount: 34,
-        createdAt: new Date('2024-02-01'),
-        lastBooking: new Date('2024-03-16'),
-        bedrooms: 2,
-        bathrooms: 2,
-        maxGuests: 4,
-        images: ['https://example.com/listing4-1.jpg'],
-        amenities: ['WiFi', 'Gym', 'Pool', 'Parking']
-      }
-    ];
   }
 }

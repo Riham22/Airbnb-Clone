@@ -1,0 +1,117 @@
+.category-bar-container {
+    display: flex;
+    align-items: center;
+    padding: 20px 0 0 0;
+    /* Adjusted padding */
+    background-color: white;
+    position: sticky;
+    top: 80px;
+    /* Adjust based on navbar height */
+    z-index: 99;
+    max-width: 1280px;
+    /* Match standard container width */
+    margin: 0 auto;
+    width: 100%;
+}
+
+.categories-wrapper {
+    flex: 1;
+    overflow: hidden;
+    margin-right: 24px;
+}
+
+.categories-list {
+    display: flex;
+    gap: 32px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    /* Space for scrollbar if needed, or visual breathing room */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+}
+
+.categories-list::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari/Webkit */
+}
+
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    min-width: 64px;
+    /* Ensure items don't shrink too much */
+    color: #717171;
+    transition: color 0.2s, border-bottom 0.2s;
+    padding-bottom: 12px;
+    border-bottom: 2px solid transparent;
+}
+
+.category-item:hover {
+    color: #000;
+    border-bottom: 2px solid #DDDDDD;
+    /* Light gray hover underline */
+}
+
+.category-item.selected {
+    color: #000;
+    border-bottom: 2px solid #000;
+}
+
+.category-icon img {
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.category-item:hover .category-icon img,
+.category-item.selected .category-icon img {
+    opacity: 1;
+}
+
+.category-name {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.filters-button-wrapper {
+    padding-left: 24px;
+    /* Separator space */
+    display: flex;
+    align-items: center;
+}
+
+.filters-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #DDDDDD;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: box-shadow 0.2s, background-color 0.2s;
+}
+
+.filters-btn:hover {
+    border-color: #000;
+    background-color: #f7f7f7;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .category-bar-container {
+        padding: 10px 24px;
+    }
+
+    .filters-button-wrapper {
+        display: none;
+        /* Hide filter button on mobile if space is tight, or adjust layout */
+    }
+}

@@ -1,11 +1,32 @@
 // components/wishlist/wishlist.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Wishlist } from '../../Models/Wishlist';
-import { Listing } from '../../Models/Listing';
+import { Subscription } from 'rxjs';
+import { Data } from '../../Services/data';
 
+interface WishlistItem {
+  id: number;
+  itemType: string;
+  itemId: number;
+  itemTitle: string;
+  itemLocation: string;
+  itemPrice: number;
+  itemRating: number;
+  itemReviewCount: number;
+  itemImageUrl: string;
+  addedAt: string;
+}
 
+interface Wishlist {
+  id: number;
+  name: string;
+  description: string;
+  isPublic: boolean;
+  itemCount: number;
+  createdAt: string;
+  listings: any[];
+}
 
 @Component({
   selector: 'app-wishlist',
@@ -14,76 +35,76 @@ import { Listing } from '../../Models/Listing';
   templateUrl: './wish-list.html',
   styleUrls: ['./wish-list.css']
 })
-export class WishlistComponent implements OnInit {
+export class WishlistComponent implements OnInit, OnDestroy {
+  // For the main wishlist view (your original data)
+  public wishlistItems: WishlistItem[] = [];
+  
+  // For the wishlist management view (needed for HTML template)
   public wishlists: Wishlist[] = [];
   public selectedWishlist: Wishlist | null = null;
   public showCreateForm = false;
   public newWishlistName = '';
   public newWishlistDescription = '';
   public newWishlistIsPublic = true;
+  
+  public loading = false;
+  public error: string | null = null;
+  private subscriptions = new Subscription();
 
-  public sampleListings: Listing[] = [
-    {
-      id: '1',
-      title: 'Beachfront Villa with Private Pool',
-      location: 'Bali, Indonesia',
-      price: 245,
-      rating: 4.89,
-      reviewCount: 142,
-      images: ['beach-villa.jpg'],
-      type: 'Entire villa',
-      dates: 'Apr 15-22',
-      guests: 6
-    },
-    {
-      id: '2',
-      title: 'Modern Apartment in City Center',
-      location: 'Tokyo, Japan',
-      price: 120,
-      rating: 4.95,
-      reviewCount: 89,
-      images: ['tokyo-apartment.jpg'],
-      type: 'Entire apartment',
-      dates: 'Jun 1-7',
-      guests: 4
-    }
-  ];
+  constructor(private dataService: Data) { }
 
   ngOnInit() {
-    this.loadWishlists();
+    this.loadWishlist();
+    this.loadWishlists(); // Load wishlist collections if needed
   }
 
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  public loadWishlist(): void {
+    this.loading = true;
+    this.error = null;
+
+    this.subscriptions.add(
+      this.dataService.getWishlist().subscribe({
+        next: (response: any) => {
+          this.wishlistItems = response.data || response || [];
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading wishlist:', err);
+          this.error = 'Failed to load wishlist. Please try again.';
+          this.loading = false;
+        }
+      })
+    );
+  }
+
+  // New methods for wishlist management
   private loadWishlists(): void {
-    // In real app, this would be from a service
-    this.wishlists = [
-      {
-        id: '1',
-        name: 'Beach Getaways',
-        description: 'Perfect spots for summer vacations',
-        isPublic: true,
-        itemCount: 12,
-        listings: this.sampleListings,
-        createdAt: new Date('2024-01-15')
-      },
-      {
-        id: '2',
-        name: 'Mountain Cabins',
-        description: 'Cozy retreats in the mountains',
+    // If your API supports multiple wishlists, implement this
+    // For now, create a default wishlist from the items
+    if (this.wishlistItems.length > 0) {
+      this.wishlists = [{
+        id: 1,
+        name: 'My Favorites',
+        description: 'All my saved places',
         isPublic: false,
-        itemCount: 8,
-        listings: [],
-        createdAt: new Date('2024-02-01')
-      },
-      {
-        id: '3',
-        name: 'City Breaks',
-        description: 'Urban adventures around the world',
-        isPublic: true,
-        itemCount: 15,
-        listings: [],
-        createdAt: new Date('2024-01-20')
-      }
-    ];
+        itemCount: this.wishlistItems.length,
+        createdAt: new Date().toISOString(),
+        listings: this.wishlistItems.map(item => ({
+          id: item.itemId,
+          title: item.itemTitle,
+          location: item.itemLocation,
+          price: item.itemPrice,
+          rating: item.itemRating,
+          reviewCount: item.itemReviewCount,
+          dates: 'Any dates',
+          guests: 2
+        }))
+      }];
+    }
   }
 
   public selectWishlist(wishlist: Wishlist): void {
@@ -95,20 +116,20 @@ export class WishlistComponent implements OnInit {
   }
 
   public createWishlist(): void {
-    if (this.newWishlistName.trim()) {
-      const newWishlist: Wishlist = {
-        id: Date.now().toString(),
-        name: this.newWishlistName,
-        description: this.newWishlistDescription,
-        isPublic: this.newWishlistIsPublic,
-        itemCount: 0,
-        listings: [],
-        createdAt: new Date()
-      };
+    if (!this.newWishlistName.trim()) return;
 
-      this.wishlists.unshift(newWishlist);
-      this.cancelCreate();
-    }
+    const newWishlist: Wishlist = {
+      id: Date.now(), // Temporary ID
+      name: this.newWishlistName,
+      description: this.newWishlistDescription,
+      isPublic: this.newWishlistIsPublic,
+      itemCount: 0,
+      createdAt: new Date().toISOString(),
+      listings: []
+    };
+
+    this.wishlists.push(newWishlist);
+    this.cancelCreate();
   }
 
   public cancelCreate(): void {
@@ -118,16 +139,17 @@ export class WishlistComponent implements OnInit {
     this.newWishlistIsPublic = true;
   }
 
-  public removeFromWishlist(listingId: string): void {
-    if (this.selectedWishlist) {
-      this.selectedWishlist.listings = this.selectedWishlist.listings.filter(
-        listing => listing.id !== listingId
-      );
-      this.selectedWishlist.itemCount = this.selectedWishlist.listings.length;
+  public shareWishlist(wishlist: Wishlist): void {
+    // Implement share functionality
+    if (wishlist.isPublic) {
+      // Generate shareable link
+      alert(`Share this wishlist: ${wishlist.name}`);
+    } else {
+      alert('Make wishlist public to share it');
     }
   }
 
-  public deleteWishlist(wishlistId: string): void {
+  public deleteWishlist(wishlistId: number): void {
     if (confirm('Are you sure you want to delete this wishlist?')) {
       this.wishlists = this.wishlists.filter(w => w.id !== wishlistId);
       if (this.selectedWishlist?.id === wishlistId) {
@@ -136,10 +158,52 @@ export class WishlistComponent implements OnInit {
     }
   }
 
-  public shareWishlist(wishlist: Wishlist): void {
-    // In real app, this would open share dialog
-    const url = `${window.location.origin}/wishlist/${wishlist.id}`;
-    navigator.clipboard.writeText(url);
-    alert('Wishlist link copied to clipboard!');
+  public removeFromWishlist(itemId: number, itemType?: string): void {
+    // For single wishlist view
+    if (!itemType) {
+      this.subscriptions.add(
+        this.dataService.toggleWishlist('property', itemId).subscribe({
+          next: (response) => {
+            // Remove from local arrays
+            this.wishlistItems = this.wishlistItems.filter(item => item.itemId !== itemId);
+            
+            // Update wishlists
+            this.wishlists.forEach(wishlist => {
+              wishlist.listings = wishlist.listings.filter(listing => listing.id !== itemId);
+              wishlist.itemCount = wishlist.listings.length;
+            });
+          },
+          error: (err) => {
+            console.error('Error removing from wishlist:', err);
+            alert('Failed to remove item. Please try again.');
+          }
+        })
+      );
+    } else {
+      // For specific item type (your original method)
+      this.subscriptions.add(
+        this.dataService.toggleWishlist(itemType, itemId).subscribe({
+          next: (response) => {
+            this.wishlistItems = this.wishlistItems.filter(
+              item => !(item.itemId === itemId && item.itemType === itemType)
+            );
+          },
+          error: (err) => {
+            console.error('Error removing from wishlist:', err);
+            alert('Failed to remove item. Please try again.');
+          }
+        })
+      );
+    }
+  }
+
+  public getItemRoute(item: WishlistItem): string {
+    const type = item.itemType.toLowerCase();
+    return `/${type}/${item.itemId}`;
+  }
+
+  public formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

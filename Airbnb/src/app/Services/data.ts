@@ -1,6 +1,8 @@
 // data.service.ts - Enhanced version
 
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, tap } from 'rxjs';
 import { RentalProperty } from '../Models/rental-property';
 import { Experience } from '../Models/experience';
 import { Service } from '../Models/service';
@@ -18,12 +20,67 @@ import { Review } from '../Models/review';
 @Injectable({
   providedIn: 'root',
 })
-export class Data  {
+export class Data {
   private bookings: Booking[] = [];
-  private wishlist: number[] = []; // Property IDs
+  private wishlistCache: Set<number> = new Set(); // Local cache for wishlist IDs
 
- getProperties(): RentalProperty[] {
-  return [
+  private propertiesSubject = new BehaviorSubject<RentalProperty[]>([]);
+  properties$ = this.propertiesSubject.asObservable();
+
+  private experiencesSubject = new BehaviorSubject<Experience[]>([]);
+  experiences$ = this.experiencesSubject.asObservable();
+
+  private servicesSubject = new BehaviorSubject<Service[]>([]);
+  services$ = this.servicesSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    this.loadProperties();
+    this.loadExperiences();
+    this.loadServices();
+  }
+
+  loadProperties() {
+    this.http.get<any[]>('https://localhost:7020/api/properties').subscribe({
+      next: (data) => {
+        const mappedProperties: RentalProperty[] = data.map(p => ({
+          id: p.id,
+          name: p.title,
+          location: `${p.city}, ${p.country}`,
+          price: p.pricePerNight,
+          rating: p.averageRating,
+          reviewCount: p.reviewsCount,
+          imageUrl: p.coverImageUrl,
+          images: [p.coverImageUrl], // Default to cover image
+          type: 'property',
+          propertyType: 'apartment', // Default
+          maxGuests: 2, // Default
+          bedrooms: 1, // Default
+          beds: 1, // Default
+          bathrooms: 1, // Default
+          amenities: [], // Default
+          host: {
+            name: 'Host',
+            joinedDate: '2024',
+            isSuperhost: false,
+            avatar: ''
+          },
+          description: '',
+          highlights: [],
+          reviews: []
+        }));
+        this.propertiesSubject.next(mappedProperties);
+      },
+      error: (err) => console.error('Failed to load properties', err)
+    });
+  }
+
+  getProperties(): RentalProperty[] {
+    return this.propertiesSubject.value;
+  }
+
+  // Old hardcoded data commented out or removed
+  // getProperties(): RentalProperty[] { ... }
+  /* return[
     {
       id: 1,
       name: 'Cozy Beachfront Apartment',
@@ -39,7 +96,7 @@ export class Data  {
         'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'
       ],
       type: 'property',
-      propertyType: 'beach', 
+      propertyType: 'beach',
       maxGuests: 4,
       bedrooms: 2,
       beds: 3,
@@ -209,11 +266,52 @@ export class Data  {
       reviews: []
     }
   ];
-}
+} */
 
 
+
+  loadExperiences() {
+    this.http.get<any[]>('https://localhost:7020/api/Experience').subscribe({
+      next: (data) => {
+        const mappedExperiences: Experience[] = data.map(exp => ({
+          id: exp.id,
+          type: 'experience',
+          name: exp.expTitle || exp.name || 'Experience',
+          location: `${exp.city || ''}, ${exp.country || ''}`.trim(),
+          price: exp.guestPrice || 0,
+          rating: 4.5, // Default rating
+          reviewCount: 0, // Default review count
+          imageUrl: exp.images?.[0]?.imageURL || '',
+          images: exp.images?.map((img: any) => img.imageURL) || [],
+          category: exp.expCatograyName || 'general',
+          duration: '3 hours', // Default duration
+          maxParticipants: exp.maximumGuest || 10,
+          host: {
+            name: 'Host',
+            joinedDate: new Date(exp.postedDate || Date.now()).getFullYear().toString(),
+            isSuperhost: false,
+            avatar: ''
+          },
+          description: exp.expDescribe || exp.expSummary || '',
+          highlights: [],
+          includes: [],
+          requirements: [],
+          meetingPoint: exp.locationName || '',
+          languages: exp.usingLanguage ? [exp.usingLanguage] : ['English'],
+          reviews: []
+        }));
+        this.experiencesSubject.next(mappedExperiences);
+      },
+      error: (err) => console.error('Failed to load experiences', err)
+    });
+  }
 
   getExperiences(): Experience[] {
+    return this.experiencesSubject.value;
+  }
+
+  // Fallback hardcoded experiences (for reference/backup)
+  private getHardcodedExperiences(): Experience[] {
     return [
       {
         id: 101,
@@ -374,8 +472,45 @@ export class Data  {
     ];
   }
 
-  // NEW: Services Data
+  loadServices() {
+    this.http.get<any[]>('https://localhost:7020/api/Services').subscribe({
+      next: (data) => {
+        const mappedServices: Service[] = data.map(svc => ({
+          id: svc.id,
+          type: 'service',
+          name: svc.title || 'Service',
+          location: `${svc.city || ''}, ${svc.country || ''}`.trim(),
+          price: svc.price || 0,
+          rating: svc.averageRating || 0,
+          reviewCount: svc.reviewsCount || 0,
+          imageUrl: svc.coverImageUrl || '',
+          images: svc.images?.map((img: any) => img.imageUrl) || [svc.coverImageUrl],
+          category: svc.categoryName || 'general',
+          duration: '3 hours', // Default duration
+          provider: {
+            name: 'Provider',
+            joinedDate: '2024',
+            isVerified: true,
+            avatar: ''
+          },
+          description: svc.description || '',
+          highlights: [],
+          includes: [],
+          requirements: [],
+          reviews: []
+        }));
+        this.servicesSubject.next(mappedServices);
+      },
+      error: (err) => console.error('Failed to load services', err)
+    });
+  }
+
   getServices(): Service[] {
+    return this.servicesSubject.value;
+  }
+
+  // Fallback hardcoded services (for reference/backup)
+  private getHardcodedServices(): Service[] {
     return [
       {
         id: 201,
@@ -488,7 +623,7 @@ export class Data  {
     ];
   }
 
-   searchAllListings(filters: SearchFilters): ListingType[] {
+  searchAllListings(filters: SearchFilters): ListingType[] {
     const allListings: ListingType[] = [
       ...this.getProperties(),
       ...this.getExperiences(),
@@ -550,7 +685,7 @@ export class Data  {
     return Array.from(new Set(allAmenities));
   }
 
-   getPropertyTypes(): string[] {
+  getPropertyTypes(): string[] {
     const properties = this.getProperties();
     const types = [...new Set(properties.map(p => p.type))];
     return ['property', 'experience', 'service', ...types];
@@ -631,38 +766,42 @@ export class Data  {
   }
 
   /**
-   * Wishlist management
+   * Wishlist management - Connected to backend
    */
-  addToWishlist(propertyId: number): void {
-    if (!this.wishlist.includes(propertyId)) {
-      this.wishlist.push(propertyId);
-      this.saveWishlistToStorage();
-    }
+  toggleWishlist(itemType: string, itemId: number) {
+    return this.http.post<any>('https://localhost:7020/api/Wishlist/toggle', {
+      itemType: itemType,
+      itemId: itemId
+    }).pipe(
+      tap((response: any) => {
+        if (response.wishlisted) {
+          this.wishlistCache.add(itemId);
+        } else {
+          this.wishlistCache.delete(itemId);
+        }
+      })
+    );
   }
 
-  removeFromWishlist(propertyId: number): void {
-    this.wishlist = this.wishlist.filter(id => id !== propertyId);
-    this.saveWishlistToStorage();
+  getWishlist() {
+    return this.http.get<any>('https://localhost:7020/api/Wishlist');
   }
 
-  getWishlist(): RentalProperty[] {
-    this.loadWishlistFromStorage();
-    return this.getProperties().filter(p => this.wishlist.includes(p.id));
+  isInWishlist(itemType: string, itemId: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Wishlist/check/${itemType}/${itemId}`);
   }
 
-  isInWishlist(propertyId: number): boolean {
-    this.loadWishlistFromStorage();
-    return this.wishlist.includes(propertyId);
+  getWishlistCount() {
+    return this.http.get<any>('https://localhost:7020/api/Wishlist/count');
   }
 
-  toggleWishlist(propertyId: number): boolean {
-    if (this.isInWishlist(propertyId)) {
-      this.removeFromWishlist(propertyId);
-      return false;
-    } else {
-      this.addToWishlist(propertyId);
-      return true;
-    }
+  isWishlistedSync(itemId: number): boolean {
+    return this.wishlistCache.has(itemId);
+  }
+
+  // Legacy method for backward compatibility (now returns Observable)
+  toggleWishlistLegacy(propertyId: number) {
+    return this.toggleWishlist('Property', propertyId);
   }
 
   /**
@@ -761,21 +900,8 @@ export class Data  {
 
   private isInstantBookAvailable(propertyId: number): boolean {
     // Mock implementation - in real app, this would come from property data
-    const instantBookProperties = [1, 2, 4, 7, 8]; // Property IDs with instant book
+    const instantBookProperties = [1, 2, 4, 7, 8];
     return instantBookProperties.includes(propertyId);
-  }
-
-  private saveWishlistToStorage(): void {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem('airbnb_wishlist', JSON.stringify(this.wishlist));
-    }
-  }
-
-  private loadWishlistFromStorage(): void {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const stored = localStorage.getItem('airbnb_wishlist');
-      this.wishlist = stored ? JSON.parse(stored) : [];
-    }
   }
 
   private saveBookingsToStorage(): void {
@@ -814,199 +940,199 @@ export class Data  {
     // Mock implementation - 80% of properties are available
     return Math.random() > 0.2;
   }
-   /**
-   * Calculate detailed price breakdown
-   */
-//   calculatePriceBreakdown(property: RentalProperty, checkIn: Date, checkOut: Date, guests: number): PriceBreakdown {
-//     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-//     const subtotal = property.price * nights;
-//     const cleaningFee = this.getCleaningFee(property);
-//     const serviceFee = this.calculateServiceFee(subtotal);
-//     const taxes = this.calculateTaxes(subtotal + cleaningFee + serviceFee);
-//     const total = subtotal + cleaningFee + serviceFee + taxes;
+  /**
+  * Calculate detailed price breakdown
+  */
+  //   calculatePriceBreakdown(property: RentalProperty, checkIn: Date, checkOut: Date, guests: number): PriceBreakdown {
+  //     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+  //     const subtotal = property.price * nights;
+  //     const cleaningFee = this.getCleaningFee(property);
+  //     const serviceFee = this.calculateServiceFee(subtotal);
+  //     const taxes = this.calculateTaxes(subtotal + cleaningFee + serviceFee);
+  //     const total = subtotal + cleaningFee + serviceFee + taxes;
 
-//     return {
-//       nightlyRate: property.price,
-//       nights,
-//       subtotal,
-//       cleaningFee,
-//       serviceFee,
-//       taxes,
-//       total,
-//       currency: 'USD'
-//     };
-//   }
+  //     return {
+  //       nightlyRate: property.price,
+  //       nights,
+  //       subtotal,
+  //       cleaningFee,
+  //       serviceFee,
+  //       taxes,
+  //       total,
+  //       currency: 'USD'
+  //     };
+  //   }
 
-//   /**
-//    * Process payment for a booking
-//    */
-//   processPayment(bookingRequest: BookingRequest): { success: boolean; payment?: Payment; error?: string } {
-//     const property = this.getPropertyById(bookingRequest.propertyId);
-//     if (!property) {
-//       return { success: false, error: 'Property not found' };
-//     }
+  //   /**
+  //    * Process payment for a booking
+  //    */
+  //   processPayment(bookingRequest: BookingRequest): { success: boolean; payment?: Payment; error?: string } {
+  //     const property = this.getPropertyById(bookingRequest.propertyId);
+  //     if (!property) {
+  //       return { success: false, error: 'Property not found' };
+  //     }
 
-//     // Check availability
-//     if (!this.isPropertyAvailable(property.id, bookingRequest.checkIn, bookingRequest.checkOut)) {
-//       return { success: false, error: 'Property not available for selected dates' };
-//     }
+  //     // Check availability
+  //     if (!this.isPropertyAvailable(property.id, bookingRequest.checkIn, bookingRequest.checkOut)) {
+  //       return { success: false, error: 'Property not available for selected dates' };
+  //     }
 
-//     // Calculate price
-//     const priceBreakdown = this.calculatePriceBreakdown(
-//       property,
-//       bookingRequest.checkIn,
-//       bookingRequest.checkOut,
-//       bookingRequest.guests
-//     );
+  //     // Calculate price
+  //     const priceBreakdown = this.calculatePriceBreakdown(
+  //       property,
+  //       bookingRequest.checkIn,
+  //       bookingRequest.checkOut,
+  //       bookingRequest.guests
+  //     );
 
-//     // Validate payment method
-//     const paymentMethod = this.getPaymentMethodById(bookingRequest.paymentMethodId);
-//     if (!paymentMethod) {
-//       return { success: false, error: 'Invalid payment method' };
-//     }
+  //     // Validate payment method
+  //     const paymentMethod = this.getPaymentMethodById(bookingRequest.paymentMethodId);
+  //     if (!paymentMethod) {
+  //       return { success: false, error: 'Invalid payment method' };
+  //     }
 
-//     // Simulate payment processing
-//     const paymentSuccess = this.simulatePaymentProcessing(paymentMethod, priceBreakdown.total);
+  //     // Simulate payment processing
+  //     const paymentSuccess = this.simulatePaymentProcessing(paymentMethod, priceBreakdown.total);
 
-//     if (paymentSuccess) {
-//       // Create booking
-//       const booking = this.createBooking({
-//         propertyId: bookingRequest.propertyId,
-//         userId: 1, // Current user ID
-//         checkIn: bookingRequest.checkIn,
-//         checkOut: bookingRequest.checkOut,
-//         guests: bookingRequest.guests,
-//         totalPrice: priceBreakdown.total,
-//         status: 'confirmed'
-//       });
+  //     if (paymentSuccess) {
+  //       // Create booking
+  //       const booking = this.createBooking({
+  //         propertyId: bookingRequest.propertyId,
+  //         userId: 1, // Current user ID
+  //         checkIn: bookingRequest.checkIn,
+  //         checkOut: bookingRequest.checkOut,
+  //         guests: bookingRequest.guests,
+  //         totalPrice: priceBreakdown.total,
+  //         status: 'confirmed'
+  //       });
 
-//       // Create payment record
-//       const payment: Payment = {
-//         id: this.generatePaymentId(),
-//         bookingId: booking.id,
-//         amount: priceBreakdown.total,
-//         currency: 'USD',
-//         status: 'completed',
-//         paymentMethodId: bookingRequest.paymentMethodId,
-//         createdAt: new Date(),
-//         processedAt: new Date()
-//       };
+  //       // Create payment record
+  //       const payment: Payment = {
+  //         id: this.generatePaymentId(),
+  //         bookingId: booking.id,
+  //         amount: priceBreakdown.total,
+  //         currency: 'USD',
+  //         status: 'completed',
+  //         paymentMethodId: bookingRequest.paymentMethodId,
+  //         createdAt: new Date(),
+  //         processedAt: new Date()
+  //       };
 
-//       this.payments.push(payment);
-//       this.savePaymentsToStorage();
+  //       this.payments.push(payment);
+  //       this.savePaymentsToStorage();
 
-//       return { success: true, payment };
-//     } else {
-//       return { success: false, error: 'Payment processing failed' };
-//     }
-//   }
+  //       return { success: true, payment };
+  //     } else {
+  //       return { success: false, error: 'Payment processing failed' };
+  //     }
+  //   }
 
-//   /**
-//    * Payment method management
-//    */
-//   getPaymentMethods(): PaymentMethod[] {
-//     this.loadPaymentMethodsFromStorage();
-//     return this.paymentMethods;
-//   }
+  //   /**
+  //    * Payment method management
+  //    */
+  //   getPaymentMethods(): PaymentMethod[] {
+  //     this.loadPaymentMethodsFromStorage();
+  //     return this.paymentMethods;
+  //   }
 
-//   addPaymentMethod(paymentMethod: Omit<PaymentMethod, 'id'>): PaymentMethod {
-//     const newPaymentMethod: PaymentMethod = {
-//       ...paymentMethod,
-//       id: this.generatePaymentMethodId()
-//     };
+  //   addPaymentMethod(paymentMethod: Omit<PaymentMethod, 'id'>): PaymentMethod {
+  //     const newPaymentMethod: PaymentMethod = {
+  //       ...paymentMethod,
+  //       id: this.generatePaymentMethodId()
+  //     };
 
-//     // If this is the first payment method, set as default
-//     if (this.paymentMethods.length === 0) {
-//       newPaymentMethod.isDefault = true;
-//     }
+  //     // If this is the first payment method, set as default
+  //     if (this.paymentMethods.length === 0) {
+  //       newPaymentMethod.isDefault = true;
+  //     }
 
-//     this.paymentMethods.push(newPaymentMethod);
-//     this.savePaymentMethodsToStorage();
-//     return newPaymentMethod;
-//   }
+  //     this.paymentMethods.push(newPaymentMethod);
+  //     this.savePaymentMethodsToStorage();
+  //     return newPaymentMethod;
+  //   }
 
-//   setDefaultPaymentMethod(paymentMethodId: number): void {
-//     this.paymentMethods.forEach(method => {
-//       method.isDefault = method.id === paymentMethodId;
-//     });
-//     this.savePaymentMethodsToStorage();
-//   }
+  //   setDefaultPaymentMethod(paymentMethodId: number): void {
+  //     this.paymentMethods.forEach(method => {
+  //       method.isDefault = method.id === paymentMethodId;
+  //     });
+  //     this.savePaymentMethodsToStorage();
+  //   }
 
-//   removePaymentMethod(paymentMethodId: number): boolean {
-//     const index = this.paymentMethods.findIndex(m => m.id === paymentMethodId);
-//     if (index > -1) {
-//       const wasDefault = this.paymentMethods[index].isDefault;
-//       this.paymentMethods.splice(index, 1);
+  //   removePaymentMethod(paymentMethodId: number): boolean {
+  //     const index = this.paymentMethods.findIndex(m => m.id === paymentMethodId);
+  //     if (index > -1) {
+  //       const wasDefault = this.paymentMethods[index].isDefault;
+  //       this.paymentMethods.splice(index, 1);
 
-//       // If we removed the default, set a new default
-//       if (wasDefault && this.paymentMethods.length > 0) {
-//         this.paymentMethods[0].isDefault = true;
-//       }
+  //       // If we removed the default, set a new default
+  //       if (wasDefault && this.paymentMethods.length > 0) {
+  //         this.paymentMethods[0].isDefault = true;
+  //       }
 
-//       this.savePaymentMethodsToStorage();
-//       return true;
-//     }
-//     return false;
-//   }
+  //       this.savePaymentMethodsToStorage();
+  //       return true;
+  //     }
+  //     return false;
+  //   }
 
-//   getPaymentMethodById(id: number): PaymentMethod | undefined {
-//     return this.paymentMethods.find(method => method.id === id);
-//   }
+  //   getPaymentMethodById(id: number): PaymentMethod | undefined {
+  //     return this.paymentMethods.find(method => method.id === id);
+  //   }
 
-//   // PRIVATE HELPER METHODS
+  //   // PRIVATE HELPER METHODS
 
-//   private getCleaningFee(property: RentalProperty): number {
-//     // Base cleaning fee + property size factor
-//     return 50 + (property.bedrooms * 10);
-//   }
+  //   private getCleaningFee(property: RentalProperty): number {
+  //     // Base cleaning fee + property size factor
+  //     return 50 + (property.bedrooms * 10);
+  //   }
 
-//   private calculateServiceFee(subtotal: number): number {
-//     // Airbnb-like service fee: 14% of subtotal
-//     return subtotal * 0.14;
-//   }
+  //   private calculateServiceFee(subtotal: number): number {
+  //     // Airbnb-like service fee: 14% of subtotal
+  //     return subtotal * 0.14;
+  //   }
 
-//   private calculateTaxes(amount: number): number {
-//     // Simplified tax calculation (8%)
-//     return amount * 0.08;
-//   }
+  //   private calculateTaxes(amount: number): number {
+  //     // Simplified tax calculation (8%)
+  //     return amount * 0.08;
+  //   }
 
-//   private simulatePaymentProcessing(paymentMethod: PaymentMethod, amount: number): boolean {
-//     // Simulate payment processing - 95% success rate
-//     // In real app, this would integrate with Stripe, PayPal, etc.
-//     return Math.random() > 0.05;
-//   }
+  //   private simulatePaymentProcessing(paymentMethod: PaymentMethod, amount: number): boolean {
+  //     // Simulate payment processing - 95% success rate
+  //     // In real app, this would integrate with Stripe, PayPal, etc.
+  //     return Math.random() > 0.05;
+  //   }
 
-//   private generatePaymentId(): number {
-//     return Math.max(0, ...this.payments.map(p => p.id)) + 1;
-//   }
+  //   private generatePaymentId(): number {
+  //     return Math.max(0, ...this.payments.map(p => p.id)) + 1;
+  //   }
 
-//   private generatePaymentMethodId(): number {
-//     return Math.max(0, ...this.paymentMethods.map(p => p.id)) + 1;
-//   }
+  //   private generatePaymentMethodId(): number {
+  //     return Math.max(0, ...this.paymentMethods.map(p => p.id)) + 1;
+  //   }
 
-//   private savePaymentMethodsToStorage(): void {
-//     if (typeof window !== 'undefined' && window.localStorage) {
-//       localStorage.setItem('airbnb_payment_methods', JSON.stringify(this.paymentMethods));
-//     }
-//   }
+  //   private savePaymentMethodsToStorage(): void {
+  //     if (typeof window !== 'undefined' && window.localStorage) {
+  //       localStorage.setItem('airbnb_payment_methods', JSON.stringify(this.paymentMethods));
+  //     }
+  //   }
 
-//   private loadPaymentMethodsFromStorage(): void {
-//     if (typeof window !== 'undefined' && window.localStorage) {
-//       const stored = localStorage.getItem('airbnb_payment_methods');
-//       this.paymentMethods = stored ? JSON.parse(stored) : this.paymentMethods;
-//     }
-//   }
+  //   private loadPaymentMethodsFromStorage(): void {
+  //     if (typeof window !== 'undefined' && window.localStorage) {
+  //       const stored = localStorage.getItem('airbnb_payment_methods');
+  //       this.paymentMethods = stored ? JSON.parse(stored) : this.paymentMethods;
+  //     }
+  //   }
 
-//   private savePaymentsToStorage(): void {
-//     if (typeof window !== 'undefined' && window.localStorage) {
-//       localStorage.setItem('airbnb_payments', JSON.stringify(this.payments));
-//     }
-//   }
+  //   private savePaymentsToStorage(): void {
+  //     if (typeof window !== 'undefined' && window.localStorage) {
+  //       localStorage.setItem('airbnb_payments', JSON.stringify(this.payments));
+  //     }
+  //   }
 
-//   private loadPaymentsFromStorage(): void {
-//     if (typeof window !== 'undefined' && window.localStorage) {
-//       const stored = localStorage.getItem('airbnb_payments');
-//       this.payments = stored ? JSON.parse(stored) : [];
-//     }
-// }
+  //   private loadPaymentsFromStorage(): void {
+  //     if (typeof window !== 'undefined' && window.localStorage) {
+  //       const stored = localStorage.getItem('airbnb_payments');
+  //       this.payments = stored ? JSON.parse(stored) : [];
+  //     }
+  // }
 }

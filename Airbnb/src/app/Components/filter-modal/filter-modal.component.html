@@ -1,0 +1,210 @@
+<div class="modal-overlay" [class.open]="isOpen" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="modal-header">
+            <button class="close-btn" (click)="onClose()">×</button>
+            <h2>Filters</h2>
+            <div class="spacer"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="modal-content">
+            <!-- Recommended for you -->
+            <section class="filter-section">
+                <h3>Recommended for you</h3>
+                <div class="recommended-grid">
+                    <div class="rec-card" [class.selected]="bookingOptions.instantBook"
+                        (click)="toggleBookingOption('instantBook')">
+                        <div class="rec-icon">⚡</div>
+                        <div class="rec-label">Instant Book</div>
+                    </div>
+                    <div class="rec-card" [class.selected]="bookingOptions.selfCheckIn"
+                        (click)="toggleBookingOption('selfCheckIn')">
+                        <div class="rec-icon">🔑</div>
+                        <div class="rec-label">Self check-in</div>
+                    </div>
+                    <div class="rec-card" [class.selected]="amenities.washer"
+                        (click)="amenities.washer = !amenities.washer">
+                        <div class="rec-icon">🧺</div>
+                        <div class="rec-label">Washer</div>
+                    </div>
+                    <div class="rec-card" [class.selected]="amenities.wifi" (click)="amenities.wifi = !amenities.wifi">
+                        <div class="rec-icon">📶</div>
+                        <div class="rec-label">Wifi</div>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Type of place -->
+            <section class="filter-section">
+                <h3>Type of place</h3>
+                <div class="checkbox-group">
+                    <label class="checkbox-row">
+                        <div class="checkbox-text">
+                            <span class="label">Entire place</span>
+                            <span class="desc">A place all to yourself</span>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="typeOfPlace.entirePlace">
+                    </label>
+                    <label class="checkbox-row">
+                        <div class="checkbox-text">
+                            <span class="label">Private room</span>
+                            <span class="desc">Your own room in a home or hotel, plus some shared common spaces</span>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="typeOfPlace.privateRoom">
+                    </label>
+                    <label class="checkbox-row">
+                        <div class="checkbox-text">
+                            <span class="label">Shared room</span>
+                            <span class="desc">A sleeping space and common areas that may be shared with others</span>
+                        </div>
+                        <input type="checkbox" [(ngModel)]="typeOfPlace.sharedRoom">
+                    </label>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Price Range -->
+            <section class="filter-section">
+                <h3>Price range</h3>
+                <p class="subtitle">Nightly prices before fees and taxes</p>
+                <div class="price-inputs">
+                    <div class="input-group">
+                        <label>Minimum</label>
+                        <div class="input-wrapper">
+                            <span>$</span>
+                            <input type="number" [(ngModel)]="priceRange.min">
+                        </div>
+                    </div>
+                    <div class="dash">–</div>
+                    <div class="input-group">
+                        <label>Maximum</label>
+                        <div class="input-wrapper">
+                            <span>$</span>
+                            <input type="number" [(ngModel)]="priceRange.max">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Rooms and beds -->
+            <section class="filter-section">
+                <h3>Rooms and beds</h3>
+                <div class="counter-row">
+                    <div class="counter-label">Bedrooms</div>
+                    <div class="counter-controls">
+                        <button class="counter-btn" [class.disabled]="roomsAndBeds.bedrooms === 0"
+                            (click)="updateCounter('bedrooms', -1)">−</button>
+                        <span class="counter-value">{{ roomsAndBeds.bedrooms === 0 ? 'Any' : roomsAndBeds.bedrooms + '+'
+                            }}</span>
+                        <button class="counter-btn" (click)="updateCounter('bedrooms', 1)">+</button>
+                    </div>
+                </div>
+                <div class="counter-row">
+                    <div class="counter-label">Beds</div>
+                    <div class="counter-controls">
+                        <button class="counter-btn" [class.disabled]="roomsAndBeds.beds === 0"
+                            (click)="updateCounter('beds', -1)">−</button>
+                        <span class="counter-value">{{ roomsAndBeds.beds === 0 ? 'Any' : roomsAndBeds.beds + '+'
+                            }}</span>
+                        <button class="counter-btn" (click)="updateCounter('beds', 1)">+</button>
+                    </div>
+                </div>
+                <div class="counter-row">
+                    <div class="counter-label">Bathrooms</div>
+                    <div class="counter-controls">
+                        <button class="counter-btn" [class.disabled]="roomsAndBeds.bathrooms === 0"
+                            (click)="updateCounter('bathrooms', -1)">−</button>
+                        <span class="counter-value">{{ roomsAndBeds.bathrooms === 0 ? 'Any' : roomsAndBeds.bathrooms +
+                            '+' }}</span>
+                        <button class="counter-btn" (click)="updateCounter('bathrooms', 1)">+</button>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Amenities -->
+            <section class="filter-section">
+                <h3>Amenities</h3>
+                <div class="amenities-grid">
+                    <label class="checkbox-simple">
+                        <input type="checkbox" [(ngModel)]="amenities.wifi"> Wifi
+                    </label>
+                    <label class="checkbox-simple">
+                        <input type="checkbox" [(ngModel)]="amenities.kitchen"> Kitchen
+                    </label>
+                    <label class="checkbox-simple">
+                        <input type="checkbox" [(ngModel)]="amenities.washer"> Washer
+                    </label>
+                    <label class="checkbox-simple">
+                        <input type="checkbox" [(ngModel)]="amenities.dryer"> Dryer
+                    </label>
+                    <label class="checkbox-simple">
+                        <input type="checkbox" [(ngModel)]="amenities.airConditioning"> Air conditioning
+                    </label>
+                    <label class="checkbox-simple">
+                        <input type="checkbox" [(ngModel)]="amenities.heating"> Heating
+                    </label>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Booking options -->
+            <section class="filter-section">
+                <h3>Booking options</h3>
+                <div class="pills-row">
+                    <button class="pill-btn" [class.selected]="bookingOptions.instantBook"
+                        (click)="toggleBookingOption('instantBook')">
+                        <span class="pill-icon">⚡</span> Instant Book
+                    </button>
+                    <button class="pill-btn" [class.selected]="bookingOptions.selfCheckIn"
+                        (click)="toggleBookingOption('selfCheckIn')">
+                        <span class="pill-icon">🔑</span> Self check-in
+                    </button>
+                    <button class="pill-btn" [class.selected]="bookingOptions.allowsPets"
+                        (click)="toggleBookingOption('allowsPets')">
+                        <span class="pill-icon">🐾</span> Allows pets
+                    </button>
+                </div>
+            </section>
+
+            <hr>
+
+            <!-- Standout stays -->
+            <section class="filter-section">
+                <h3>Standout stays</h3>
+                <div class="standout-grid">
+                    <div class="standout-card" [class.selected]="standoutStays.guestFavorite"
+                        (click)="toggleStandout('guestFavorite')">
+                        <div class="standout-icon">👑</div>
+                        <div class="standout-content">
+                            <div class="standout-title">Guest favorite</div>
+                            <div class="standout-desc">The most loved homes on Airbnb</div>
+                        </div>
+                    </div>
+                    <div class="standout-card" [class.selected]="standoutStays.luxe" (click)="toggleStandout('luxe')">
+                        <div class="standout-icon">💎</div>
+                        <div class="standout-content">
+                            <div class="standout-title">Luxe</div>
+                            <div class="standout-desc">Luxury homes with elevated design</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+            <button class="clear-btn" (click)="clearAll()">Clear all</button>
+            <button class="show-btn" (click)="onApply()">Show homes</button>
+        </div>
+    </div>
+</div>
