@@ -18,7 +18,7 @@
       (activeFiltersChange)="onActiveFiltersChange($event)">
     </app-search-bar>
 
-    <app-category-bar (categorySelect)="onCategorySelect($event)" (openFilters)="openFilters()">
+    <app-category-bar (openFilters)="openFilters()">
     </app-category-bar>
 
     <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">

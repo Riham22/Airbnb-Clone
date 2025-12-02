@@ -1,0 +1,156 @@
+.personal-info-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 48px 24px;
+    margin-top: 80px;
+}
+
+.breadcrumbs {
+    font-size: 14px;
+    color: #717171;
+    margin-bottom: 32px;
+}
+
+.breadcrumbs a {
+    color: #222222;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.separator {
+    margin: 0 8px;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 48px;
+    color: #222222;
+}
+
+.info-item {
+    border-bottom: 1px solid #dddddd;
+    padding: 24px 0;
+}
+
+.info-item:first-child {
+    border-top: 1px solid #dddddd;
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.info-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222222;
+}
+
+.edit-btn {
+    background: none;
+    border: none;
+    color: #222222;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+}
+
+.info-value {
+    font-size: 16px;
+    color: #717171;
+}
+
+.edit-form {
+    margin-top: 16px;
+}
+
+.form-desc {
+    font-size: 14px;
+    color: #717171;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+    flex: 1;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    color: #717171;
+    margin-bottom: 4px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #b0b0b0;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #222222;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #222222;
+    box-shadow: 0 0 0 1px #222222;
+}
+
+.save-btn {
+    background: #222222;
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.save-btn:hover {
+    background: #000000;
+}
+
+.loading-state {
+    display: flex;
+    justify-content: center;
+    padding: 48px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #222222;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

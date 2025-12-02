@@ -147,11 +147,11 @@ export class AuthService {
   // ------------------------
   // SIGNUP (returns TEXT)
   // ------------------------
- signup(data: any) {
-  return this.http.post(`${this.apiUrl}/Register`, data, {
-    responseType: 'text' as 'json'
-  });
-}
+  signup(data: any) {
+    return this.http.post(`${this.apiUrl}/Register`, data, {
+      responseType: 'text' as 'json'
+    });
+  }
 
 
   // ------------------------
@@ -206,5 +206,15 @@ export class AuthService {
 
   getCurrentUser() {
     return this.currentUser.value;
+  }
+
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+
+    // Check for Admin role (case-sensitive)
+    return user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] === 'Admin' ||
+      user.role === 'Admin' ||
+      user.Role === 'Admin';
   }
 }

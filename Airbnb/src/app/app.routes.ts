@@ -43,6 +43,48 @@ export const routes: Routes = [
         data: { roles: ['host', 'admin'] }
       },
       {
+        path: 'wishlists',
+        loadComponent: () => import('./Components/wish-list/wish-list').then(m => m.WishlistComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'trips',
+        loadComponent: () => import('./Components/booking/booking').then(m => m.Booking),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./Components/messages/messages').then(m => m.MessagesComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./Components/notifications/notifications').then(m => m.NotificationsComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'account',
+        loadComponent: () => import('./Components/user-profile/user-profile').then(m => m.UserProfile),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'account-personal-info',
+        loadComponent: () => import('./Components/personal-info/personal-info').then(m => m.PersonalInfoComponent),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'help',
+        loadComponent: () => import('./Components/help-center/help-center').then(m => m.HelpCenterComponent)
+      },
+      {
+        path: 'gift-cards',
+        loadComponent: () => import('./Components/gift-cards/gift-cards').then(m => m.GiftCardsComponent)
+      },
+      {
+        path: 'host-experience',
+        loadComponent: () => import('./Components/host-experience/host-experience').then(m => m.HostExperienceComponent)
+      },
+      {
         path: 'admin',
         loadComponent: () => import('./Components/admin-dashboard/admin-dashboard').then(m => m.AdminDashboardComponent),
         canActivate: [AuthGuard, RoleGuard],

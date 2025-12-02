@@ -12,6 +12,12 @@ import { Experience } from '../../Models/experience';
 import { Service } from '../../Models/service';
 import { DateRange } from '../../Models/DateRange';
 
+// Menu item type definition
+export type MenuItem =
+  | { label: string; icon: string; route: string; action?: never; separator?: never }
+  | { label: string; icon: string; action: string; route?: never; separator?: never }
+  | { separator: true; label?: never; icon?: never; route?: never; action?: never };
+
 @Component({
   selector: 'app-search-bar',
   standalone: true,
@@ -799,14 +805,22 @@ export class SearchComponent implements OnInit {
     this.activePanel = null;
   }
 
-  get menuItems() {
+  get menuItems(): MenuItem[] {
     if (this.isAuthenticated) {
-      return [
+      const items: MenuItem[] = [
         { label: 'Messages', icon: '💬', route: '/messages' },
         { label: 'Notifications', icon: '🔔', route: '/notifications' },
         { label: 'Trips', icon: '✈️', route: '/trips' },
         { label: 'Wishlists', icon: '❤️', route: '/wishlists' },
-        { label: 'Account', icon: '👤', route: '/account' },
+        { label: 'Account', icon: '👤', route: '/account' }
+      ];
+
+      // Add Admin Dashboard for admin users
+      if (this.authService.isAdmin()) {
+        items.push({ label: 'Admin Dashboard', icon: '⚙️', route: '/admin' });
+      }
+
+      items.push(
         { separator: true },
         { label: 'Become a Host', icon: '🏠', route: '/become-host' },
         { label: 'Host an experience', icon: '🌟', route: '/host-experience' },
@@ -818,7 +832,9 @@ export class SearchComponent implements OnInit {
           icon: '🚪',
           action: 'logout'
         }
-      ];
+      );
+
+      return items;
     } else {
       return [
         { label: 'Become a Host', icon: '🏠', route: '/become-host' },

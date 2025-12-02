@@ -1,17 +1,4 @@
 <div class="category-bar-container">
-    <!-- Categories List -->
-    <div class="categories-wrapper">
-        <div class="categories-list">
-            <div class="category-item" *ngFor="let category of categories"
-                [class.selected]="selectedCategory === category.name" (click)="selectCategory(category.name)">
-                <div class="category-icon">
-                    <img [src]="category.icon" [alt]="category.name" width="24" height="24">
-                </div>
-                <span class="category-name">{{ category.name }}</span>
-            </div>
-        </div>
-    </div>
-
     <!-- Filters Button -->
     <div class="filters-button-wrapper">
         <button class="filters-btn" (click)="onOpenFilters()">

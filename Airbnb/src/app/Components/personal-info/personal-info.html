@@ -1,0 +1,115 @@
+<div class="personal-info-container">
+    <div class="breadcrumbs">
+        <a routerLink="/account">Account</a>
+        <span class="separator">&gt;</span>
+        <span class="current">Personal Info</span>
+    </div>
+
+    <h1 class="page-title">Personal Info</h1>
+
+    <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+    </div>
+
+    <div *ngIf="!loading && user" class="info-list">
+        <!-- Name -->
+        <div class="info-item">
+            <div class="info-header">
+                <div class="info-label">Legal name</div>
+                <button class="edit-btn" (click)="editingName ? stopEditing('name') : startEditing('name')">
+                    {{ editingName ? 'Cancel' : 'Edit' }}
+                </button>
+            </div>
+
+            <div *ngIf="!editingName" class="info-value">
+                {{ user.firstName }} {{ user.lastName }}
+            </div>
+
+            <div *ngIf="editingName" class="edit-form">
+                <p class="form-desc">This is the name on your travel document, which could be a license or a passport.
+                </p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First name</label>
+                        <input type="text" [(ngModel)]="user.firstName">
+                    </div>
+                    <div class="form-group">
+                        <label>Last name</label>
+                        <input type="text" [(ngModel)]="user.lastName">
+                    </div>
+                </div>
+                <button class="save-btn" (click)="saveField('name')">Save</button>
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="info-item">
+            <div class="info-header">
+                <div class="info-label">Email address</div>
+                <button class="edit-btn" (click)="editingEmail ? stopEditing('email') : startEditing('email')">
+                    {{ editingEmail ? 'Cancel' : 'Edit' }}
+                </button>
+            </div>
+
+            <div *ngIf="!editingEmail" class="info-value">
+                {{ user.email }}
+            </div>
+
+            <div *ngIf="editingEmail" class="edit-form">
+                <p class="form-desc">Use an address you’ll always have access to.</p>
+                <div class="form-group">
+                    <label>Email address</label>
+                    <input type="email" [(ngModel)]="user.email">
+                </div>
+                <button class="save-btn" (click)="saveField('email')">Save</button>
+            </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="info-item">
+            <div class="info-header">
+                <div class="info-label">Phone number</div>
+                <button class="edit-btn" (click)="editingPhone ? stopEditing('phone') : startEditing('phone')">
+                    {{ editingPhone ? 'Cancel' : 'Add' }}
+                </button>
+            </div>
+
+            <div *ngIf="!editingPhone" class="info-value">
+                {{ user.phoneNumber || 'Not provided' }}
+            </div>
+
+            <div *ngIf="editingPhone" class="edit-form">
+                <p class="form-desc">Add a number so confirmed guests and Airbnb can get in touch. You can add other
+                    numbers and choose how they’re used.</p>
+                <div class="form-group">
+                    <label>Phone number</label>
+                    <input type="tel" [(ngModel)]="user.phoneNumber">
+                </div>
+                <button class="save-btn" (click)="saveField('phone')">Save</button>
+            </div>
+        </div>
+
+        <!-- Address -->
+        <div class="info-item">
+            <div class="info-header">
+                <div class="info-label">Address</div>
+                <button class="edit-btn" (click)="editingAddress ? stopEditing('address') : startEditing('address')">
+                    {{ editingAddress ? 'Cancel' : 'Edit' }}
+                </button>
+            </div>
+
+            <div *ngIf="!editingAddress" class="info-value">
+                {{ user.address || 'Not provided' }}
+            </div>
+
+            <div *ngIf="editingAddress" class="edit-form">
+                <p class="form-desc">Use a permanent address where you can receive mail.</p>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" [(ngModel)]="user.address">
+                </div>
+                <button class="save-btn" (click)="saveField('address')">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
