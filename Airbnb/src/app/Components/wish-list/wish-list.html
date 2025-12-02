@@ -1,0 +1,72 @@
+<div class="wishlist-container">
+  <!-- Main View: Grid of Wishlists -->
+  <div *ngIf="!selectedWishlist" class="wishlists-grid-view">
+    <div class="header">
+      <h1>Wishlists</h1>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+    </div>
+
+    <div *ngIf="!loading && wishlists.length === 0" class="empty-state">
+      <h2>Create your first wishlist</h2>
+      <p>As you search, click the heart icon to save your favorite places and Experiences to a wishlist.</p>
+    </div>
+
+    <div *ngIf="!loading && wishlists.length > 0" class="wishlists-grid">
+      <div *ngFor="let list of wishlists" class="wishlist-card" (click)="openWishlist(list)">
+        <div class="card-cover">
+          <img [src]="list.coverImage" [alt]="list.name" class="cover-img">
+        </div>
+        <div class="card-details">
+          <h3>{{ list.name }}</h3>
+          <p>{{ list.itemCount }} saved</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View: Selected Wishlist -->
+  <div *ngIf="selectedWishlist" class="wishlist-detail-view">
+    <div class="detail-header">
+      <button class="back-btn" (click)="backToAll()">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+          focusable="false"
+          style="display: block; fill: none; height: 16px; width: 16px; stroke: currentcolor; stroke-width: 3; overflow: visible;">
+          <g fill="none">
+            <path
+              d="m20 28-11.29289322-11.2928932c-.39052429-.3905243-.39052429-1.0236893 0-1.4142136l11.29289322-11.2928932">
+            </path>
+          </g>
+        </svg>
+      </button>
+      <h1>{{ selectedWishlist.name }}</h1>
+    </div>
+
+    <div class="listings-grid">
+      <div *ngFor="let item of selectedWishlist.listings" class="listing-card">
+        <div class="listing-image">
+          <img [src]="item.itemImageUrl" [alt]="item.itemTitle">
+          <button class="remove-btn" (click)="removeFromWishlist(item.itemId, $event)">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+              focusable="false"
+              style="display: block; fill: currentcolor; height: 24px; width: 24px; stroke: white; stroke-width: 2; overflow: visible;">
+              <path
+                d="M16 28c7-4.73 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.58.68-4.95 2.05L16 8.1l-2.05-2.05a6.98 6.98 0 0 0-9.9 0A6.98 6.98 0 0 0 2 11c0 7 7 12.27 14 17z">
+              </path>
+            </svg>
+          </button>
+        </div>
+        <div class="listing-info">
+          <div class="listing-header">
+            <h3>{{ item.itemLocation }}</h3>
+            <span class="rating">★ {{ item.itemRating }}</span>
+          </div>
+          <p class="listing-title">{{ item.itemTitle }}</p>
+          <p class="listing-price"><strong>${{ item.itemPrice }}</strong> night</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

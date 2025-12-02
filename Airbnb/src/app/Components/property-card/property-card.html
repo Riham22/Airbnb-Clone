@@ -1,0 +1,86 @@
+<!-- Enhanced Property Card Template -->
+<div class="property-card" (click)="onCardClick()">
+  <div class="property-image-container">
+    <img [src]="property.imageUrl" alt="{{ property.name }}" class="property-image" (error)="handleImageError()"
+      loading="lazy" />
+
+    <!-- Property Type Badge -->
+    <div class="property-type" *ngIf="property.type">
+      {{ property.type }}
+    </div>
+
+    <button class="wishlist-button" (click)="toggleWishlist($event)" type="button" aria-label="Add to wishlist"
+      [attr.aria-pressed]="isWishlisted">
+      <svg [class.filled]="isWishlisted" viewBox="0 0 32 32" aria-hidden="true">
+        <path
+          d="M16 28c7-4.733 14-10 14-17 0-1.792-.683-3.583-2.05-4.85-1.367-1.367-3.158-2.15-4.95-2.15-1.791 0-3.583.783-4.95 2.15l-2.05 2.083-2.05-2.083c-1.367-1.367-3.158-2.15-4.95-2.15-1.792 0-3.583.783-4.95 2.15-1.367 1.267-2.05 3.058-2.05 4.85 0 7 7 12.267 14 17z">
+        </path>
+      </svg>
+    </button>
+
+    <!-- Image indicators -->
+    <div class="image-indicators" *ngIf="showImageIndicators && property.images && property.images.length > 1">
+      <span *ngFor="let indicator of getImageIndicators(); let i = index" class="indicator" [class.active]="i === 0">
+      </span>
+    </div>
+  </div>
+
+  <div class="property-content">
+    <!-- Property badges -->
+    <div class="property-badges" *ngIf="getSuperhostStatus() || isInstantBook()">
+      <span class="superhost-badge" *ngIf="getSuperhostStatus()">SUPERHOST</span>
+      <span class="instant-book-badge" *ngIf="isInstantBook()">INSTANT BOOK</span>
+    </div>
+
+    <!-- Property header with title and rating -->
+    <div class="property-header">
+      <h3 class="property-title">{{ property.name }}</h3>
+      <div class="property-rating" *ngIf="property.rating">
+        <span class="rating-star">★</span>
+        <span class="rating-value">{{ property.rating }}</span>
+      </div>
+    </div>
+
+    <!-- Property location -->
+    <p class="property-location">{{ property.location }}</p>
+
+    <!-- Property features -->
+    <div class="property-features">
+      <span class="property-feature" *ngIf="property.maxGuests">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm6 0a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-9 9v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2">
+          </path>
+        </svg>
+        {{ property.maxGuests }} guests
+      </span>
+      <span class="property-feature" *ngIf="property.bedrooms">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        </svg>
+        {{ property.bedrooms }} bedrooms
+      </span>
+      <span class="property-feature" *ngIf="property.beds">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        </svg>
+        {{ property.beds }} beds
+      </span>
+    </div>
+
+    <!-- Available dates -->
+    <p class="property-dates" *ngIf="property.availableDates">
+      {{ property.availableDates }}
+    </p>
+
+    <!-- Price information -->
+    <div class="property-price-container">
+      <p class="property-price">
+        <strong>${{ property.price }}</strong> night
+      </p>
+      <p class="property-total-price" *ngIf="property.totalPrice">
+        ${{ property.totalPrice }} total
+      </p>
+    </div>
+  </div>
+</div>

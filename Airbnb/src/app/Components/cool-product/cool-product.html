@@ -1,0 +1,26 @@
+<table>
+  @for(cp of listOfProducts; track cp.CoolName){
+
+<tr>
+<th>Name</th>
+<th>Image</th>
+<th>Quantity</th>
+<th>Price</th>
+</tr>
+<tr>
+  <td>
+  {{cp.CoolName}}
+  </td>
+  <td>
+    <img [src]="cp.Img" alt="{{cp.CoolName}}" width="100">
+  </td>
+  <td [ngClass]="{'bg-danger':cp.Quantity===0}">
+    {{cp.Quantity}}
+  </td>
+  <td>
+    {{cp.Quantity | clac}}
+  </td>
+</tr>
+}
+
+</table>

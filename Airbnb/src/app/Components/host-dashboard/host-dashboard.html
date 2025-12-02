@@ -1,0 +1,328 @@
+<div class="host-dashboard">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1>Host Dashboard</h1>
+        <p class="header-subtitle">Manage your listings and bookings</p>
+      </div>
+      <button class="btn-primary" (click)="toggleCreateListing()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 1a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2H9v5a1 1 0 1 1-2 0V9H2a1 1 0 0 1 0-2h5V2a1 1 0 0 1 1-1z"/>
+        </svg>
+        {{ showCreateListing ? 'Cancel' : 'Create Listing' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Create Listing Modal -->
+  <div *ngIf="showCreateListing" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Create a new listing</h2>
+        <button class="close-btn" (click)="toggleCreateListing()">×</button>
+      </div>
+      <div class="modal-body">
+        <form class="listing-form">
+          <div class="form-section">
+            <h3>Basic Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="title">Listing Title</label>
+                <input type="text" id="title" placeholder="Cozy apartment in city center">
+              </div>
+              <div class="form-group">
+                <label for="type">Property Type</label>
+                <select id="type">
+                  <option value="">Select property type</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="house">House</option>
+                  <option value="condo">Condo</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea id="description" rows="4" placeholder="Describe your space..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Pricing</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="price">Price per night ($)</label>
+                <input type="number" id="price" placeholder="100">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="toggleCreateListing()">Cancel</button>
+            <button type="submit" class="btn-primary">Create Listing</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <nav class="dashboard-nav">
+    <div class="nav-tabs">
+      <button
+        class="nav-tab"
+        [class.active]="activeTab === 'overview'"
+        (click)="setActiveTab('overview')">
+        Overview
+      </button>
+      <button
+        class="nav-tab"
+        [class.active]="activeTab === 'listings'"
+        (click)="setActiveTab('listings')">
+        Listings
+      </button>
+      <button
+        class="nav-tab"
+        [class.active]="activeTab === 'bookings'"
+        (click)="setActiveTab('bookings')">
+        Bookings
+      </button>
+      <button
+        class="nav-tab"
+        [class.active]="activeTab === 'earnings'"
+        (click)="setActiveTab('earnings')">
+        Earnings
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="dashboard-content">
+
+    <!-- Overview Tab -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content overview-tab">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon earnings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.78-1.18 2.73-3.12 3.16z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats?.totalEarnings || 0 | currency }}</h3>
+            <p>Total Earnings</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bookings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17 11V3H7v4H3v14h8v-4h2v4h8V11h-4zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm4 4H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats?.totalBookings || 0 }}</h3>
+            <p>Total Bookings</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon listings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats?.activeListings || 0 }}</h3>
+            <p>Active Listings</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon occupancy">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats?.occupancyRate || 0 }}%</h3>
+            <p>Occupancy Rate</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="activity-section">
+        <div class="section-header">
+          <h2>Recent Activity</h2>
+          <a routerLink="/bookings" class="see-all">See all</a>
+        </div>
+        <div class="activity-list">
+          <div *ngFor="let booking of bookings.slice(0, 5)" class="activity-item">
+            <div class="activity-avatar">
+              <img [src]="booking.guestAvatar" alt="booking.guestName" />
+            </div>
+            <div class="activity-details">
+              <p><strong>{{ booking.guestName }}</strong> booked <strong>{{ booking.listingName }}</strong></p>
+              <span class="activity-date">{{ booking.checkIn }} - {{ booking.checkOut }}</span>
+            </div>
+            <div class="activity-amount">
+              {{ booking.totalPrice| currency }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listings Tab -->
+    <div *ngIf="activeTab === 'listings'" class="tab-content listings-tab">
+      <div class="section-header">
+        <h2>Your Listings ({{ listings.length }})</h2>
+      </div>
+
+      <div class="listings-grid">
+        <div *ngFor="let listing of listings" class="listing-card">
+          <div class="listing-image">
+            <img alt="" [src]="listing.images[0]"   />
+            <div class="listing-status" [class.active]="listing.status === 'active'">
+              {{ listing.status }}
+            </div>
+          </div>
+          <div class="listing-content">
+            <h3 class="listing-title">{{ listing.title }}</h3>
+            <p class="listing-location">{{ listing.location }}</p>
+            <div class="listing-stats">
+              <span class="listing-price">{{ listing.price | currency }} <small>night</small></span>
+              <div class="listing-meta">
+                <span>⭐ {{ listing.rating }}</span>
+                <span>·</span>
+                <span>{{ listing.reviewCount }} reviews</span>
+              </div>
+            </div>
+            <div class="listing-actions">
+              <button
+                class="status-toggle"
+                [class.active]="listing.status === 'active'"
+                (click)="toggleListingStatus(listing.id, listing.status)">
+                {{ listing.status === 'active' ? 'Active' : 'Inactive' }}
+              </button>
+              <button class="btn-edit">Edit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bookings Tab -->
+<div *ngIf="activeTab === 'bookings'" class="tab-content bookings-tab">
+  <div class="section-header">
+    <h2>Bookings</h2>
+    <div class="booking-filters">
+      <select title="g" class="filter-select">
+        <option>All bookings</option>
+        <option>Upcoming</option>
+        <option>Current</option>
+        <option>Completed</option>
+        <option>Cancelled</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="bookings-list">
+    <div *ngFor="let booking of bookings" class="booking-card">
+      <div class="booking-header">
+        <div class="booking-guest">
+          <img alt="" [src]="booking.guestAvatar"  class="guest-avatar" />
+          <div class="guest-info">
+            <h4>{{ booking.guestName }}</h4>
+            <p>{{ booking.guests }} guests · {{ booking.listingName }}</p>
+          </div>
+        </div>
+        <div class="booking-status" [class]="booking.status">
+          {{ booking.status }}
+        </div>
+      </div>
+
+      <div class="booking-details">
+        <div class="booking-dates">
+          <div class="date-group">
+            <label>Check-in</label>
+            <strong>{{ booking.checkIn }}</strong>
+          </div>
+          <div class="date-group">
+            <label>Check-out</label>
+            <strong>{{ booking.checkOut }}</strong>
+          </div>
+        </div>
+
+        <div class="booking-amount">
+          <label>Total</label>
+          <strong>{{ booking.totalPrice| currency }}</strong>
+        </div>
+      </div>
+
+      <div class="booking-actions">
+        <!-- Use 'upcoming' instead of 'pending' -->
+        <button
+          *ngIf="booking.status === 'upcoming'"
+          class="btn-confirm"
+          (click)="confirmBooking(booking.id)">
+          Confirm Booking
+        </button>
+        <button class="btn-message">Message</button>
+        <button
+          *ngIf="booking.status === 'upcoming'"
+          class="btn-cancel"
+          (click)="cancelBooking(booking.id)">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Earnings Tab -->
+    <div *ngIf="activeTab === 'earnings'" class="tab-content earnings-tab">
+      <div class="earnings-header">
+        <div class="earnings-summary">
+          <h2>Earnings</h2>
+          <div class="earnings-amount">{{ stats?.totalEarnings | currency }}</div>
+          <p>Total earnings all time</p>
+        </div>
+        <div class="earnings-period">
+          <select title="l" class="period-select">
+            <option>Last 30 days</option>
+            <option>Last 3 months</option>
+            <option>Last 12 months</option>
+            <option>All time</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="earnings-chart">
+        <div class="chart-placeholder">
+          <p>Earnings chart would be displayed here</p>
+        </div>
+      </div>
+
+      <div class="earnings-breakdown">
+        <h3>Earnings Breakdown</h3>
+        <div class="breakdown-list">
+          <div class="breakdown-item">
+            <span class="breakdown-label">Completed stays</span>
+            <span class="breakdown-amount">{{ stats?.totalBookings }} bookings</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">Average nightly rate</span>
+            <span class="breakdown-amount">{{ stats?.averageRating | currency }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="breakdown-label">Occupancy rate</span>
+            <span class="breakdown-amount">{{ stats?.occupancyRate || 0 }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
