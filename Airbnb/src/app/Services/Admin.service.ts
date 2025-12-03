@@ -15,6 +15,8 @@ export class AdminService {
   private statsSubject = new BehaviorSubject<AdminStats>(this.getInitialStats());
   private usersSubject = new BehaviorSubject<AdminUser[]>([]);
   private listingsSubject = new BehaviorSubject<AdminListing[]>([]);
+  private servicesSubject = new BehaviorSubject<any[]>([]);
+  private experiencesSubject = new BehaviorSubject<any[]>([]);
   private loadingSubject = new BehaviorSubject<boolean>(false);
 
   constructor(private http: HttpClient) { }
@@ -33,8 +35,8 @@ export class AdminService {
         next: (users) => {
           totalUsers = users.length || 0;
 
-          // Get properties count
-          this.http.get<any>(`${this.apiUrl}/properties`).subscribe({
+          // Get properties count - FIXED: Use /Properties (capital P)
+          this.http.get<any>(`${this.apiUrl}/Properties`).subscribe({
             next: (props) => {
               totalListings = props.length || 0;
 
@@ -167,7 +169,8 @@ export class AdminService {
   // Listings Management - Connected to backend
   getListings(): Observable<AdminListing[]> {
     this.setLoading(true);
-    return this.http.get<any>(`${this.apiUrl}/properties`).pipe(
+    // FIXED: Use /Properties (capital P)
+    return this.http.get<any>(`${this.apiUrl}/Properties`).pipe(
       map((properties: any[]) => {
         // Map backend properties to AdminListing format
         const adminListings: AdminListing[] = properties.map(p => ({
@@ -218,10 +221,9 @@ export class AdminService {
   }
 
   deleteListing(listingId: string): Observable<boolean> {
-    // Backend doesn't have delete property endpoint yet
-    // Update local state only
-    return new Observable<boolean>(observer => {
-      setTimeout(() => {
+    // FIXED: Use real API endpoint
+    return this.http.delete(`${this.apiUrl}/Properties/${listingId}`).pipe(
+      tap(() => {
         const listings = this.listingsSubject.value.filter(listing => listing.id !== listingId);
         this.listingsSubject.next(listings);
 
@@ -231,11 +233,54 @@ export class AdminService {
           ...stats,
           totalListings: stats.totalListings - 1
         });
+      }),
+      map(() => true)
+    );
+  }
 
-        observer.next(true);
-        observer.complete();
-      }, 400);
-    });
+  // Services Management
+  getServices(): Observable<any[]> {
+    this.setLoading(true);
+    return this.http.get<any>(`${this.apiUrl}/Services`).pipe(
+      map((services: any[]) => {
+        // Map if necessary, for now passing raw data
+        this.servicesSubject.next(services);
+        return services;
+      }),
+      tap(() => this.setLoading(false))
+    );
+  }
+
+  deleteService(serviceId: string): Observable<boolean> {
+    return this.http.delete(`${this.apiUrl}/Services/${serviceId}`).pipe(
+      tap(() => {
+        const services = this.servicesSubject.value.filter(s => s.id !== serviceId);
+        this.servicesSubject.next(services);
+      }),
+      map(() => true)
+    );
+  }
+
+  // Experiences Management
+  getExperiences(): Observable<any[]> {
+    this.setLoading(true);
+    return this.http.get<any>(`${this.apiUrl}/Experience`).pipe(
+      map((experiences: any[]) => {
+        this.experiencesSubject.next(experiences);
+        return experiences;
+      }),
+      tap(() => this.setLoading(false))
+    );
+  }
+
+  deleteExperience(experienceId: string): Observable<boolean> {
+    return this.http.delete(`${this.apiUrl}/Experience/${experienceId}`).pipe(
+      tap(() => {
+        const experiences = this.experiencesSubject.value.filter(e => e.id !== experienceId);
+        this.experiencesSubject.next(experiences);
+      }),
+      map(() => true)
+    );
   }
 
   // Loading state
@@ -259,5 +304,172 @@ export class AdminService {
       weeklyRevenue: 0,
       activeBookings: 0
     };
+  }
+
+  // TEST METHODS - Check if endpoints work
+  testPropertiesEndpoint(): void {
+    console.log('🧪 Testing /api/Properties endpoint...');
+    this.http.get(`${this.apiUrl}/Properties`).subscribe({
+      next: (data) => {
+        console.log('✅ Properties endpoint works!');
+        console.log('📦 Properties data:', data);
+        console.log('📊 Number of properties:', Array.isArray(data) ? data.length : 'Not an array');
+      },
+      error: (err) => {
+        console.error('❌ Properties endpoint failed:', err);
+      }
+    });
+  }
+
+  testServicesEndpoint(): void {
+    console.log('🧪 Testing /api/Services endpoint...');
+    this.http.get(`${this.apiUrl}/Services`).subscribe({
+      next: (data) => {
+        console.log('✅ Services endpoint works!');
+        console.log('📦 Services data:', data);
+        console.log('📊 Number of services:', Array.isArray(data) ? data.length : 'Not an array');
+      },
+      error: (err) => {
+        console.error('❌ Services endpoint failed:', err);
+      }
+    });
+  }
+
+  testExperienceEndpoint(): void {
+    console.log('🧪 Testing /api/Experience endpoint...');
+    this.http.get(`${this.apiUrl}/Experience`).subscribe({
+      next: (data) => {
+        console.log('✅ Experience endpoint works!');
+        console.log('📦 Experience data:', data);
+        console.log('📊 Number of experiences:', Array.isArray(data) ? data.length : 'Not an array');
+      },
+      error: (err) => {
+        console.error('❌ Experience endpoint failed:', err);
+      }
+    });
+  }
+
+  testAllEndpoints(): void {
+    console.log('🧪 Testing all endpoints...');
+    this.testPropertiesEndpoint();
+    this.testServicesEndpoint();
+    this.testExperienceEndpoint();
+  }
+
+  // CREATE METHODS
+  createUser(userData: any): Observable<any> {
+    // Using Auth API for registration
+    return this.http.post(`${this.apiUrl}/Account/Register`, userData, { responseType: 'text' }).pipe(
+      tap(() => {
+        // Refresh users list
+        this.getUsers().subscribe();
+      })
+    );
+  }
+
+  createListing(listingData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Properties`, listingData).pipe(
+      tap(() => {
+        this.getListings().subscribe();
+      })
+    );
+  }
+
+  uploadPropertyImage(propertyId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('Images', file);
+    // Set first image as cover by default
+    formData.append('CoverImageIndex', '0');
+
+    return this.http.post(`${this.apiUrl}/Properties/${propertyId}/images`, formData);
+  }
+
+  uploadServiceImage(serviceId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('Images', file);
+    return this.http.post(`${this.apiUrl}/Services/${serviceId}/images`, formData);
+  }
+
+  uploadExperienceImage(experienceId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('Images', file);
+    return this.http.post(`${this.apiUrl}/Experience/${experienceId}/images`, formData);
+  }
+
+  createService(serviceData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Services`, serviceData).pipe(
+      tap(() => {
+        this.getServices().subscribe();
+      })
+    );
+  }
+
+  createExperience(experienceData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Experience`, experienceData).pipe(
+      tap(() => {
+        this.getExperiences().subscribe();
+      })
+    );
+  }
+
+  updateUserRole(userId: string, newRole: string): Observable<any> {
+    // Note: Assuming there's an endpoint for this, or we mock it for now
+    // If no specific endpoint exists, we might need to use a generic update or mock it
+    console.log(`Mocking role update for user ${userId} to ${newRole}`);
+    return new Observable(observer => {
+      setTimeout(() => {
+        const users = this.usersSubject.value.map(u =>
+          u.id === userId ? { ...u, role: newRole as 'guest' | 'host' | 'admin' } : u
+        );
+        this.usersSubject.next(users);
+        observer.next({ success: true });
+        observer.complete();
+      }, 500);
+    });
+  }
+
+  // Category Management Methods
+  getServiceCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Services/categories`);
+  }
+
+  getExperienceCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ExpCatogray`);
+  }
+
+  getExperienceSubCategories(categoryId?: number): Observable<any[]> {
+    const url = categoryId
+      ? `${this.apiUrl}/ExpSubCatogray?categoryId=${categoryId}`
+      : `${this.apiUrl}/ExpSubCatogray`;
+    return this.http.get<any[]>(url);
+  }
+
+  // For properties, we'll fetch from the existing properties endpoint and extract unique types/categories
+  getPropertyTypesFromData(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(
+      map((properties: any[]) => {
+        const typesMap = new Map<number, any>();
+        properties.forEach(p => {
+          if (p.propertyType && !typesMap.has(p.propertyType.id)) {
+            typesMap.set(p.propertyType.id, p.propertyType);
+          }
+        });
+        return Array.from(typesMap.values());
+      })
+    );
+  }
+
+  getPropertyCategoriesFromData(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(
+      map((properties: any[]) => {
+        const categoriesMap = new Map<number, any>();
+        properties.forEach(p => {
+          if (p.propertyCategory && !categoriesMap.has(p.propertyCategory.id)) {
+            categoriesMap.set(p.propertyCategory.id, p.propertyCategory);
+          }
+        });
+        return Array.from(categoriesMap.values());
+      })
+    );
   }
 }
