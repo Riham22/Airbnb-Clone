@@ -45,6 +45,11 @@ export const routes: Routes = [
         data: { roles: ['admin'] }
       },
       {
+        path: 'account-settings',
+        loadComponent: () => import('./Components/personal-account/personal-account.component').then(m => m.PersonalAccountComponent),
+        canActivate: [AuthGuard]
+      },
+      {
         path: '**',
         redirectTo: ''
       }
