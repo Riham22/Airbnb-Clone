@@ -12,6 +12,12 @@ import { Experience } from '../../Models/experience';
 import { Service } from '../../Models/service';
 import { DateRange } from '../../Models/DateRange';
 
+// Menu item type definition
+export type MenuItem =
+  | { label: string; icon: string; route: string; action?: never; separator?: never }
+  | { label: string; icon: string; action: string; route?: never; separator?: never }
+  | { separator: true; label?: never; icon?: never; route?: never; action?: never };
+
 @Component({
   selector: 'app-search-bar',
   standalone: true,
@@ -30,7 +36,7 @@ export class SearchComponent implements OnInit {
   // Filter subjects
   private guestFilter$ = new BehaviorSubject<GuestCounts | null>(null);
   private locationFilter$ = new BehaviorSubject<string>('');
-private dateFilter$ = new BehaviorSubject<DateRange>({start: null, end: null, flexible: false});  private propertyTypeFilter$ = new BehaviorSubject<string>('all');
+  private dateFilter$ = new BehaviorSubject<DateRange>({ start: null, end: null, flexible: false }); private propertyTypeFilter$ = new BehaviorSubject<string>('all');
 
   // Simplified property types - only 3 main categories
   propertyTypes = [
@@ -43,11 +49,11 @@ private dateFilter$ = new BehaviorSubject<DateRange>({start: null, end: null, fl
   selectedPropertyType = 'all';
 
   currentFilters = {
-  location: '',
-  dates: { start: null as Date | null, end: null as Date | null, flexible: false } as DateRange,
-  guests: { adults: 0, children: 0, infants: 0, pets: 0 },
-  propertyType: 'all'
-};
+    location: '',
+    dates: { start: null as Date | null, end: null as Date | null, flexible: false } as DateRange,
+    guests: { adults: 0, children: 0, infants: 0, pets: 0 },
+    propertyType: 'all'
+  };
 
   activePanel: string | null = null;
 
@@ -150,7 +156,7 @@ private dateFilter$ = new BehaviorSubject<DateRange>({start: null, end: null, fl
     private dataService: Data,
     private router: Router,
     private authService: AuthService
-  ) {}
+  ) { }
 
   ngOnInit() {
     // Load all data types
@@ -275,27 +281,27 @@ private dateFilter$ = new BehaviorSubject<DateRange>({start: null, end: null, fl
     this.dateFilter$.next(this.currentFilters.dates);
     this.activeFiltersChange.emit(this.currentFilters);
   }
-private getNextWeek(): { start: Date, end: Date } {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() + 1); // Start from tomorrow
+  private getNextWeek(): { start: Date, end: Date } {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1); // Start from tomorrow
 
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 6); // 7 days total (1 week)
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6); // 7 days total (1 week)
 
-  return { start: startDate, end: endDate };
-}
+    return { start: startDate, end: endDate };
+  }
 
-// Missing method: getNextMonth
-private getNextMonth(): { start: Date, end: Date } {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() + 1); // Start from tomorrow
+  // Missing method: getNextMonth
+  private getNextMonth(): { start: Date, end: Date } {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1); // Start from tomorrow
 
-  const endDate = new Date(startDate);
-  endDate.setMonth(endDate.getMonth() + 1);
-  endDate.setDate(endDate.getDate() - 1); // Last day of next month
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setDate(endDate.getDate() - 1); // Last day of next month
 
-  return { start: startDate, end: endDate };
-}
+    return { start: startDate, end: endDate };
+  }
 
   private getNextWeekend(): { start: Date, end: Date } {
     const today = new Date();
@@ -320,7 +326,11 @@ private getNextMonth(): { start: Date, end: Date } {
 
   // Load all data types
   private loadAllData(): void {
-    this.properties = this.dataService.getProperties();
+    this.dataService.properties$.subscribe(props => {
+      this.properties = props;
+      // Update listings when properties load
+      this.filteredPropertiesChange.emit(this.getAllListings());
+    });
 
     // Check if experiences and services methods exist
     if ((this.dataService as any).getExperiences) {
@@ -400,7 +410,7 @@ private getNextMonth(): { start: Date, end: Date } {
 
   // Enhanced location matching for all types
   private isListingInLocation(listing: any, location: string): boolean {
-    const locationMap: {[key: string]: string[]} = {
+    const locationMap: { [key: string]: string[] } = {
       'new_york': ['New York', 'NY', 'New York City'],
       'los_angeles': ['Los Angeles', 'LA', 'California', 'Malibu'],
       'miami': ['Miami', 'Florida'],
@@ -519,12 +529,12 @@ private getNextMonth(): { start: Date, end: Date } {
   }
 
   // Get months for year view
-  getMonthsForYear(): {name: string, number: number}[] {
+  getMonthsForYear(): { name: string, number: number }[] {
     return [
-      {name: 'Jan', number: 0}, {name: 'Feb', number: 1}, {name: 'Mar', number: 2},
-      {name: 'Apr', number: 3}, {name: 'May', number: 4}, {name: 'Jun', number: 5},
-      {name: 'Jul', number: 6}, {name: 'Aug', number: 7}, {name: 'Sep', number: 8},
-      {name: 'Oct', number: 9}, {name: 'Nov', number: 10}, {name: 'Dec', number: 11}
+      { name: 'Jan', number: 0 }, { name: 'Feb', number: 1 }, { name: 'Mar', number: 2 },
+      { name: 'Apr', number: 3 }, { name: 'May', number: 4 }, { name: 'Jun', number: 5 },
+      { name: 'Jul', number: 6 }, { name: 'Aug', number: 7 }, { name: 'Sep', number: 8 },
+      { name: 'Oct', number: 9 }, { name: 'Nov', number: 10 }, { name: 'Dec', number: 11 }
     ];
   }
 
@@ -703,8 +713,8 @@ private getNextMonth(): { start: Date, end: Date } {
   isToday(date: Date): boolean {
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   }
 
   // Quick date selections
@@ -795,14 +805,22 @@ private getNextMonth(): { start: Date, end: Date } {
     this.activePanel = null;
   }
 
-  get menuItems() {
+  get menuItems(): MenuItem[] {
     if (this.isAuthenticated) {
-      return [
+      const items: MenuItem[] = [
         { label: 'Messages', icon: '💬', route: '/messages' },
         { label: 'Notifications', icon: '🔔', route: '/notifications' },
         { label: 'Trips', icon: '✈️', route: '/trips' },
         { label: 'Wishlists', icon: '❤️', route: '/wishlists' },
-        { label: 'Account', icon: '👤', route: '/account' },
+        { label: 'Account', icon: '👤', route: '/account' }
+      ];
+
+      // Add Admin Dashboard for admin users
+      if (this.authService.isAdmin()) {
+        items.push({ label: 'Admin Dashboard', icon: '⚙️', route: '/admin' });
+      }
+
+      items.push(
         { separator: true },
         { label: 'Become a Host', icon: '🏠', route: '/become-host' },
         { label: 'Host an experience', icon: '🌟', route: '/host-experience' },
@@ -814,7 +832,9 @@ private getNextMonth(): { start: Date, end: Date } {
           icon: '🚪',
           action: 'logout'
         }
-      ];
+      );
+
+      return items;
     } else {
       return [
         { label: 'Become a Host', icon: '🏠', route: '/become-host' },
@@ -887,19 +907,19 @@ private getNextMonth(): { start: Date, end: Date } {
   // Check if any basic filters are active
   get areBasicFiltersActive(): boolean {
     return !!this.currentFilters.location ||
-           !!this.currentFilters.dates.start ||
-           !!this.currentFilters.dates.end ||
-           this.getTotalGuests() > 0;
+      !!this.currentFilters.dates.start ||
+      !!this.currentFilters.dates.end ||
+      this.getTotalGuests() > 0;
   }
 
   // Check if any advanced filters are active
   get areAdvancedFiltersActive(): boolean {
     return this.priceRange.min > 0 ||
-           this.priceRange.max < 1000 ||
-           this.selectedAmenities.length > 0 ||
-           this.selectedCategories.length > 0 ||
-           this.instantBookOnly ||
-           this.superhostOnly;
+      this.priceRange.max < 1000 ||
+      this.selectedAmenities.length > 0 ||
+      this.selectedCategories.length > 0 ||
+      this.instantBookOnly ||
+      this.superhostOnly;
   }
 
   // Check if any filters are active (basic or advanced)

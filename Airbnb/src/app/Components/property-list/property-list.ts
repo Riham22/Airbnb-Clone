@@ -181,7 +181,7 @@ export class PropertyList implements OnInit, OnChanges {
   superhostOnly = false;
   showAdvancedFilters = false;
 
-  constructor(private dataService: Data) {}
+  constructor(private dataService: Data) { }
 
   ngOnInit() {
     this.loadAllData();
@@ -195,30 +195,30 @@ export class PropertyList implements OnInit, OnChanges {
   }
 
   // In your PropertyList component, make sure you're loading properties correctly
-private loadAllData(): void {
-  // Get properties, experiences, and services from data service
-  const rentalProperties = this.dataService.getProperties();
-  const experiences = (this.dataService as any).getExperiences ? (this.dataService as any).getExperiences() : [];
-  const services = (this.dataService as any).getServices ? (this.dataService as any).getServices() : [];
+  private loadAllData(): void {
+    // Get properties, experiences, and services from data service
+    const rentalProperties = this.dataService.getProperties();
+    const experiences = (this.dataService as any).getExperiences ? (this.dataService as any).getExperiences() : [];
+    const services = (this.dataService as any).getServices ? (this.dataService as any).getServices() : [];
 
-  console.log('Rental Properties:', rentalProperties); // Debug log
-  console.log('Experiences:', experiences); // Debug log
-  console.log('Services:', services); // Debug log
+    console.log('Rental Properties:', rentalProperties); // Debug log
+    console.log('Experiences:', experiences); // Debug log
+    console.log('Services:', services); // Debug log
 
-  // Combine all listings
-  this.allListings = [
-    ...rentalProperties,
-    ...experiences,
-    ...services
-  ];
+    // Combine all listings
+    this.allListings = [
+      ...rentalProperties,
+      ...experiences,
+      ...services
+    ];
 
-  console.log('All Listings:', this.allListings); // Debug log
+    console.log('All Listings:', this.allListings); // Debug log
 
-  // If input properties are provided, use them instead
-  if (this.properties && this.properties.length > 0) {
-    this.allListings = this.properties;
+    // If input properties are provided, use them instead
+    if (this.properties && this.properties.length > 0) {
+      this.allListings = this.properties;
+    }
   }
-}
   private updateAllCategories(): void {
     const filteredProperties = this.applyFilters(this.allListings);
 
@@ -307,7 +307,7 @@ private loadAllData(): void {
   }
 
   private matchesLocation(property: any, location: string): boolean {
-    const locationMap: {[key: string]: string[]} = {
+    const locationMap: { [key: string]: string[] } = {
       'new_york': ['New York', 'NY', 'New York City', 'Manhattan', 'Brooklyn'],
       'los_angeles': ['Los Angeles', 'LA', 'California', 'Malibu', 'Santa Monica'],
       'miami': ['Miami', 'Florida', 'Miami Beach'],
@@ -368,13 +368,13 @@ private loadAllData(): void {
   }
 
   private filterPropertiesByType(properties: any[], propertyType: string): any[] {
-  console.log(`Filtering properties for type: ${propertyType}`); // Debug
-  const filtered = properties.filter(p =>
-    p.type === 'property' && p.propertyType === propertyType
-  );
-  console.log(`Found ${filtered.length} properties for ${propertyType}:`, filtered); // Debug
-  return filtered;
-}
+    console.log(`Filtering properties for type: ${propertyType}`); // Debug
+    const filtered = properties.filter(p =>
+      p.type === 'property' && p.propertyType === propertyType
+    );
+    console.log(`Found ${filtered.length} properties for ${propertyType}:`, filtered); // Debug
+    return filtered;
+  }
 
   private filterExperiencesByCategory(properties: any[], category: string): any[] {
     return properties.filter(p =>
@@ -439,8 +439,8 @@ private loadAllData(): void {
   // Airbnb-like utility methods
   getTotalResults(): number {
     return this.categories.reduce((total, category) => total + category.properties.length, 0) +
-           this.experiences.reduce((total, exp) => total + exp.properties.length, 0) +
-           this.services.reduce((total, service) => total + service.properties.length, 0);
+      this.experiences.reduce((total, exp) => total + exp.properties.length, 0) +
+      this.services.reduce((total, service) => total + service.properties.length, 0);
   }
 
   // UPDATED: Return array of objects instead of strings
@@ -535,7 +535,7 @@ private loadAllData(): void {
   }
 
   private getLocationDisplay(location: string): string {
-    const locationMap: {[key: string]: string} = {
+    const locationMap: { [key: string]: string } = {
       'new_york': 'New York',
       'los_angeles': 'Los Angeles',
       'miami': 'Miami',
@@ -555,7 +555,7 @@ private loadAllData(): void {
   }
 
   private formatPropertyType(type: string): string {
-    const typeMap: {[key: string]: string} = {
+    const typeMap: { [key: string]: string } = {
       'property': 'Properties',
       'experience': 'Experiences',
       'service': 'Services',
@@ -571,9 +571,9 @@ private loadAllData(): void {
   // Check if any category has items
   hasAnyCategoryItems(): boolean {
     return this.categories.some(cat => cat.properties.length > 0) ||
-           this.experiences.some(exp => exp.properties.length > 0) ||
-           this.services.some(service => service.properties.length > 0) ||
-           this.listingTypes.some(type => type.properties.length > 0);
+      this.experiences.some(exp => exp.properties.length > 0) ||
+      this.services.some(service => service.properties.length > 0) ||
+      this.listingTypes.some(type => type.properties.length > 0);
   }
 
   // Check if specific category has items
@@ -649,14 +649,14 @@ private loadAllData(): void {
   // Check if listing is in wishlist
   isInWishlist(listing: any): boolean {
     // This would integrate with your wishlist service
-    return this.dataService.isInWishlist ? this.dataService.isInWishlist(listing.id) : false;
+    return this.dataService.isWishlistedSync ? this.dataService.isWishlistedSync(listing.id) : false;
   }
 
   // Toggle wishlist
   toggleWishlist(listing: any): void {
     const wasInWishlist = this.isInWishlist(listing);
     if (this.dataService.toggleWishlist) {
-      const isNowInWishlist = this.dataService.toggleWishlist(listing.id);
+      const isNowInWishlist = this.dataService.toggleWishlist('property', listing.id);
       this.wishlistChange.emit({
         listing,
         inWishlist: isNowInWishlist,

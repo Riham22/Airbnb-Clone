@@ -9,7 +9,7 @@ export interface RentalProperty {
   reviewCount: number;
   imageUrl: string;
   images: string[];
-  type: string; 
+  type: string;
   propertyType: string;
   maxGuests: number;
   bedrooms: number;
@@ -25,4 +25,6 @@ export interface RentalProperty {
   description: string;
   highlights: string[];
   reviews: Review[];
+  availableDates?: string;
+  totalPrice?: number;
 }
