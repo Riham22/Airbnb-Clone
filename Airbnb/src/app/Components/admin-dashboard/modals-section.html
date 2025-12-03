@@ -1,0 +1,172 @@
+<!-- Add Listing Modal -->
+<div class="modal-overlay" *ngIf="showAddListingModal">
+    <div class="modal-content">
+        <h3>Add New Listing</h3>
+        <form (ngSubmit)="addListing()">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" [(ngModel)]="newListing.name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" [(ngModel)]="newListing.description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label>Price per Night</label>
+                <input type="number" [(ngModel)]="newListing.price" name="price" required>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" [(ngModel)]="newListing.location" name="location" required>
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select [(ngModel)]="newListing.type" name="type">
+                    <option value="apartment">Apartment</option>
+                    <option value="house">House</option>
+                    <option value="villa">Villa</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Max Guests</label>
+                <input type="number" [(ngModel)]="newListing.maxGuests" name="maxGuests" required>
+            </div>
+            <div class="form-group">
+                <label>Bedrooms</label>
+                <input type="number" [(ngModel)]="newListing.bedrooms" name="bedrooms" required>
+            </div>
+            <div class="form-group">
+                <label>Beds</label>
+                <input type="number" [(ngModel)]="newListing.beds" name="beds" required>
+            </div>
+            <div class="form-group">
+                <label>Bathrooms</label>
+                <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" required>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="text" [(ngModel)]="newListing.imageUrl" name="imageUrl"
+                    placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Create Listing</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal-overlay" *ngIf="showAddServiceModal">
+    <div class="modal-content">
+        <h3>Add New Service</h3>
+        <form (ngSubmit)="addService()">
+            <div class="form-group">
+                <label>Service Name</label>
+                <input type="text" [(ngModel)]="newService.name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" [(ngModel)]="newService.description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <input type="text" [(ngModel)]="newService.category" name="category" required>
+            </div>
+            <div class="form-group">
+                <label>Price</label>
+                <input type="number" [(ngModel)]="newService.price" name="price" required>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" [(ngModel)]="newService.location" name="location" required>
+            </div>
+            <div class="form-group">
+                <label>Duration</label>
+                <input type="text" [(ngModel)]="newService.duration" name="duration" required>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="text" [(ngModel)]="newService.imageUrl" name="imageUrl"
+                    placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Create Service</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Experience Modal -->
+<div class="modal-overlay" *ngIf="showAddExperienceModal">
+    <div class="modal-content">
+        <h3>Add New Experience</h3>
+        <form (ngSubmit)="addExperience()">
+            <div class="form-group">
+                <label>Experience Name</label>
+                <input type="text" [(ngModel)]="newExperience.name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" [(ngModel)]="newExperience.description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <input type="text" [(ngModel)]="newExperience.category" name="category" required>
+            </div>
+            <div class="form-group">
+                <label>Price</label>
+                <input type="number" [(ngModel)]="newExperience.price" name="price" required>
+            </div>
+            <div class="form-group">
+                <label>Duration</label>
+                <input type="text" [(ngModel)]="newExperience.duration" name="duration" required>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" [(ngModel)]="newExperience.location" name="location" required>
+            </div>
+            <div class="form-group">
+                <label>Max Participants</label>
+                <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required>
+            </div>
+            <div class="form-group">
+                <label>Meeting Point</label>
+                <input type="text" [(ngModel)]="newExperience.meetingPoint" name="meetingPoint" required>
+            </div>
+            <div class="form-group">
+                <label>Image URL</label>
+                <input type="text" [(ngModel)]="newExperience.imageUrl" name="imageUrl"
+                    placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Create Experience</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Change Role Modal -->
+<div class="modal-overlay" *ngIf="showChangeRoleModal">
+    <div class="modal-content">
+        <h3>Change Role for {{ selectedUserForRole?.firstName }}</h3>
+        <form (ngSubmit)="changeRole()">
+            <div class="form-group">
+                <label>Select New Role</label>
+                <select [(ngModel)]="newRoleForUser" name="newRole">
+                    <option value="guest">Guest</option>
+                    <option value="host">Host</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="closeChangeRoleModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Update Role</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</div>

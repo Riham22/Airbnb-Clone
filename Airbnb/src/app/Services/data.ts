@@ -52,12 +52,12 @@ export class Data {
           imageUrl: p.coverImageUrl,
           images: [p.coverImageUrl], // Default to cover image
           type: 'property',
-          propertyType: 'apartment', // Default
-          maxGuests: 2, // Default
-          bedrooms: 1, // Default
-          beds: 1, // Default
-          bathrooms: 1, // Default
-          amenities: [], // Default
+          propertyType: this.mapPropertyType(p.propertyType?.name || 'apartment'),
+          maxGuests: p.maxGuests || 2,
+          bedrooms: p.bedrooms || 1,
+          beds: p.beds || 1,
+          bathrooms: p.bathrooms || 1,
+          amenities: p.amenities?.map((a: any) => a.name) || [],
           host: {
             name: 'Host',
             joinedDate: '2024',
@@ -72,6 +72,16 @@ export class Data {
       },
       error: (err) => console.error('Failed to load properties', err)
     });
+  }
+
+  private mapPropertyType(backendType: string): string {
+    const type = backendType.toLowerCase();
+    if (type.includes('beach') || type.includes('coast')) return 'beach';
+    if (type.includes('city') || type.includes('apartment') || type.includes('loft')) return 'city';
+    if (type.includes('mountain') || type.includes('cabin') || type.includes('ski')) return 'mountain';
+    if (type.includes('lake') || type.includes('water')) return 'lake';
+    if (type.includes('country') || type.includes('farm') || type.includes('barn')) return 'countryside';
+    return 'city'; // Default fallback
   }
 
   getProperties(): RentalProperty[] {
