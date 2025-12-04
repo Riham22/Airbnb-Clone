@@ -22,7 +22,7 @@ export class UserService {
     // Helper to get current user's details using ID from token
     getMyProfile(): Observable<any> {
         const currentUser = this.authService.getCurrentUser();
-        // Assuming the token has an 'id' or 'sub' field. 
+        // Assuming the token has an 'id' or 'sub' field.
         // Adjust 'id' based on your actual token structure (e.g., 'userId', 'nameid', etc.)
         const userId = currentUser?.id || currentUser?.userId || currentUser?.sub;
 

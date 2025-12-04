@@ -184,7 +184,7 @@ export class AuthService {
           localStorage.setItem('token', response.token);
           localStorage.setItem('token_expiration', response.expire);
           this.isAuthenticated.next(true);
-          
+
           this.fetchUserProfile().subscribe(user => {
             if (user) {
               this.currentUser.next(user);
@@ -198,5 +198,27 @@ export class AuthService {
         throw error;
       })
     );
-  }
+  //   // Debug: Log the user object to see what's inside
+  //   console.log('🔍 Checking admin status for user:', user);
+
+  //   // Check for Admin role (case-insensitive)
+  //   const role = user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+  //     user.role ||
+  //     user.Role;
+
+  //   console.log('🔍 Found role:', role);
+
+  //   // TEMPORARY WORKAROUND: If no role claim exists, check username
+  //   if (!role) {
+  //     const username = user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || user.name || user.username;
+  //     console.log('⚠️ No role found, checking username:', username);
+  //     const isAdminByUsername = username && username.toLowerCase() === 'admin';
+  //     console.log('🔍 Is admin by username?', isAdminByUsername);
+  //     return isAdminByUsername;
+  //   }
+
+  //   console.log('🔍 Is admin by role?', role && role.toLowerCase() === 'admin');
+
+  //   return role && role.toLowerCase() === 'admin';
+   }
 }
