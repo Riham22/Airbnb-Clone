@@ -141,10 +141,10 @@ export class SearchComponent implements OnInit {
 
   selectedQuickFilters: string[] = [];
 
-  // Enhanced mobile responsiveness
+
   isMobileView = false;
 
-  // New properties for advanced filters
+
   showAdvancedFilters = false;
   priceRange = { min: 0, max: 1000 };
   selectedAmenities: string[] = [];
@@ -159,13 +159,13 @@ export class SearchComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    // Load all data types
+
     this.loadAllData();
     this.generateAvailableYears();
     this.generateAvailableDecades();
     this.checkMobileView();
 
-    // Setup enhanced filtering logic for all types
+
     combineLatest([
       this.locationFilter$,
       this.dateFilter$,
@@ -197,7 +197,10 @@ export class SearchComponent implements OnInit {
     this.authService.checkAuthentication();
   }
 
-  // Enhanced search functionality
+
+
+
+
   onSearchInput(): void {
     if (this.searchQuery.length > 2) {
       this.showSearchSuggestions = true;
@@ -816,9 +819,9 @@ export class SearchComponent implements OnInit {
       ];
 
       // Add Admin Dashboard for admin users
-      if (this.authService.isAdmin()) {
-        items.push({ label: 'Admin Dashboard', icon: '⚙️', route: '/admin' });
-      }
+      // if (this.authService.isAdmin()) {
+      //   items.push({ label: 'Admin Dashboard', icon: '⚙️', route: '/admin' });
+      // }
 
       items.push(
         { separator: true },
