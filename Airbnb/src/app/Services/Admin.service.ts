@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
+import { tap, map, switchMap, catchError } from 'rxjs/operators';
+import { AdminStats } from '../Models/AdminStats';
+import { AdminUser } from '../Models/AdminUser';
+import { AdminListing } from '../Models/AdminListing';
 
 @Injectable({
   providedIn: 'root'
@@ -20,23 +23,19 @@ export class AdminService {
   // Stats Management - Calculated from data
   getStats(): Observable<AdminStats> {
     this.setLoading(true);
-    // Calculate stats from users, properties, and bookings
     return new Observable<AdminStats>(observer => {
       let totalUsers = 0;
       let totalListings = 0;
       let totalBookings = 0;
 
-      // Get users count
       this.http.get<any>(`${this.apiUrl}/User`).subscribe({
         next: (users) => {
           totalUsers = users.length || 0;
 
-          // Get properties count - FIXED: Use /Properties (capital P)
           this.http.get<any>(`${this.apiUrl}/Properties`).subscribe({
             next: (props) => {
               totalListings = props.length || 0;
 
-              // Get bookings count (requires auth)
               this.http.get<any>(`${this.apiUrl}/Booking`).subscribe({
                 next: (bookings) => {
                   const bookingsData = bookings.data || bookings || [];
@@ -46,9 +45,9 @@ export class AdminService {
                     totalUsers,
                     totalListings,
                     totalBookings,
-                    totalRevenue: totalBookings * 150, // Estimated
+                    totalRevenue: totalBookings * 150,
                     pendingVerifications: 0,
-                    activeHosts: Math.floor(totalUsers * 0.3), // Estimated
+                    activeHosts: Math.floor(totalUsers * 0.3),
                     monthlyGrowth: 0,
                     weeklyRevenue: 0,
                     activeBookings: totalBookings
@@ -60,7 +59,6 @@ export class AdminService {
                   this.setLoading(false);
                 },
                 error: () => {
-                  // Use partial stats if bookings fail
                   const stats: AdminStats = {
                     totalUsers,
                     totalListings,
@@ -103,30 +101,32 @@ export class AdminService {
     this.setLoading(true);
     return this.http.get<any>(`${this.apiUrl}/User`).pipe(
       map((users: any[]) => {
-        // Map backend users to AdminUser format
         const adminUsers: AdminUser[] = users.map(u => ({
           id: u.id,
           email: u.email,
           firstName: u.firstName,
           lastName: u.lastName,
-          role: u.roles?.[0] || 'guest', // First role
-          joinedDate: new Date(), // Not in backend response
-          status: 'active', // Default status
-          listingsCount: 0, // Not available from backend
-          bookingsCount: 0, // Not available from backend
-          lastActive: new Date(), // Not available from backend
+          role: u.roles?.[0] || 'guest',
+          joinedDate: new Date(),
+          status: 'active',
+          listingsCount: 0,
+          bookingsCount: 0,
+          lastActive: new Date(),
           avatar: u.photoURL || ''
         }));
         this.usersSubject.next(adminUsers);
         return adminUsers;
       }),
-      tap(() => this.setLoading(false))
+      tap(() => this.setLoading(false)),
+      catchError(err => {
+        this.setLoading(false);
+        console.error('getUsers error', err);
+        return of([]);
+      })
     );
   }
 
   updateUserStatus(userId: string, status: 'active' | 'suspended'): Observable<AdminUser> {
-    // Backend doesn't have status update endpoint
-    // Update local state only
     return new Observable<AdminUser>(observer => {
       setTimeout(() => {
         const users = this.usersSubject.value.map(user =>
@@ -151,28 +151,29 @@ export class AdminService {
         const users = this.usersSubject.value.filter(user => user.id !== userId);
         this.usersSubject.next(users);
 
-        // Update stats
         const stats = this.statsSubject.value;
         this.statsSubject.next({
           ...stats,
-          totalUsers: stats.totalUsers - 1
+          totalUsers: Math.max(0, stats.totalUsers - 1)
         });
       }),
-      map(() => true)
+      map(() => true),
+      catchError(err => {
+        console.error('deleteUser error', err);
+        throw err;
+      })
     );
   }
 
   // Listings Management - Connected to backend
   getListings(): Observable<AdminListing[]> {
     this.setLoading(true);
-    // FIXED: Use /Properties (capital P)
     return this.http.get<any>(`${this.apiUrl}/Properties`).pipe(
       map((properties: any[]) => {
-        // Map backend properties to AdminListing format
         const adminListings: AdminListing[] = properties.map(p => ({
-          id: p.id.toString(),
+          id: p.id?.toString() ?? '',
           title: p.title || p.name,
-          host: 'Host', // Not available from backend
+          host: p.hostName || 'Host',
           hostId: p.hostId || '1',
           type: 'Property',
           status: p.isPublished ? 'active' : 'pending',
@@ -180,41 +181,62 @@ export class AdminService {
           location: p.city && p.country ? `${p.city}, ${p.country}` : p.location,
           rating: p.averageRating || p.rating || 0,
           reviewCount: p.reviewsCount || p.reviewCount || 0,
-          createdAt: new Date(), // Not in response
-          lastBooking: new Date(), // Not in response
+          createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+          lastBooking: p.lastBooking ? new Date(p.lastBooking) : new Date(),
           bedrooms: p.bedrooms || 0,
           bathrooms: p.bathrooms || 0,
           maxGuests: p.maxGuests || 0,
-          images: [p.coverImageUrl || p.imageUrl],
+          images: p.images?.length ? p.images.map((i: any) => i.imageUrl || i.imageURL) : [p.coverImageUrl || p.imageUrl],
           amenities: p.amenities || []
         }));
         this.listingsSubject.next(adminListings);
         return adminListings;
       }),
-      tap(() => this.setLoading(false))
+      tap(() => this.setLoading(false)),
+      catchError(err => {
+        console.error('getListings error', err);
+        this.setLoading(false);
+        return of([]);
+      })
     );
   }
 
-  updateListingStatus(listingId: string, status: string): Observable<any> {
-    // You need to create this endpoint
-    return this.http.patch(`${this.apiUrl}/Listings/${listingId}/status`, { status });
+  updateListingStatus(listingId: string, status: 'active' | 'suspended' | 'pending'): Observable<AdminListing> {
+    return new Observable<AdminListing>(observer => {
+      setTimeout(() => {
+        const listings = this.listingsSubject.value.map(listing =>
+          listing.id === listingId ? { ...listing, status, updatedAt: new Date() } : listing
+        );
+        this.listingsSubject.next(listings);
+
+        const updatedListing = listings.find(listing => listing.id === listingId);
+        if (updatedListing) {
+          observer.next(updatedListing);
+        } else {
+          observer.error(new Error('Listing not found'));
+        }
+        observer.complete();
+      }, 300);
+    });
   }
 
   deleteListing(listingId: string): Observable<boolean> {
-    // FIXED: Use real API endpoint
     return this.http.delete(`${this.apiUrl}/Properties/${listingId}`).pipe(
       tap(() => {
         const listings = this.listingsSubject.value.filter(listing => listing.id !== listingId);
         this.listingsSubject.next(listings);
 
-        // Update stats
         const stats = this.statsSubject.value;
         this.statsSubject.next({
           ...stats,
-          totalListings: stats.totalListings - 1
+          totalListings: Math.max(0, stats.totalListings - 1)
         });
       }),
-      map(() => true)
+      map(() => true),
+      catchError(err => {
+        console.error('deleteListing error', err);
+        throw err;
+      })
     );
   }
 
@@ -223,11 +245,15 @@ export class AdminService {
     this.setLoading(true);
     return this.http.get<any>(`${this.apiUrl}/Services`).pipe(
       map((services: any[]) => {
-        // Map if necessary, for now passing raw data
         this.servicesSubject.next(services);
         return services;
       }),
-      tap(() => this.setLoading(false))
+      tap(() => this.setLoading(false)),
+      catchError(err => {
+        console.error('getServices error', err);
+        this.setLoading(false);
+        return of([]);
+      })
     );
   }
 
@@ -237,7 +263,11 @@ export class AdminService {
         const services = this.servicesSubject.value.filter(s => s.id !== serviceId);
         this.servicesSubject.next(services);
       }),
-      map(() => true)
+      map(() => true),
+      catchError(err => {
+        console.error('deleteService error', err);
+        throw err;
+      })
     );
   }
 
@@ -249,7 +279,12 @@ export class AdminService {
         this.experiencesSubject.next(experiences);
         return experiences;
       }),
-      tap(() => this.setLoading(false))
+      tap(() => this.setLoading(false)),
+      catchError(err => {
+        console.error('getExperiences error', err);
+        this.setLoading(false);
+        return of([]);
+      })
     );
   }
 
@@ -259,7 +294,11 @@ export class AdminService {
         const experiences = this.experiencesSubject.value.filter(e => e.id !== experienceId);
         this.experiencesSubject.next(experiences);
       }),
-      map(() => true)
+      map(() => true),
+      catchError(err => {
+        console.error('deleteExperience error', err);
+        throw err;
+      })
     );
   }
 
@@ -337,64 +376,211 @@ export class AdminService {
   }
 
   // CREATE METHODS
+
   createUser(userData: any): Observable<any> {
-    // Using Auth API for registration
     return this.http.post(`${this.apiUrl}/Account/Register`, userData, { responseType: 'text' }).pipe(
       tap(() => {
-        // Refresh users list
         this.getUsers().subscribe();
       })
     );
   }
 
+  /**
+   * Create Property
+   * - Uses the exact fields from your DTO.
+   * - If `listingData.imageFiles` is provided (File[]), uploads them after property creation.
+   */
   createListing(listingData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Properties`, listingData).pipe(
-      tap(() => {
+    const payload = {
+      title: listingData.title,
+      description: listingData.description,
+      pricePerNight: listingData.pricePerNight,
+      currency: listingData.currency || 'USD',
+      country: listingData.country,
+      city: listingData.city,
+      address: listingData.address || '',
+      latitude: listingData.latitude ?? 0,
+      longitude: listingData.longitude ?? 0,
+      maxGuests: listingData.maxGuests,
+      bedrooms: listingData.bedrooms,
+      beds: listingData.beds ?? listingData.bedrooms ?? 0,
+      bathrooms: listingData.bathrooms,
+      allowsPets: !!listingData.allowsPets,
+      cancellationPolicy: listingData.cancellationPolicy || 'Flexible',
+      minNights: listingData.minNights ?? 1,
+      maxNights: listingData.maxNights ?? 30,
+      propertyTypeId: listingData.propertyTypeId,
+      propertyCategoryId: listingData.propertyCategoryId,
+      subCategoryId: listingData.subCategoryId ?? null,
+      amenityIds: Array.isArray(listingData.amenityIds) ? listingData.amenityIds : (listingData.amenities || [])
+    };
+
+    console.log("📤 Sending createListing payload:", payload);
+
+    return this.http.post<any>(`${this.apiUrl}/Properties`, payload).pipe(
+      switchMap((created: any) => {
+        const createdId = created?.id || created?.data?.id;
+        // if there are image files to upload, do that now
+        if (createdId && listingData.imageFiles && Array.isArray(listingData.imageFiles) && listingData.imageFiles.length) {
+          const uploads = listingData.imageFiles.map((file: File) => this.uploadPropertyImage(createdId, file));
+          return forkJoin(uploads).pipe(
+            map(results => {
+              return { created, uploads: results };
+            })
+          );
+        }
+        return of({ created });
+      }),
+      tap((res) => {
+        // Refresh listings
         this.getListings().subscribe();
+        console.log('createListing response:', res);
+      }),
+      catchError(err => {
+        console.error('createListing error', err);
+        throw err;
       })
     );
   }
 
   uploadPropertyImage(propertyId: number, file: File): Observable<any> {
     const formData = new FormData();
-    formData.append('Images', file);
-    // Set first image as cover by default
-    formData.append('CoverImageIndex', '0');
-
-    return this.http.post(`${this.apiUrl}/Properties/${propertyId}/images`, formData);
+    // backend expects field name "Images" (your screenshot indicated that)
+    formData.append("Images", file);
+    // Add CoverImageIndex if you want first file to be cover
+    formData.append("CoverImageIndex", "0");
+    return this.http.post(`${this.apiUrl}/Properties/${propertyId}/images`, formData).pipe(
+      catchError(err => {
+        console.error('uploadPropertyImage error', err);
+        throw err;
+      })
+    );
   }
 
   uploadServiceImage(serviceId: number, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('Images', file);
-    return this.http.post(`${this.apiUrl}/Services/${serviceId}/images`, formData);
+    return this.http.post(`${this.apiUrl}/Services/${serviceId}/images`, formData).pipe(
+      catchError(err => {
+        console.error('uploadServiceImage error', err);
+        throw err;
+      })
+    );
   }
 
   uploadExperienceImage(experienceId: number, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('Images', file);
-    return this.http.post(`${this.apiUrl}/Experience/${experienceId}/images`, formData);
-  }
-
-  createService(serviceData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Services`, serviceData).pipe(
-      tap(() => {
-        this.getServices().subscribe();
+    return this.http.post(`${this.apiUrl}/Experience/${experienceId}/images`, formData).pipe(
+      catchError(err => {
+        console.error('uploadExperienceImage error', err);
+        throw err;
       })
     );
   }
 
+
+
+  /**
+   * Create Service
+   * DTO fields: Title, Description, Price, Currency, PricingType, Country, City, Address, ServiceCategoryId
+   * If `serviceData.imageFiles` is provided (File[]), will upload after creation.
+   */
+  createService(serviceData: any): Observable<any> {
+    const payload = {
+      Title: serviceData.title,
+      Description: serviceData.description,
+      Price: Number(serviceData.price),
+      Currency: serviceData.currency || 'USD',
+      PricingType: serviceData.pricingType || 'PerHour',
+      Country: serviceData.country,
+      City: serviceData.city,
+      Address: serviceData.address || '',
+      ServiceCategoryId: Number(serviceData.serviceCategoryId)
+    };
+
+    console.log('📤 Sending createService payload:', payload);
+
+    return this.http.post<any>(`${this.apiUrl}/Services`, payload).pipe(
+      switchMap((created: any) => {
+        const id = created?.id || created?.data?.id;
+        if (id && serviceData.imageFiles && Array.isArray(serviceData.imageFiles) && serviceData.imageFiles.length) {
+          const uploads = serviceData.imageFiles.map((f: File) => this.uploadServiceImage(id, f));
+          return forkJoin(uploads).pipe(map(u => ({ created, uploads: u })));
+        }
+        return of({ created });
+      }),
+      tap(() => this.getServices().subscribe()),
+      catchError(err => {
+        console.error('createService error', err);
+        throw err;
+      })
+    );
+  }
+
+  /**
+   * Create Experience
+   * Uses the DTO keys you provided. If `experienceData.images` contains File objects, send them after creation.
+   */
   createExperience(experienceData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Experience`, experienceData).pipe(
-      tap(() => {
-        this.getExperiences().subscribe();
+    // Map experience payload using DTO keys you provided
+    const payload: any = {
+      name: experienceData.name,
+      location: experienceData.location,
+      manyExpYear: experienceData.manyExpYear ?? 0,
+      workName: experienceData.workName,
+      expSummary: experienceData.expSummary,
+      expAchievement: experienceData.expAchievement,
+      country: experienceData.country,
+      apartment: experienceData.apartment,
+      street: experienceData.street,
+      city: experienceData.city,
+      governorate: experienceData.governorate,
+      postalCode: experienceData.postalCode,
+      locationName: experienceData.locationName,
+      expTitle: experienceData.expTitle,
+      expDescribe: experienceData.expDescribe,
+      maximumGuest: experienceData.maximumGuest ?? 1,
+      guestPrice: experienceData.guestPrice ?? 0,
+      groupPrice: experienceData.groupPrice ?? 0,
+      durationDiscount: experienceData.durationDiscount ?? 0,
+      earlyDiscount: experienceData.earlyDiscount ?? 0,
+      groupDiscount: experienceData.groupDiscount ?? 0,
+      responsibleGuests: experienceData.responsibleGuests,
+      servingFood: experienceData.servingFood,
+      servingAlcoholic: experienceData.servingAlcoholic,
+      cancelOrder: experienceData.cancelOrder,
+      usingLanguage: experienceData.usingLanguage,
+      status: experienceData.status || 'In_Progress',
+      expCatograyId: experienceData.expCatograyId,
+      expSubCatograyId: experienceData.expSubCatograyId,
+      postedBy: experienceData.postedBy,
+      // backend expects images array objects (you provided an example with imageURL) - but if we have File[] we'll upload separately
+      images: Array.isArray(experienceData.images) ? experienceData.images.filter((i: any) => typeof i.imageURL === 'string') : [],
+      expActivities: experienceData.expActivities || []
+    };
+
+    console.log('📤 Sending createExperience payload:', payload);
+
+    return this.http.post<any>(`${this.apiUrl}/Experience`, payload).pipe(
+      switchMap((created: any) => {
+        const id = created?.id || created?.data?.id;
+        // if user passed imageFiles (File[]) -> upload them
+        if (id && experienceData.imageFiles && Array.isArray(experienceData.imageFiles) && experienceData.imageFiles.length) {
+          const uploads = experienceData.imageFiles.map((f: File) => this.uploadExperienceImage(id, f));
+          return forkJoin(uploads).pipe(map(u => ({ created, uploads: u })));
+        }
+        return of({ created });
+      }),
+      tap(() => this.getExperiences().subscribe()),
+      catchError(err => {
+        console.error('createExperience error', err);
+        throw err;
       })
     );
   }
 
   updateUserRole(userId: string, newRole: string): Observable<any> {
-    // Note: Assuming there's an endpoint for this, or we mock it for now
-    // If no specific endpoint exists, we might need to use a generic update or mock it
     console.log(`Mocking role update for user ${userId} to ${newRole}`);
     return new Observable(observer => {
       setTimeout(() => {
@@ -408,48 +594,89 @@ export class AdminService {
     });
   }
 
-  // Category Management Methods
+  // Category Management Methods - try backend first, fallback to hardcoded
   getServiceCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/Services/categories`);
+    return this.http.get<any[]>(`${this.apiUrl}/Services/categories`).pipe(
+      catchError(err => {
+        console.warn('ServiceCategory endpoint failed, returning empty array as fallback.', err);
+        return of([]);
+      })
+    );
   }
 
   getExperienceCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/ExpCatogray`);
+    return this.http.get<any[]>(`${this.apiUrl}/ExpCatogray`).pipe(
+      catchError(err => {
+        console.warn('ExpCatogray endpoint failed, returning empty array as fallback.', err);
+        return of([]);
+      })
+    );
   }
 
   getExperienceSubCategories(categoryId?: number): Observable<any[]> {
-    const url = categoryId
-      ? `${this.apiUrl}/ExpSubCatogray?categoryId=${categoryId}`
-      : `${this.apiUrl}/ExpSubCatogray`;
-    return this.http.get<any[]>(url);
-  }
-
-  // For properties, we'll fetch from the existing properties endpoint and extract unique types/categories
-  getPropertyTypesFromData(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(
-      map((properties: any[]) => {
-        const typesMap = new Map<number, any>();
-        properties.forEach(p => {
-          if (p.propertyType && !typesMap.has(p.propertyType.id)) {
-            typesMap.set(p.propertyType.id, p.propertyType);
-          }
-        });
-        return Array.from(typesMap.values());
+    const endpoint = `${this.apiUrl}/ExpSubCatogray`;
+    if (categoryId) {
+      return this.http.get<any[]>(endpoint).pipe(
+        map(subs => subs.filter(s => s.expCatograyId === categoryId)),
+        catchError(err => {
+          console.warn('ExpSubCatogray fetch failed, returning empty array.', err);
+          return of([]);
+        })
+      );
+    }
+    return this.http.get<any[]>(endpoint).pipe(
+      catchError(err => {
+        console.warn('ExpSubCatogray fetch failed, returning empty array.', err);
+        return of([]);
       })
     );
   }
 
-  getPropertyCategoriesFromData(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(
-      map((properties: any[]) => {
-        const categoriesMap = new Map<number, any>();
-        properties.forEach(p => {
-          if (p.propertyCategory && !categoriesMap.has(p.propertyCategory.id)) {
-            categoriesMap.set(p.propertyCategory.id, p.propertyCategory);
-          }
-        });
-        return Array.from(categoriesMap.values());
+  getPropertyTypes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/PropertyType`).pipe(
+      catchError(err => {
+        console.warn('PropertyType endpoint failed, returning hardcoded types.', err);
+        // fallback (same as before)
+        const types = [
+          { id: 1, name: 'Apartment', description: 'Entire apartment' },
+          { id: 2, name: 'House', description: 'Entire house' },
+          { id: 3, name: 'Villa', description: 'Luxury villa' },
+          { id: 4, name: 'Room', description: 'Private room' },
+          { id: 5, name: 'Double Room', description: 'Room with double bed' },
+          { id: 6, name: 'Single Room', description: 'Room with single bed' },
+          { id: 7, name: 'Shared Room', description: 'Shared space' },
+          { id: 8, name: 'Studio', description: 'Open plan apartment' },
+          { id: 9, name: 'Cabin', description: 'Nature cabin' },
+          { id: 10, name: 'Cottage', description: 'Cozy cottage' }
+        ];
+        return of(types);
       })
     );
+  }
+
+  getPropertyCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/PropertyCategory`).pipe(
+      catchError(err => {
+        console.warn('PropertyCategory endpoint failed, returning hardcoded categories.', err);
+        const categories = [
+          { id: 1, name: 'Beachfront', description: 'Properties right on the beach' },
+          { id: 2, name: 'City', description: 'Urban apartments and lofts' },
+          { id: 3, name: 'Countryside', description: 'Peaceful countryside retreats' },
+          { id: 4, name: 'Lakefront', description: 'Properties by the lake' },
+          { id: 5, name: 'Mansions', description: 'Luxury mansions' },
+          { id: 6, name: 'Castles', description: 'Historic castles' },
+          { id: 7, name: 'Islands', description: 'Private islands' },
+          { id: 8, name: 'Camping', description: 'Camping and glamping spots' },
+          { id: 9, name: 'Trending', description: 'Highly rated and popular properties' },
+          { id: 10, name: 'Cabins', description: 'Cozy cabins in nature' }
+        ];
+        return of(categories);
+      })
+    );
+  }
+
+  createPropertyCategory(categoryData: any): Observable<any> {
+    // Mock implementation maintained for now
+    return of({ id: Math.floor(Math.random() * 1000) + 11, ...categoryData });
   }
 }

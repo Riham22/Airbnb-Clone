@@ -19,6 +19,9 @@
 
 
   <nav class="admin-tabs">
+    <button [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')" class="tab-button">
+      📊 Overview
+    </button>
     <button [class.active]="activeTab === 'users'" (click)="setActiveTab('users')" class="tab-button">
       👥 Users
     </button>
@@ -30,6 +33,9 @@
     </button>
     <button [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')" class="tab-button">
       🏄 Experiences
+    </button>
+    <button [class.active]="activeTab === 'analytics'" (click)="setActiveTab('analytics')" class="tab-button">
+      📈 Analytics
     </button>
   </nav>
 
@@ -224,7 +230,162 @@
             <th>Price</th>
             <th>Rating</th>
             <th>Status</th>
-            <h3>No experiences found</h3>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let listing of listings">
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
+              </div>
+              <div class="listing-info">
+                <strong>{{ listing.title }}</strong>
+                <span class="listing-location">{{ listing.location }}</span>
+              </div>
+            </td>
+            <td>{{ listing.host }}</td>
+            <td>{{ listing.type }}</td>
+            <td>${{ listing.price }}</td>
+            <td>⭐ {{ listing.rating }} ({{ listing.reviewCount }})</td>
+            <td>
+              <span [class]="'status-badge ' + getListingStatusClass(listing.status)">
+                {{ listing.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button *ngIf="listing.status === 'active'" (click)="suspendListing(listing.id)" class="btn-warning"
+                  title="Suspend Listing">
+                  Suspend
+                </button>
+                <button *ngIf="listing.status === 'suspended' || listing.status === 'pending'"
+                  (click)="approveListing(listing.id)" class="btn-success" title="Approve Listing">
+                  Approve
+                </button>
+                <button (click)="deleteListing(listing.id)" class="btn-danger" title="Delete Listing">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="listings.length === 0" class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <h3>No listings found</h3>
+    </div>
+  </section>
+
+  <!-- Services Tab -->
+  <section *ngIf="activeTab === 'services'" class="tab-content">
+    <div class="section-header">
+      <h2>Service Management</h2>
+      <div class="table-actions">
+        <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
+        <input type="text" placeholder="Search services..." class="search-input">
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Provider</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let service of services">
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img [src]="service.imageUrl || service.images?.[0] || '/assets/default-service.jpg'" alt="">
+              </div>
+              <div class="listing-info">
+                <strong>{{ service.name }}</strong>
+                <span class="listing-location">{{ service.location }}</span>
+              </div>
+            </td>
+            <td>{{ service.provider?.name || 'Unknown' }}</td>
+            <td>{{ service.category }}</td>
+            <td>${{ service.price }}</td>
+            <td>⭐ {{ service.rating }} ({{ service.reviewCount }})</td>
+            <td>
+              <div class="action-buttons">
+                <button (click)="deleteService(service.id)" class="btn-danger" title="Delete Service">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="services.length === 0" class="empty-state">
+      <div class="empty-icon">🛠️</div>
+      <h3>No services found</h3>
+    </div>
+  </section>
+
+  <!-- Experiences Tab -->
+  <section *ngIf="activeTab === 'experiences'" class="tab-content">
+    <div class="section-header">
+      <h2>Experiences Management</h2>
+      <div class="table-actions">
+        <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
+        <input type="text" placeholder="Search experiences..." class="search-input">
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Experience</th>
+            <th>Host</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let experience of experiences">
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img [src]="experience.imageUrl || experience.images?.[0] || '/assets/default-experience.jpg'" alt="">
+              </div>
+              <div class="listing-info">
+                <strong>{{ experience.name }}</strong>
+                <span class="listing-location">{{ experience.location }}</span>
+              </div>
+            </td>
+            <td>{{ experience.host?.name || 'Unknown' }}</td>
+            <td>{{ experience.category }}</td>
+            <td>${{ experience.price }}</td>
+            <td>⭐ {{ experience.rating }} ({{ experience.reviewCount }})</td>
+            <td>
+              <div class="action-buttons">
+                <button (click)="deleteExperience(experience.id)" class="btn-danger" title="Delete Experience">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="experiences.length === 0" class="empty-state">
+      <div class="empty-icon">🏄</div>
+      <h3>No experiences found</h3>
     </div>
   </section>
 
@@ -320,323 +481,143 @@
           <input type="text" [(ngModel)]="newListing.location" name="location" required>
         </div>
         <div class="form-group">
-          <label>Type</label>
-          <select [(ngModel)]="newListing.type" name="type">
-            <option value="apartment">Apartment</option>
-            <option value="house">House</option>
-            <option value="villa">Villa</option>
+          <label>Property Type</label>
+          <select [(ngModel)]="newListing.propertyTypeId" name="propertyTypeId" required>
+            <option [ngValue]="null" disabled>Select Property Type</option>
+            <option *ngFor="let type of propertyTypes" [value]="type.id">{{ type.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Property Category</label>
+          <select [(ngModel)]="newListing.propertyCategoryId" name="propertyCategoryId" required>
+            <option [ngValue]="null" disabled>Select Property Category</option>
+            <option *ngFor="let category of propertyCategories" [value]="category.id">{{ category.name }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>Max Guests</label>
           <input type="number" [(ngModel)]="newListing.maxGuests" name="maxGuests" required>
-          <th>Price</th>
-          <th>Rating</th>
-          <th>Actions</th>
-          </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let service of services">
-              <td class="listing-cell">
-                <div class="listing-image">
-                  <img [src]="service.imageUrl || service.images?.[0] || '/assets/default-service.jpg'" alt="">
-                </div>
-                <div class="listing-info">
-                  <strong>{{ service.name }}</strong>
-                  <span class="listing-location">{{ service.location }}</span>
-                </div>
-              </td>
-              <td>{{ service.provider?.name || 'Unknown' }}</td>
-              <td>{{ service.category }}</td>
-              <td>${{ service.price }}</td>
-              <td>⭐ {{ service.rating }} ({{ service.reviewCount }})</td>
-              <td>
-                <div class="action-buttons">
-                  <button (click)="deleteService(service.id)" class="btn-danger" title="Delete Service">
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-          </table>
         </div>
-
-        <div *ngIf="services.length === 0" class="empty-state">
-          <div class="empty-icon">🛠️</div>
-          <h3>No services found</h3>
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <input type="number" [(ngModel)]="newListing.bedrooms" name="bedrooms" required>
         </div>
-        </section>
-
-        <!-- Experiences Tab -->
-        <section *ngIf="activeTab === 'experiences'" class="tab-content">
-          <div class="section-header">
-            <h2>Experiences Management</h2>
-            <div class="table-actions">
-              <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
-              <input type="text" placeholder="Search experiences..." class="search-input">
-            </div>
-          </div>
-
-          <div class="table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Experience</th>
-                  <th>Host</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Rating</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let experience of experiences">
-                  <td class="listing-cell">
-                    <div class="listing-image">
-                      <img [src]="experience.imageUrl || experience.images?.[0] || '/assets/default-experience.jpg'"
-                        alt="">
-                    </div>
-                    <div class="listing-info">
-                      <strong>{{ experience.name }}</strong>
-                      <span class="listing-location">{{ experience.location }}</span>
-                    </div>
-                  </td>
-                  <td>{{ experience.host?.name || 'Unknown' }}</td>
-                  <td>{{ experience.category }}</td>
-                  <td>${{ experience.price }}</td>
-                  <td>⭐ {{ experience.rating }} ({{ experience.reviewCount }})</td>
-                  <td>
-                    <div class="action-buttons">
-                      <button (click)="deleteExperience(experience.id)" class="btn-danger" title="Delete Experience">
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div *ngIf="experiences.length === 0" class="empty-state">
-            <div class="empty-icon">🏄</div>
-            <h3>No experiences found</h3>
-          </div>
-        </section>
-
-        <!-- Analytics Tab -->
-        <section *ngIf="activeTab === 'analytics'" class="tab-content">
-          <div class="analytics-placeholder">
-            <div class="placeholder-icon">📈</div>
-            <h3>Analytics Dashboard</h3>
-            <p>Advanced analytics and reporting features coming soon.</p>
-            <p>This section will include charts, graphs, and detailed performance metrics.</p>
-          </div>
-        </section>
-
-        <!-- MODALS -->
-
-        <!-- Add User Modal -->
-        <div class="modal-overlay" *ngIf="showAddUserModal">
-          <div class="modal-content">
-            <h3>Add New User</h3>
-            <form (ngSubmit)="addUser()">
-              <div class="form-group">
-                <label>First Name</label>
-                <input type="text" [(ngModel)]="newUser.firstName" name="firstName" required>
-              </div>
-              <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" [(ngModel)]="newUser.lastName" name="lastName" required>
-              </div>
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email" [(ngModel)]="newUser.email" name="email" required>
-              </div>
-              <div class="form-group">
-                <label>Password</label>
-                <input type="password" [(ngModel)]="newUser.password" name="password" required>
-              </div>
-              <div class="form-group">
-                <label>Role</label>
-                <select [(ngModel)]="newUser.role" name="role">
-                  <option value="guest">Guest</option>
-                  <option value="host">Host</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" (click)="closeAddUserModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Create User</button>
-              </div>
-            </form>
-          </div>
+        <div class="form-group">
+          <label>Beds</label>
+          <input type="number" [(ngModel)]="newListing.beds" name="beds" required>
         </div>
-
-        <!-- Change Role Modal -->
-        <div class="modal-overlay" *ngIf="showChangeRoleModal">
-          <div class="modal-content">
-            <h3>Change Role for {{ selectedUserForRole?.firstName }}</h3>
-            <form (ngSubmit)="changeRole()">
-              <div class="form-group">
-                <label>Select New Role</label>
-                <select [(ngModel)]="newRoleForUser" name="newRole">
-                  <option value="guest">Guest</option>
-                  <option value="host">Host</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" (click)="closeChangeRoleModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Update Role</button>
-              </div>
-            </form>
-          </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" required>
         </div>
-
-        <!-- Add Listing Modal -->
-        <div class="modal-overlay" *ngIf="showAddListingModal">
-          <div class="modal-content">
-            <h3>Add New Listing</h3>
-            <form (ngSubmit)="addListing()">
-              <div class="form-group">
-                <label>Name</label>
-                <input type="text" [(ngModel)]="newListing.name" name="name" required>
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <input type="text" [(ngModel)]="newListing.description" name="description" required>
-              </div>
-              <div class="form-group">
-                <label>Price per Night</label>
-                <input type="number" [(ngModel)]="newListing.price" name="price" required>
-              </div>
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" [(ngModel)]="newListing.location" name="location" required>
-              </div>
-              <div class="form-group">
-                <label>Type</label>
-                <select [(ngModel)]="newListing.type" name="type">
-                  <option value="apartment">Apartment</option>
-                  <option value="house">House</option>
-                  <option value="villa">Villa</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Max Guests</label>
-                <input type="number" [(ngModel)]="newListing.maxGuests" name="maxGuests" required>
-              </div>
-              <div class="form-group">
-                <label>Bedrooms</label>
-                <input type="number" [(ngModel)]="newListing.bedrooms" name="bedrooms" required>
-              </div>
-              <div class="form-group">
-                <label>Beds</label>
-                <input type="number" [(ngModel)]="newListing.beds" name="beds" required>
-              </div>
-              <div class="form-group">
-                <label>Bathrooms</label>
-                <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" required>
-              </div>
-              <div class="form-group">
-                <label>Image</label>
-                <input type="file" (change)="onFileSelected($event)" accept="image/*">
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Create Listing</button>
-              </div>
-            </form>
-          </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="url" [(ngModel)]="newListing.imageUrl" name="imageUrl"
+            placeholder="https://example.com/image.jpg">
         </div>
-
-        <!-- Add Service Modal -->
-        <div class="modal-overlay" *ngIf="showAddServiceModal">
-          <div class="modal-content">
-            <h3>Add New Service</h3>
-            <form (ngSubmit)="addService()">
-              <div class="form-group">
-                <label>Service Name</label>
-                <input type="text" [(ngModel)]="newService.name" name="name" required>
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <input type="text" [(ngModel)]="newService.description" name="description" required>
-              </div>
-              <div class="form-group">
-                <label>Category</label>
-                <input type="text" [(ngModel)]="newService.category" name="category" required>
-              </div>
-              <div class="form-group">
-                <label>Price</label>
-                <input type="number" [(ngModel)]="newService.price" name="price" required>
-              </div>
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" [(ngModel)]="newService.location" name="location" required>
-              </div>
-              <div class="form-group">
-                <label>Duration</label>
-                <input type="text" [(ngModel)]="newService.duration" name="duration" required>
-              </div>
-              <div class="form-group">
-                <label>Image</label>
-                <input type="file" (change)="onFileSelected($event)" accept="image/*">
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Create Service</button>
-              </div>
-            </form>
-          </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Listing</button>
         </div>
+      </form>
+    </div>
+  </div>
 
-        <!-- Add Experience Modal -->
-        <div class="modal-overlay" *ngIf="showAddExperienceModal">
-          <div class="modal-content">
-            <h3>Add New Experience</h3>
-            <form (ngSubmit)="addExperience()">
-              <div class="form-group">
-                <label>Experience Name</label>
-                <input type="text" [(ngModel)]="newExperience.name" name="name" required>
-              </div>
-              <div class="form-group">
-                <label>Description</label>
-                <input type="text" [(ngModel)]="newExperience.description" name="description" required>
-              </div>
-              <div class="form-group">
-                <label>Category</label>
-                <input type="text" [(ngModel)]="newExperience.category" name="category" required>
-              </div>
-              <div class="form-group">
-                <label>Price</label>
-                <input type="number" [(ngModel)]="newExperience.price" name="price" required>
-              </div>
-              <div class="form-group">
-                <label>Duration</label>
-                <input type="text" [(ngModel)]="newExperience.duration" name="duration" required>
-              </div>
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" [(ngModel)]="newExperience.location" name="location" required>
-              </div>
-              <div class="form-group">
-                <label>Max Participants</label>
-                <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required>
-              </div>
-              <div class="form-group">
-                <label>Meeting Point</label>
-                <input type="text" [(ngModel)]="newExperience.meetingPoint" name="meetingPoint" required>
-              </div>
-              <div class="form-group">
-                <label>Image</label>
-                <input type="file" (change)="onFileSelected($event)" accept="image/*">
-              </div>
-              <div class="modal-actions">
-                <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Create Experience</button>
-              </div>
-            </form>
-          </div>
+  <!-- Add Service Modal -->
+  <div class="modal-overlay" *ngIf="showAddServiceModal">
+    <div class="modal-content">
+      <h3>Add New Service</h3>
+      <form (ngSubmit)="addService()">
+        <div class="form-group">
+          <label>Service Name</label>
+          <input type="text" [(ngModel)]="newService.name" name="name" required>
         </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" [(ngModel)]="newService.description" name="description" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId" required>
+            <option [ngValue]="null" disabled>Select Category</option>
+            <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" [(ngModel)]="newService.price" name="price" required>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" [(ngModel)]="newService.location" name="location" required>
+        </div>
+        <div class="form-group">
+          <label>Duration</label>
+          <input type="text" [(ngModel)]="newService.duration" name="duration" required>
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="url" [(ngModel)]="newService.imageUrl" name="imageUrl"
+            placeholder="https://example.com/service-image.jpg">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Service</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Experience Modal -->
+  <div class="modal-overlay" *ngIf="showAddExperienceModal">
+    <div class="modal-content">
+      <h3>Add New Experience</h3>
+      <form (ngSubmit)="addExperience()">
+        <div class="form-group">
+          <label>Experience Name</label>
+          <input type="text" [(ngModel)]="newExperience.name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" [(ngModel)]="newExperience.description" name="description" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select [(ngModel)]="newExperience.category" name="category" required>
+            <option [ngValue]="null" disabled>Select Category</option>
+            <option *ngFor="let cat of experienceCategories" [value]="cat.name">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" [(ngModel)]="newExperience.price" name="price" required>
+        </div>
+        <div class="form-group">
+          <label>Duration</label>
+          <input type="text" [(ngModel)]="newExperience.duration" name="duration" required>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" [(ngModel)]="newExperience.location" name="location" required>
+        </div>
+        <div class="form-group">
+          <label>Max Participants</label>
+          <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required>
+        </div>
+        <div class="form-group">
+          <label>Meeting Point</label>
+          <input type="text" [(ngModel)]="newExperience.meetingPoint" name="meetingPoint" required>
+        </div>
+        <div class="form-group">
+          <label>Image</label>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Experience</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>

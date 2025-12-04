@@ -46,14 +46,24 @@ export class AuthService {
     );
   }
 
-  // Signup method
-  signup(data: any): Observable<any> {
-    const signupData = {
-      ...data,
-      dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : null
+  // ------------------------
+  // SIGNUP (returns TEXT)
+  // ------------------------
+  signup(data: any) {
+    const payload = {
+      username: data.username,       // make sure matches DTO
+      password: data.password,
+      email: data.email,
+      firstName: data.firstName || null,
+      lastName: data.lastName || null,
+      dateOfBirth: data.dateOfBirth
+        ? new Date(data.dateOfBirth).toISOString().split('T')[0]
+        : null
     };
 
-    return this.http.post(`${this.apiUrl}/Register`, signupData, {
+    console.log("📤 Sending register payload:", payload);
+
+    return this.http.post(`${this.apiUrl}/Register`, payload, {
       responseType: 'text' as 'json'
     }).pipe(
       tap((response: any) => {
@@ -65,6 +75,7 @@ export class AuthService {
       })
     );
   }
+<<<<<<< HEAD
 
   // Forget Password method - ADDED THIS
   forgetPassword(email: string): Observable<any> {
@@ -91,6 +102,13 @@ export class AuthService {
         throw error;
       })
     );
+=======
+  // ------------------------
+  // FORGET PASSWORD
+  // ------------------------
+  forgetPassword(email: string) {
+    return this.http.post(`${this.apiUrl}/ForgetPassword`, { email });
+>>>>>>> 4a249da099bf4a9f7fb8005263067d2f40ed00dd
   }
 
   // Change Password method
