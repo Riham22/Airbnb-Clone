@@ -1,4 +1,4 @@
-// data.service.ts - Enhanced version
+// data.service.ts - Complete Fixed Version
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -11,18 +11,12 @@ import { Booking } from '../Models/booking';
 
 export type ListingType = RentalProperty | Experience | Service;
 
-
-
-import { Review } from '../Models/review';
-
-
-
 @Injectable({
   providedIn: 'root',
 })
 export class Data {
   private bookings: Booking[] = [];
-  private wishlistCache: Set<string> = new Set(); // Cache for "Type_Id" strings
+  private wishlistCache: Set<string> = new Set();
 
   private propertiesSubject = new BehaviorSubject<RentalProperty[]>([]);
   properties$ = this.propertiesSubject.asObservable();
@@ -34,10 +28,17 @@ export class Data {
   services$ = this.servicesSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    this.loadWishlist(); // Load wishlist first
-    this.loadProperties();
-    this.loadExperiences();
-    this.loadServices();
+    console.log('🚀 DataService initialized');
+
+    // Load wishlist first, then data
+    this.loadWishlist();
+
+    // Give a small delay to ensure wishlist loads first
+    setTimeout(() => {
+      this.loadProperties();
+      this.loadExperiences();
+      this.loadServices();
+    }, 100);
   }
 
   loadWishlist() {
@@ -59,262 +60,205 @@ export class Data {
   }
 
   loadProperties() {
-    this.http.get<any[]>('https://localhost:7020/api/properties').subscribe({
-      next: (data) => {
-        const mappedProperties: RentalProperty[] = data.map(p => ({
-          id: p.id,
-          name: p.title,
-          location: `${p.city}, ${p.country}`,
-          price: p.pricePerNight,
-          rating: p.averageRating,
-          reviewCount: p.reviewsCount,
-          imageUrl: p.coverImageUrl,
-          images: [p.coverImageUrl], // Default to cover image
-          type: 'property',
-          propertyType: this.mapPropertyType(p.propertyType?.name || 'apartment'),
-          maxGuests: p.maxGuests || 2,
-          bedrooms: p.bedrooms || 1,
-          beds: p.beds || 1,
-          bathrooms: p.bathrooms || 1,
-          amenities: p.amenities?.map((a: any) => a.name) || [],
-          host: {
-            name: 'Host',
-            joinedDate: '2024',
-            isSuperhost: false,
-            avatar: ''
-          },
-          description: '',
-          highlights: [],
-          reviews: [],
-          isWishlisted: this.isWishlistedSync('Property', p.id)
-        }));
+    console.log('🔄 Loading properties from API...');
+
+    // Note: Using capital 'P' in Properties to match your API
+    this.http.get<any>('https://localhost:7020/api/Properties').subscribe({
+      next: (response) => {
+        console.log('✅ API Response received:', response);
+
+        // Handle different response formats
+        let data: any[] = [];
+
+        // Check if response is wrapped in a data property
+        if (response && typeof response === 'object') {
+          if (Array.isArray(response)) {
+            data = response;
+          } else if (response.data && Array.isArray(response.data)) {
+            data = response.data;
+          } else if (response.items && Array.isArray(response.items)) {
+            data = response.items;
+          } else if (response.properties && Array.isArray(response.properties)) {
+            data = response.properties;
+          } else {
+            console.warn('⚠️ Unexpected response format:', response);
+            data = [];
+          }
+        }
+
+        console.log('📊 Number of properties:', data?.length);
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No properties returned from API');
+          this.propertiesSubject.next([]);
+          return;
+        }
+
+        const mappedProperties: RentalProperty[] = data.map(p => {
+          console.log('=== Mapping property ===');
+          console.log('ID:', p.id);
+          console.log('Title:', p.title);
+          console.log('PropertyCategory:', p.propertyCategory);
+          console.log('PropertyType:', p.propertyType);
+
+          // Try to get category name from multiple sources
+          let categoryName =
+            p.propertyCategory?.name ||     // Best: from PropertyCategory relationship
+            p.propertyCategory?.title ||
+            p.categoryName ||               // Fallback: direct field
+            p.category?.name;
+
+          // If no category found, try to guess from title
+          if (!categoryName) {
+            console.warn('⚠️ No category found, guessing from title:', p.title);
+            const title = (p.title || '').toLowerCase();
+            if (title.includes('beach')) categoryName = 'Beachfront';
+            else if (title.includes('city')) categoryName = 'City';
+            else if (title.includes('countryside') || title.includes('cottage')) categoryName = 'Countryside';
+            else if (title.includes('mountain')) categoryName = 'Mountain';
+            else if (title.includes('lake')) categoryName = 'Lake';
+            else categoryName = 'City'; // Default
+          }
+
+          console.log('Using category name:', categoryName);
+
+          const categoryForUI = this.mapPropertyType(categoryName);
+
+          console.log('Mapped to UI category:', categoryForUI);
+          console.log('===================');
+
+          return {
+            id: p.id,
+            name: p.title || 'Untitled Property',
+            location: `${p.city || 'Unknown'}, ${p.country || 'Unknown'}`,
+            price: p.pricePerNight || 0,
+            rating: p.averageRating || 0,
+            reviewCount: p.reviewsCount || 0,
+            imageUrl: p.coverImageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
+            images: p.images?.length > 0
+              ? p.images.map((img: any) => img.imageUrl || img.imageURL).filter((url: string) => url)
+              : [p.coverImageUrl || 'https://via.placeholder.com/400x300?text=No+Image'],
+            type: 'property',
+            propertyType: categoryForUI,
+            maxGuests: p.maxGuests || 2,
+            bedrooms: p.bedrooms || 1,
+            beds: p.beds || 1,
+            bathrooms: p.bathrooms || 1,
+            amenities: Array.isArray(p.amenities)
+              ? p.amenities.map((a: any) => a.name || a).filter((name: string) => name)
+              : [],
+            host: {
+              name: p.hostName || 'Host',
+              joinedDate: '2024',
+              isSuperhost: false,
+              avatar: ''
+            },
+            description: p.description || '',
+            highlights: [],
+            reviews: [],
+            isWishlisted: this.isWishlistedSync('Property', p.id)
+          };
+        });
+
+        console.log('✅ Mapped properties:', mappedProperties.length);
+        console.log('📦 First property:', mappedProperties[0]);
+
         this.propertiesSubject.next(mappedProperties);
       },
-      error: (err) => console.error('Failed to load properties', err)
+      error: (err) => {
+        console.error('❌ Failed to load properties:', err);
+        console.error('Error details:', {
+          status: err.status,
+          statusText: err.statusText,
+          message: err.message,
+          url: err.url
+        });
+
+        // Return empty array on error
+        this.propertiesSubject.next([]);
+      }
     });
   }
 
   private mapPropertyType(backendType: string): string {
-    const type = backendType.toLowerCase();
-    if (type.includes('beach') || type.includes('coast')) return 'beach';
-    if (type.includes('city') || type.includes('apartment') || type.includes('loft')) return 'city';
-    if (type.includes('mountain') || type.includes('cabin') || type.includes('ski')) return 'mountain';
-    if (type.includes('lake') || type.includes('water')) return 'lake';
-    if (type.includes('country') || type.includes('farm') || type.includes('barn')) return 'countryside';
-    return 'city'; // Default fallback
+    if (!backendType) {
+      console.warn('⚠️ No property type provided, defaulting to "city"');
+      return 'city';
+    }
+
+    const type = backendType.toLowerCase().trim();
+    console.log('Mapping category:', backendType, '→', type);
+
+    // Exact matches first
+    if (type === 'beachfront' || type === 'beach') return 'beach';
+    if (type === 'city' || type === 'urban') return 'city';
+    if (type === 'countryside' || type === 'country') return 'countryside';
+    if (type === 'mountain' || type === 'mountains') return 'mountain';
+    if (type === 'lakefront' || type === 'lake') return 'lake';
+
+    // Contains matches
+    if (type.includes('beach') || type.includes('coast') || type.includes('seaside') || type.includes('ocean')) {
+      console.log('→ Mapped to: beach');
+      return 'beach';
+    }
+    if (type.includes('city') || type.includes('urban') || type.includes('downtown')) {
+      console.log('→ Mapped to: city');
+      return 'city';
+    }
+    if (type.includes('mountain') || type.includes('alpine') || type.includes('ski')) {
+      console.log('→ Mapped to: mountain');
+      return 'mountain';
+    }
+    if (type.includes('lake') || type.includes('water')) {
+      console.log('→ Mapped to: lake');
+      return 'lake';
+    }
+    if (type.includes('country') || type.includes('farm') || type.includes('rural') || type.includes('cottage')) {
+      console.log('→ Mapped to: countryside');
+      return 'countryside';
+    }
+
+    // For Apartment, House, Villa etc - default to city
+    if (type.includes('apartment') || type.includes('house') || type.includes('villa') ||
+      type.includes('studio') || type.includes('cabin') || type.includes('room')) {
+      console.warn('⚠️ Found building type "' + backendType + '", defaulting to "city"');
+      return 'city';
+    }
+
+    // Default fallback
+    console.warn('⚠️ Category "' + backendType + '" did not match, defaulting to "city"');
+    return 'city';
   }
 
   getProperties(): RentalProperty[] {
     return this.propertiesSubject.value;
   }
 
-  // Old hardcoded data commented out or removed
-  // getProperties(): RentalProperty[] { ... }
-  /* return[
-    {
-      id: 1,
-      name: 'Cozy Beachfront Apartment',
-      location: 'Malibu, California',
-      price: 245,
-      rating: 4.92,
-      reviewCount: 128,
-      imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-      images: [
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
-        'https://images.unsplash.com/photo-1554995207-c18c203602cb',
-        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'
-      ],
-      type: 'property',
-      propertyType: 'beach',
-      maxGuests: 4,
-      bedrooms: 2,
-      beds: 3,
-      bathrooms: 1.5,
-      amenities: [
-        'WiFi', 'Kitchen', 'Parking', 'Beach Access',
-        'Air Conditioning', 'TV', 'Washer'
-      ],
-      host: {
-        name: 'Sarah Johnson',
-        joinedDate: '2018',
-        isSuperhost: true,
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786'
-      },
-      description: 'Beautiful beachfront apartment with stunning ocean views. Perfect for a relaxing getaway with direct beach access.',
-      highlights: [
-        'Beachfront location',
-        'Stunning ocean views',
-        'Modern amenities',
-        'Direct beach access'
-      ],
-      reviews: [
-        {
-          id: 1,
-          user: 'Michael T.',
-          date: '2024-01-15',
-          rating: 5,
-          comment: 'Absolutely stunning views! The apartment was even better than pictured.',
-          userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Modern City Loft',
-      location: 'New York City, New York',
-      price: 189,
-      rating: 4.78,
-      reviewCount: 95,
-      imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-      images: [
-        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-        'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
-        'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5',
-        'https://images.unsplash.com/photo-1505691938895-1758d7feb511'
-      ],
-      type: 'property', // ← FIXED
-      propertyType: 'city', // ← FIXED
-      maxGuests: 2,
-      bedrooms: 1,
-      beds: 1,
-      bathrooms: 1,
-      amenities: ['WiFi', 'Kitchen', 'Gym', 'City View', 'Heating'],
-      host: {
-        name: 'Daniel Price',
-        joinedDate: '2020',
-        isSuperhost: false,
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'
-      },
-      description: 'Stylish loft located in the heart of NYC. Walking distance to major attractions and subway stations.',
-      highlights: [
-        'Central location',
-        'Modern interior',
-        'High-speed WiFi',
-        'Gym access'
-      ],
-      reviews: [
-        {
-          id: 1,
-          user: 'Emily R.',
-          date: '2024-02-02',
-          rating: 5,
-          comment: 'Perfect location & super clean!',
-          userAvatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e'
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Mountain Cabin Retreat',
-      location: 'Aspen, Colorado',
-      price: 320,
-      rating: 4.95,
-      reviewCount: 64,
-      imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000',
-      images: [
-        'https://images.unsplash.com/photo-1449824913935-59a10b8d2000',
-        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-        'https://images.unsplash.com/photo-1615870216513-1a3896abbf7d',
-        'https://images.unsplash.com/photo-1615870719275-54c1e5bc9b25'
-      ],
-      type: 'property', // ← FIXED
-      propertyType: 'mountain', // ← FIXED
-      maxGuests: 6,
-      bedrooms: 3,
-      beds: 4,
-      bathrooms: 2,
-      amenities: ['WiFi', 'Fireplace', 'Mountain View', 'Parking', 'Hot Tub'],
-      host: {
-        name: 'Oliver Woods',
-        joinedDate: '2017',
-        isSuperhost: true,
-        avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36'
-      },
-      description: 'A cozy wooden cabin with breathtaking mountain views and a private hot tub.',
-      highlights: ['Private cabin', 'Fireplace', 'Hot tub', 'Amazing views'],
-      reviews: []
-    },
-    {
-      id: 4,
-      name: 'Lakeside Villa',
-      location: 'Lake Tahoe, Nevada',
-      price: 275,
-      rating: 4.83,
-      reviewCount: 142,
-      imageUrl: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
-      images: [
-        'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
-        'https://images.unsplash.com/photo-1600585154207-362ad7a1f235',
-        'https://images.unsplash.com/photo-1560448075-bb46d1a1b6b1'
-      ],
-      type: 'property', // ← FIXED
-      propertyType: 'lake', // ← FIXED
-      maxGuests: 8,
-      bedrooms: 4,
-      beds: 6,
-      bathrooms: 3,
-      amenities: ['WiFi', 'Pool', 'Lake Access', 'Kitchen', 'Parking'],
-      host: {
-        name: 'Emma Davis',
-        joinedDate: '2019',
-        isSuperhost: true,
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'
-      },
-      description: 'Luxury villa right on Lake Tahoe with private dock access.',
-      highlights: ['Lake access', 'Private dock', 'Spacious home'],
-      reviews: []
-    },
-    {
-      id: 5,
-      name: 'Countryside Farmhouse',
-      location: 'Napa Valley, California',
-      price: 180,
-      rating: 4.87,
-      reviewCount: 89,
-      imageUrl: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90',
-      images: [
-        'https://images.unsplash.com/photo-1513584684374-8bab748fbf90',
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-        'https://images.unsplash.com/photo-1499696010180-027a47b30e23'
-      ],
-      type: 'property', // ← FIXED
-      propertyType: 'countryside', // ← FIXED
-      maxGuests: 5,
-      bedrooms: 3,
-      beds: 3,
-      bathrooms: 1.5,
-      amenities: ['WiFi', 'Garden', 'Country View', 'Kitchen'],
-      host: {
-        name: 'Hannah Lee',
-        joinedDate: '2022',
-        isSuperhost: false,
-        avatar: 'https://images.unsplash.com/photo-1520813792240-56fc4a3765a7'
-      },
-      description: 'Relax in this quiet countryside farmhouse with large gardens and scenic valley views.',
-      highlights: ['Private garden', 'Quiet area', 'Rustic design'],
-      reviews: []
-    }
-  ];
-} */
-
-
-
   loadExperiences() {
+    console.log('🔄 Loading experiences from API...');
+
     this.http.get<any[]>('https://localhost:7020/api/Experience').subscribe({
       next: (data) => {
+        console.log('✅ Experiences API Response:', data?.length);
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No experiences returned from API');
+          this.experiencesSubject.next([]);
+          return;
+        }
+
         const mappedExperiences: Experience[] = data.map(exp => ({
           id: exp.id,
           type: 'experience',
           name: exp.expTitle || exp.name || 'Experience',
           location: `${exp.city || ''}, ${exp.country || ''}`.trim(),
           price: exp.guestPrice || 0,
-          rating: 4.5, // Default rating
-          reviewCount: 0, // Default review count
-          imageUrl: exp.images?.[0]?.imageURL || '',
+          rating: 4.5,
+          reviewCount: 0,
+          imageUrl: exp.images?.[0]?.imageURL || 'https://via.placeholder.com/400x300?text=No+Image',
           images: exp.images?.map((img: any) => img.imageURL) || [],
           category: exp.expCatograyName || 'general',
-          duration: '3 hours', // Default duration
+          duration: '3 hours',
           maxParticipants: exp.maximumGuest || 10,
           host: {
             name: 'Host',
@@ -331,9 +275,14 @@ export class Data {
           reviews: [],
           isWishlisted: this.isWishlistedSync('Experience', exp.id)
         }));
+
+        console.log('✅ Mapped experiences:', mappedExperiences.length);
         this.experiencesSubject.next(mappedExperiences);
       },
-      error: (err) => console.error('Failed to load experiences', err)
+      error: (err) => {
+        console.error('❌ Failed to load experiences:', err);
+        this.experiencesSubject.next([]);
+      }
     });
   }
 
@@ -341,171 +290,19 @@ export class Data {
     return this.experiencesSubject.value;
   }
 
-  // Fallback hardcoded experiences (for reference/backup)
-  private getHardcodedExperiences(): Experience[] {
-    return [
-      {
-        id: 101,
-        type: 'experience',
-        name: 'Wine Tasting in Napa Valley',
-        location: 'Napa Valley, California',
-        price: 89,
-        rating: 4.95,
-        reviewCount: 234,
-        imageUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'food-drink',
-        duration: '3 hours',
-        maxParticipants: 12,
-        host: {
-          name: 'Sophia Martinez',
-          joinedDate: '2019',
-          isSuperhost: true,
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Join us for an exclusive wine tasting experience at a family-owned vineyard. Learn about wine production while enjoying stunning valley views.',
-        highlights: ['Local winery', 'Expert sommelier', 'Beautiful scenery', 'Small group'],
-        includes: ['Wine tasting (5 varieties)', 'Cheese platter', 'Vineyard tour'],
-        requirements: ['Age 21+', 'Comfortable walking shoes'],
-        meetingPoint: 'Main Winery Entrance',
-        languages: ['English', 'Spanish'],
-        reviews: [
-          {
-            id: 201,
-            user: 'David L.',
-            date: '2024-01-20',
-            rating: 5,
-            comment: 'Amazing experience! Sophia was incredibly knowledgeable.',
-            userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      },
-      {
-        id: 102,
-        type: 'experience',
-        name: 'Surfing Lessons in Malibu',
-        location: 'Malibu, California',
-        price: 75,
-        rating: 4.88,
-        reviewCount: 189,
-        imageUrl: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1506929562872-bb421503ef21?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'sports',
-        duration: '2 hours',
-        maxParticipants: 6,
-        host: {
-          name: 'Jake Thompson',
-          joinedDate: '2018',
-          isSuperhost: true,
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Learn to surf with professional instructors on the beautiful beaches of Malibu. Perfect for beginners and intermediate surfers.',
-        highlights: ['Professional instructors', 'All equipment included', 'Small groups', 'Beautiful location'],
-        includes: ['Surfboard', 'Wetsuit', 'Safety equipment', 'Photos'],
-        requirements: ['Swimming ability', 'Comfortable in water'],
-        meetingPoint: 'Malibu Surf Shop',
-        languages: ['English'],
-        reviews: [
-          {
-            id: 202,
-            user: 'Emma R.',
-            date: '2024-01-18',
-            rating: 5,
-            comment: 'So much fun! Caught my first wave thanks to Jake.',
-            userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      },
-      {
-        id: 103,
-        type: 'experience',
-        name: 'NYC Street Photography Tour',
-        location: 'New York City, New York',
-        price: 65,
-        rating: 4.92,
-        reviewCount: 156,
-        imageUrl: 'https://images.unsplash.com/photo-1519996529931-28324d5a630e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1519996529931-28324d5a630e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'arts-culture',
-        duration: '4 hours',
-        maxParticipants: 8,
-        host: {
-          name: 'Alex Chen',
-          joinedDate: '2020',
-          isSuperhost: true,
-          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Discover hidden gems and iconic locations while learning street photography techniques from a professional photographer.',
-        highlights: ['Professional guidance', 'Iconic locations', 'Small group', 'Photo tips'],
-        includes: ['Photography tips', 'Route map', 'Local insights'],
-        requirements: ['Camera or smartphone', 'Comfortable walking shoes'],
-        meetingPoint: 'Central Park South',
-        languages: ['English', 'Mandarin'],
-        reviews: [
-          {
-            id: 203,
-            user: 'Michael K.',
-            date: '2024-01-15',
-            rating: 5,
-            comment: 'Alex showed us parts of NYC I never knew existed!',
-            userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      },
-      {
-        id: 104,
-        type: 'experience',
-        name: 'Mountain Hiking Adventure',
-        location: 'Aspen, Colorado',
-        price: 55,
-        rating: 4.85,
-        reviewCount: 142,
-        imageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'outdoors',
-        duration: '5 hours',
-        maxParticipants: 10,
-        host: {
-          name: 'Ryan Wilson',
-          joinedDate: '2017',
-          isSuperhost: true,
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Guided hiking tour through breathtaking mountain trails with stunning views and wildlife spotting opportunities.',
-        highlights: ['Expert guide', 'Stunning views', 'Wildlife spotting', 'Small group'],
-        includes: ['Trail snacks', 'Water', 'Safety equipment'],
-        requirements: ['Good physical condition', 'Hiking shoes'],
-        meetingPoint: 'Trailhead Parking',
-        languages: ['English'],
-        reviews: [
-          {
-            id: 204,
-            user: 'Sarah M.',
-            date: '2024-01-12',
-            rating: 5,
-            comment: 'Absolutely breathtaking views! Ryan was an excellent guide.',
-            userAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      }
-    ];
-  }
-
   loadServices() {
+    console.log('🔄 Loading services from API...');
+
     this.http.get<any[]>('https://localhost:7020/api/Services').subscribe({
       next: (data) => {
+        console.log('✅ Services API Response:', data?.length);
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No services returned from API');
+          this.servicesSubject.next([]);
+          return;
+        }
+
         const mappedServices: Service[] = data.map(svc => ({
           id: svc.id,
           type: 'service',
@@ -514,10 +311,10 @@ export class Data {
           price: svc.price || 0,
           rating: svc.averageRating || 0,
           reviewCount: svc.reviewsCount || 0,
-          imageUrl: svc.coverImageUrl || '',
+          imageUrl: svc.coverImageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
           images: svc.images?.map((img: any) => img.imageUrl) || [svc.coverImageUrl],
           category: svc.categoryName || 'general',
-          duration: '3 hours', // Default duration
+          duration: '3 hours',
           provider: {
             name: 'Provider',
             joinedDate: '2024',
@@ -531,128 +328,19 @@ export class Data {
           reviews: [],
           isWishlisted: this.isWishlistedSync('Service', svc.id)
         }));
+
+        console.log('✅ Mapped services:', mappedServices.length);
         this.servicesSubject.next(mappedServices);
       },
-      error: (err) => console.error('Failed to load services', err)
+      error: (err) => {
+        console.error('❌ Failed to load services:', err);
+        this.servicesSubject.next([]);
+      }
     });
   }
 
   getServices(): Service[] {
     return this.servicesSubject.value;
-  }
-
-  // Fallback hardcoded services (for reference/backup)
-  private getHardcodedServices(): Service[] {
-    return [
-      {
-        id: 201,
-        type: 'service',
-        name: 'Professional House Cleaning',
-        location: 'Los Angeles, California',
-        price: 120,
-        rating: 4.90,
-        reviewCount: 345,
-        imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'cleaning',
-        duration: '3 hours',
-        provider: {
-          name: 'CleanPro Services',
-          joinedDate: '2018',
-          isVerified: true,
-          avatar: 'https://images.unsplash.com/photo-1560250056-07ba64664864?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Professional deep cleaning service for homes and apartments. We use eco-friendly products and pay attention to every detail.',
-        highlights: ['Eco-friendly products', 'Professional team', 'Satisfaction guaranteed', 'Flexible scheduling'],
-        includes: ['Deep cleaning', 'Kitchen & bathroom', 'Floor cleaning', 'Dusting'],
-        requirements: ['Access to property', 'Clear workspace'],
-        reviews: [
-          {
-            id: 301,
-            user: 'Jennifer T.',
-            date: '2024-01-22',
-            rating: 5,
-            comment: 'My apartment has never been cleaner! Highly recommended.',
-            userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      },
-      {
-        id: 202,
-        type: 'service',
-        name: 'Private Chef Experience',
-        location: 'Miami, Florida',
-        price: 200,
-        rating: 4.95,
-        reviewCount: 278,
-        imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1546833999-b9f581a1996d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'food',
-        duration: '3 hours',
-        provider: {
-          name: 'Chef Marco',
-          joinedDate: '2019',
-          isVerified: true,
-          avatar: 'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Enjoy a gourmet dining experience in the comfort of your own home. Custom menus tailored to your preferences.',
-        highlights: ['Custom menus', 'Professional chef', 'Local ingredients', 'Fine dining experience'],
-        includes: ['Meal preparation', 'Grocery shopping', 'Kitchen cleanup'],
-        requirements: ['Functional kitchen', 'Dietary preferences'],
-        reviews: [
-          {
-            id: 302,
-            user: 'Robert L.',
-            date: '2024-01-20',
-            rating: 5,
-            comment: 'Chef Marco created an unforgettable dining experience!',
-            userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      },
-      {
-        id: 203,
-        type: 'service',
-        name: 'Personal Fitness Training',
-        location: 'Chicago, Illinois',
-        price: 80,
-        rating: 4.87,
-        reviewCount: 189,
-        imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'fitness',
-        duration: '1 hour',
-        provider: {
-          name: 'FitLife Training',
-          joinedDate: '2020',
-          isVerified: true,
-          avatar: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Personalized fitness training sessions tailored to your goals. Available at your home or local park.',
-        highlights: ['Personalized plans', 'Certified trainers', 'Flexible location', 'Results focused'],
-        includes: ['Fitness assessment', 'Custom workout plan', 'Nutrition guidance'],
-        requirements: ['Comfortable clothing', 'Water bottle'],
-        reviews: [
-          {
-            id: 303,
-            user: 'Amanda K.',
-            date: '2024-01-18',
-            rating: 5,
-            comment: 'Best trainer I have ever worked with! See real results.',
-            userAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ]
-      }
-    ];
   }
 
   searchAllListings(filters: SearchFilters): ListingType[] {
@@ -663,24 +351,20 @@ export class Data {
     ];
 
     return allListings.filter(listing => {
-      // Location filter
       if (filters.location && filters.location.trim() !== '') {
         if (!listing.location.toLowerCase().includes(filters.location.toLowerCase())) {
           return false;
         }
       }
 
-      // Price range filter
       if (listing.price < filters.priceRange.min || listing.price > filters.priceRange.max) {
         return false;
       }
 
-      // Rating filter
       if (listing.rating < filters.minRating) {
         return false;
       }
 
-      // Property type filter (enhanced for all types)
       if (filters.propertyTypes && filters.propertyTypes.length > 0) {
         if (this.isProperty(listing) && !filters.propertyTypes.includes(listing.type)) {
           return false;
@@ -697,7 +381,6 @@ export class Data {
     });
   }
 
-  // Type guards
   private isProperty(item: ListingType): item is RentalProperty {
     return (item as RentalProperty).bedrooms !== undefined;
   }
@@ -710,8 +393,6 @@ export class Data {
     return (item as Service).duration !== undefined && (item as any).type === 'service';
   }
 
-
-  // KEEP YOUR EXISTING METHODS
   getAmenities(): string[] {
     const allAmenities = this.getProperties().flatMap(p => p.amenities);
     return Array.from(new Set(allAmenities));
@@ -736,60 +417,38 @@ export class Data {
     return this.getProperties().find(property => property.id === id);
   }
 
-  // NEW ENHANCED FEATURES
-
-  /**
-   * Advanced search with multiple filters
-   */
   searchProperties(filters: SearchFilters): RentalProperty[] {
     let properties = this.getProperties();
 
-    // Location filter
     if (filters.location && filters.location.trim() !== '') {
       properties = properties.filter(p =>
         p.location.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
-    // Price range filter
     properties = properties.filter(p =>
       p.price >= filters.priceRange.min &&
       p.price <= filters.priceRange.max
     );
 
-    // Property types filter
     if (filters.propertyTypes && filters.propertyTypes.length > 0) {
       properties = properties.filter(p =>
         filters.propertyTypes.includes(p.type)
       );
     }
 
-    // Amenities filter
     if (filters.amenities && filters.amenities.length > 0) {
       properties = properties.filter(p =>
         filters.amenities.every(amenity => p.amenities.includes(amenity))
       );
     }
 
-    // Bedrooms filter
-    // if (filters.bedrooms && filters.bedrooms > 0) {
-    //   properties = properties.filter(p => p.bedrooms >= filters.bedrooms);
-    // }
-
-    // Bathrooms filter
-    // if (filters.bathrooms && filters.bathrooms > 0) {
-    //   properties = properties.filter(p => p.bathrooms >= filters.bathrooms);
-    // }
-
-    // Rating filter
     properties = properties.filter(p => p.rating >= filters.minRating);
 
-    // Superhost filter
     if (filters.superhost) {
       properties = properties.filter(p => p.host.isSuperhost);
     }
 
-    // Instant Book filter (mock implementation - you can add this property to your data)
     if (filters.instantBook) {
       properties = properties.filter(p => this.isInstantBookAvailable(p.id));
     }
@@ -797,9 +456,6 @@ export class Data {
     return properties;
   }
 
-  /**
-   * Wishlist management - Connected to backend
-   */
   toggleWishlist(itemType: string, itemId: number) {
     return this.http.post<any>('https://localhost:7020/api/Wishlist/toggle', {
       itemType: itemType,
@@ -832,14 +488,10 @@ export class Data {
     return this.wishlistCache.has(`${itemType}_${itemId}`);
   }
 
-  // Legacy method for backward compatibility (now returns Observable)
   toggleWishlistLegacy(propertyId: number) {
     return this.toggleWishlist('Property', propertyId);
   }
 
-  /**
-   * Booking management
-   */
   createBooking(bookingData: Omit<Booking, 'id' | 'createdAt'>): Booking {
     const newBooking: Booking = {
       ...bookingData,
@@ -871,14 +523,10 @@ export class Data {
     return false;
   }
 
-  /**
-   * Property recommendations
-   */
   getRecommendedProperties(propertyId?: number, limit: number = 6): RentalProperty[] {
     const properties = this.getProperties();
 
     if (propertyId) {
-      // Get similar properties based on type and location
       const currentProperty = this.getPropertyById(propertyId);
       if (currentProperty) {
         return properties
@@ -887,7 +535,6 @@ export class Data {
       }
     }
 
-    // Return popular properties (high rating and many reviews)
     return properties
       .sort((a, b) => {
         const scoreA = a.rating * a.reviewCount;
@@ -897,9 +544,6 @@ export class Data {
       .slice(0, limit);
   }
 
-  /**
-   * Search suggestions
-   */
   getSearchSuggestions(query: string): string[] {
     const properties = this.getProperties();
     const locations = properties.map(p => p.location);
@@ -912,9 +556,6 @@ export class Data {
       .slice(0, 5);
   }
 
-  /**
-   * Price statistics
-   */
   getPriceStatistics(): { min: number; max: number; average: number } {
     const properties = this.getProperties();
     const prices = properties.map(p => p.price);
@@ -925,14 +566,11 @@ export class Data {
     return { min, max, average: Math.round(average) };
   }
 
-  // PRIVATE HELPER METHODS
-
   private generateBookingId(): number {
     return Math.max(0, ...this.bookings.map(b => b.id)) + 1;
   }
 
   private isInstantBookAvailable(propertyId: number): boolean {
-    // Mock implementation - in real app, this would come from property data
     const instantBookProperties = [1, 2, 4, 7, 8];
     return instantBookProperties.includes(propertyId);
   }
@@ -950,222 +588,19 @@ export class Data {
     }
   }
 
-  /**
-   * Get properties by host
-   */
   getPropertiesByHost(hostName: string): RentalProperty[] {
     return this.getProperties().filter(p =>
       p.host.name.toLowerCase().includes(hostName.toLowerCase())
     );
   }
 
-  /**
-   * Get available properties for dates (mock implementation)
-   */
   getAvailableProperties(checkIn: Date, checkOut: Date): RentalProperty[] {
-    // Mock implementation - in real app, you'd check against actual availability calendar
     return this.getProperties().filter(property =>
       this.isPropertyAvailable(property.id, checkIn, checkOut)
     );
   }
 
   private isPropertyAvailable(propertyId: number, checkIn: Date, checkOut: Date): boolean {
-    // Mock implementation - 80% of properties are available
     return Math.random() > 0.2;
   }
-  /**
-  * Calculate detailed price breakdown
-  */
-  //   calculatePriceBreakdown(property: RentalProperty, checkIn: Date, checkOut: Date, guests: number): PriceBreakdown {
-  //     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-  //     const subtotal = property.price * nights;
-  //     const cleaningFee = this.getCleaningFee(property);
-  //     const serviceFee = this.calculateServiceFee(subtotal);
-  //     const taxes = this.calculateTaxes(subtotal + cleaningFee + serviceFee);
-  //     const total = subtotal + cleaningFee + serviceFee + taxes;
-
-  //     return {
-  //       nightlyRate: property.price,
-  //       nights,
-  //       subtotal,
-  //       cleaningFee,
-  //       serviceFee,
-  //       taxes,
-  //       total,
-  //       currency: 'USD'
-  //     };
-  //   }
-
-  //   /**
-  //    * Process payment for a booking
-  //    */
-  //   processPayment(bookingRequest: BookingRequest): { success: boolean; payment?: Payment; error?: string } {
-  //     const property = this.getPropertyById(bookingRequest.propertyId);
-  //     if (!property) {
-  //       return { success: false, error: 'Property not found' };
-  //     }
-
-  //     // Check availability
-  //     if (!this.isPropertyAvailable(property.id, bookingRequest.checkIn, bookingRequest.checkOut)) {
-  //       return { success: false, error: 'Property not available for selected dates' };
-  //     }
-
-  //     // Calculate price
-  //     const priceBreakdown = this.calculatePriceBreakdown(
-  //       property,
-  //       bookingRequest.checkIn,
-  //       bookingRequest.checkOut,
-  //       bookingRequest.guests
-  //     );
-
-  //     // Validate payment method
-  //     const paymentMethod = this.getPaymentMethodById(bookingRequest.paymentMethodId);
-  //     if (!paymentMethod) {
-  //       return { success: false, error: 'Invalid payment method' };
-  //     }
-
-  //     // Simulate payment processing
-  //     const paymentSuccess = this.simulatePaymentProcessing(paymentMethod, priceBreakdown.total);
-
-  //     if (paymentSuccess) {
-  //       // Create booking
-  //       const booking = this.createBooking({
-  //         propertyId: bookingRequest.propertyId,
-  //         userId: 1, // Current user ID
-  //         checkIn: bookingRequest.checkIn,
-  //         checkOut: bookingRequest.checkOut,
-  //         guests: bookingRequest.guests,
-  //         totalPrice: priceBreakdown.total,
-  //         status: 'confirmed'
-  //       });
-
-  //       // Create payment record
-  //       const payment: Payment = {
-  //         id: this.generatePaymentId(),
-  //         bookingId: booking.id,
-  //         amount: priceBreakdown.total,
-  //         currency: 'USD',
-  //         status: 'completed',
-  //         paymentMethodId: bookingRequest.paymentMethodId,
-  //         createdAt: new Date(),
-  //         processedAt: new Date()
-  //       };
-
-  //       this.payments.push(payment);
-  //       this.savePaymentsToStorage();
-
-  //       return { success: true, payment };
-  //     } else {
-  //       return { success: false, error: 'Payment processing failed' };
-  //     }
-  //   }
-
-  //   /**
-  //    * Payment method management
-  //    */
-  //   getPaymentMethods(): PaymentMethod[] {
-  //     this.loadPaymentMethodsFromStorage();
-  //     return this.paymentMethods;
-  //   }
-
-  //   addPaymentMethod(paymentMethod: Omit<PaymentMethod, 'id'>): PaymentMethod {
-  //     const newPaymentMethod: PaymentMethod = {
-  //       ...paymentMethod,
-  //       id: this.generatePaymentMethodId()
-  //     };
-
-  //     // If this is the first payment method, set as default
-  //     if (this.paymentMethods.length === 0) {
-  //       newPaymentMethod.isDefault = true;
-  //     }
-
-  //     this.paymentMethods.push(newPaymentMethod);
-  //     this.savePaymentMethodsToStorage();
-  //     return newPaymentMethod;
-  //   }
-
-  //   setDefaultPaymentMethod(paymentMethodId: number): void {
-  //     this.paymentMethods.forEach(method => {
-  //       method.isDefault = method.id === paymentMethodId;
-  //     });
-  //     this.savePaymentMethodsToStorage();
-  //   }
-
-  //   removePaymentMethod(paymentMethodId: number): boolean {
-  //     const index = this.paymentMethods.findIndex(m => m.id === paymentMethodId);
-  //     if (index > -1) {
-  //       const wasDefault = this.paymentMethods[index].isDefault;
-  //       this.paymentMethods.splice(index, 1);
-
-  //       // If we removed the default, set a new default
-  //       if (wasDefault && this.paymentMethods.length > 0) {
-  //         this.paymentMethods[0].isDefault = true;
-  //       }
-
-  //       this.savePaymentMethodsToStorage();
-  //       return true;
-  //     }
-  //     return false;
-  //   }
-
-  //   getPaymentMethodById(id: number): PaymentMethod | undefined {
-  //     return this.paymentMethods.find(method => method.id === id);
-  //   }
-
-  //   // PRIVATE HELPER METHODS
-
-  //   private getCleaningFee(property: RentalProperty): number {
-  //     // Base cleaning fee + property size factor
-  //     return 50 + (property.bedrooms * 10);
-  //   }
-
-  //   private calculateServiceFee(subtotal: number): number {
-  //     // Airbnb-like service fee: 14% of subtotal
-  //     return subtotal * 0.14;
-  //   }
-
-  //   private calculateTaxes(amount: number): number {
-  //     // Simplified tax calculation (8%)
-  //     return amount * 0.08;
-  //   }
-
-  //   private simulatePaymentProcessing(paymentMethod: PaymentMethod, amount: number): boolean {
-  //     // Simulate payment processing - 95% success rate
-  //     // In real app, this would integrate with Stripe, PayPal, etc.
-  //     return Math.random() > 0.05;
-  //   }
-
-  //   private generatePaymentId(): number {
-  //     return Math.max(0, ...this.payments.map(p => p.id)) + 1;
-  //   }
-
-  //   private generatePaymentMethodId(): number {
-  //     return Math.max(0, ...this.paymentMethods.map(p => p.id)) + 1;
-  //   }
-
-  //   private savePaymentMethodsToStorage(): void {
-  //     if (typeof window !== 'undefined' && window.localStorage) {
-  //       localStorage.setItem('airbnb_payment_methods', JSON.stringify(this.paymentMethods));
-  //     }
-  //   }
-
-  //   private loadPaymentMethodsFromStorage(): void {
-  //     if (typeof window !== 'undefined' && window.localStorage) {
-  //       const stored = localStorage.getItem('airbnb_payment_methods');
-  //       this.paymentMethods = stored ? JSON.parse(stored) : this.paymentMethods;
-  //     }
-  //   }
-
-  //   private savePaymentsToStorage(): void {
-  //     if (typeof window !== 'undefined' && window.localStorage) {
-  //       localStorage.setItem('airbnb_payments', JSON.stringify(this.payments));
-  //     }
-  //   }
-
-  //   private loadPaymentsFromStorage(): void {
-  //     if (typeof window !== 'undefined' && window.localStorage) {
-  //       const stored = localStorage.getItem('airbnb_payments');
-  //       this.payments = stored ? JSON.parse(stored) : [];
-  //     }
-  // }
 }

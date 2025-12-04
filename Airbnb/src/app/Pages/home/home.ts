@@ -1,3 +1,5 @@
+// home.component.ts - Complete Fixed Version
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RentalProperty } from '../../Models/rental-property';
@@ -24,10 +26,26 @@ export class HomeComponent implements OnInit {
   constructor(private dataService: Data) { }
 
   ngOnInit() {
+    console.log('🏠 HomeComponent initialized');
+
+    // Subscribe to properties with detailed logging
     this.dataService.properties$.subscribe(props => {
+      console.log('📊 Properties received in HomeComponent:', props.length);
+      console.log('Properties data:', props);
+
       this.properties = props;
       this.filteredProperties = props;
+
+      if (props.length === 0) {
+        console.warn('⚠️ No properties available to display');
+      } else {
+        console.log('✅ Displaying', props.length, 'properties');
+      }
     });
+
+    // Also try to get properties directly
+    const directProps = this.dataService.getProperties();
+    console.log('Direct properties check:', directProps.length);
   }
 
   onFilteredPropertiesChange(properties: RentalProperty[]) {
@@ -42,8 +60,6 @@ export class HomeComponent implements OnInit {
   onCategorySelect(category: string) {
     console.log('Category selected:', category);
     this.selectedCategory = category;
-    // TODO: Filter properties by category
-    // For now, just logging or mock filtering
   }
 
   openFilters() {
@@ -57,12 +73,10 @@ export class HomeComponent implements OnInit {
   onApplyFilters(filters: any) {
     console.log('Filters applied:', filters);
     this.activeFilters = { ...this.activeFilters, ...filters };
-    // TODO: Apply complex filtering logic here
   }
 
   onWishlistChange(event: any) {
     console.log("Wish changed:", event);
-    // TODO: save to user profile / local storage
   }
 
   onActiveFiltersChange(filters: any) {
@@ -93,6 +107,14 @@ export class HomeComponent implements OnInit {
 
   onPropertyClick(property: RentalProperty) {
     console.log('Property clicked:', property);
-    // Navigate to property details
+  }
+
+  // Debug method - add this button to your template temporarily
+  debugProperties() {
+    console.log('=== DEBUG INFO ===');
+    console.log('Properties:', this.properties);
+    console.log('Filtered Properties:', this.filteredProperties);
+    console.log('Active Filters:', this.activeFilters);
+    console.log('Service Properties:', this.dataService.getProperties());
   }
 }

@@ -71,7 +71,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     price: 0,
     maxParticipants: 10,
     expCatograyId: null,
-    expSubCatograyId: null
+    expSubCatograyId: null,
+    imageUrl: ''
   };
 
   selectedFile: File | null = null;
@@ -160,7 +161,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private loadCategories(): void {
     // Load property types and categories
-    // Load property types and categories
     this.subscriptions.add(
       this.adminService.getPropertyTypes().subscribe({
         next: (types) => {
@@ -219,7 +219,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   onExperienceCategoryChange(): void {
     const categoryId = this.newExperience.expCatograyId;
     if (categoryId) {
-      this.adminService.getExperienceSubCategories(categoryId).subscribe({
+      this.adminService.getExperienceSubCategories(Number(categoryId)).subscribe({
         next: (subCategories) => {
           this.experienceSubCategories = subCategories;
           // Reset subcategory selection
@@ -313,7 +313,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       price: 0,
       maxParticipants: 10,
       expCatograyId: null,
-      expSubCatograyId: null
+      expSubCatograyId: null,
+      imageUrl: ''
     };
     this.selectedFile = null;
   }
@@ -451,58 +452,89 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Replace your addExperience() method in admin-dashboard.component.ts with this:
+
   addExperience() {
+    // Validation
     if (!this.newExperience.expCatograyId || !this.newExperience.expSubCatograyId) {
       alert('Please select both Experience Category and Subcategory');
       return;
     }
 
+    // Create the payload - NOT wrapped, send directly
     const experiencePayload = {
-      Name: this.newExperience.name,
-      ExpTitle: this.newExperience.name,
-      ExpDescribe: this.newExperience.description,
-      GuestPrice: Number(this.newExperience.price),
-      MaximumGuest: Number(this.newExperience.maxParticipants),
-      ExpCatograyId: Number(this.newExperience.expCatograyId),
-      ExpSubCatograyId: Number(this.newExperience.expSubCatograyId),
-      Status: 'In_Progress'
+      name: this.newExperience.name || '',
+      location: this.newExperience.location || '',
+      manyExpYear: 0,
+      workName: this.newExperience.name || '',
+      expSummary: this.newExperience.description || '',
+      expAchievement: this.newExperience.description || '',
+      country: 'Egypt',
+      apartment: '',
+      street: this.newExperience.location || '',
+      city: this.newExperience.location || '',
+      governorate: 'Cairo',
+      postalCode: '00000',
+      locationName: this.newExperience.location || '',
+      expTitle: this.newExperience.name || '',
+      expDescribe: this.newExperience.description || '',
+      maximumGuest: Number(this.newExperience.maxParticipants) || 10,
+      guestPrice: Number(this.newExperience.price) || 0,
+      groupPrice: Number(this.newExperience.price) || 0,
+      durationDiscount: 0,
+      earlyDiscount: 0,
+      groupDiscount: 0,
+      responsibleGuests: 'No',
+      servingFood: 'No',
+      servingAlcoholic: 'No',
+      cancelOrder: 'No',
+      usingLanguage: 'English',
+      status: 'In_Progress',
+      expCatograyId: Number(this.newExperience.expCatograyId),
+      expSubCatograyId: Number(this.newExperience.expSubCatograyId),
+      postedBy: null,
+      images: [],
+      expActivities: []
     };
 
     console.log('Creating experience with payload:', experiencePayload);
+    console.log('Category ID:', this.newExperience.expCatograyId);
+    console.log('Subcategory ID:', this.newExperience.expSubCatograyId);
 
     this.adminService.createExperience(experiencePayload).subscribe({
       next: (response: any) => {
-        const experienceId = response?.id || response?.Id;
-        if (experienceId && this.selectedFile) {
-          this.adminService.uploadExperienceImage(experienceId, this.selectedFile).subscribe({
-            next: () => {
-              alert('Experience and image created successfully');
-              this.closeAddExperienceModal();
-              this.loadDashboardData();
-            },
-            error: (err) => {
-              console.error('Image upload failed', err);
-              alert('Experience created but image upload failed');
-              this.closeAddExperienceModal();
-              this.loadDashboardData();
-            }
-          });
-        } else {
-          alert('Experience created successfully');
-          this.closeAddExperienceModal();
-          this.loadDashboardData();
-        }
+        console.log('Experience created successfully:', response);
+        alert('Experience created successfully');
+        this.closeAddExperienceModal();
+        this.loadDashboardData();
       },
       error: (err) => {
         console.error('Create Experience Error:', err);
-        alert(`Failed to create experience: ${err.error?.message || err.message}`);
+        console.error('Full error object:', JSON.stringify(err.error, null, 2));
+
+        // Log detailed validation errors
         if (err.error?.errors) {
-          console.error('Validation Errors:', err.error.errors);
+          console.error('=== VALIDATION ERRORS ===');
+          Object.keys(err.error.errors).forEach(key => {
+            console.error(`Field: ${key}`);
+            console.error(`Errors: ${err.error.errors[key].join(', ')}`);
+          });
         }
+
+        const errorMsg = err.error?.title || err.message || 'Unknown error';
+        let detailedMsg = errorMsg;
+
+        if (err.error?.errors) {
+          const errorDetails = Object.keys(err.error.errors)
+            .map(key => `${key}: ${err.error.errors[key].join(', ')}`)
+            .join('\n');
+          detailedMsg = `${errorMsg}\n\nDetails:\n${errorDetails}`;
+        }
+
+        alert(`Failed to create experience:\n${detailedMsg}`);
       }
     });
   }
-
   // Test API Method
   testAPIs() {
     console.log('Testing APIs...');

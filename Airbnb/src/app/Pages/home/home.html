@@ -1,5 +1,12 @@
-<!-- home.html -->
+<!-- home.html - Add this debug button at the very top temporarily -->
 <div class="home-container">
+
+  <!-- TEMPORARY DEBUG BUTTON - Remove after fixing
+  <button (click)="debugProperties()"
+    style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: #ff385c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+    🐛 Debug Properties
+  </button> -->
+
   <!-- Search Bar -->
   <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
     (activeFiltersChange)="onActiveFiltersChange($event)">
@@ -7,13 +14,6 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <!-- Hero Section -->
-    <!-- <section class="hero-section">
-      <div class="hero-content">
-        <h1>Find your next getaway</h1>
-        <p>Discover homes, experiences, and unique stays tailored just for you.</p>
-      </div>
-    </section> -->
     <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
       (activeFiltersChange)="onActiveFiltersChange($event)">
     </app-search-bar>
@@ -24,32 +24,16 @@
     <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">
     </app-filter-modal>
 
+    <!-- Show loading/empty state -->
+    <div *ngIf="filteredProperties.length === 0" style="text-align: center; padding: 50px;">
+      <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+      <h2>{{ properties.length === 0 ? 'Loading properties...' : 'No properties found' }}</h2>
+      <p *ngIf="properties.length === 0">Please wait while we fetch available properties.</p>
+      <p *ngIf="properties.length > 0">Try adjusting your filters or search criteria.</p>
+    </div>
+
     <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
       (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)">
     </app-property-list>
-    <!-- Search Results Section -->
-    <!-- <section class="search-results-section">
-    <app-property-list
-    [properties]="filteredProperties"
-    [title]="getResultsTitle()"
-    [filters]="activeFilters"
-    (propertyClick)="onPropertyClick($event)"
-
-></app-property-list>
-
-    </section> -->
-
-    <!-- Categories Section -->
-    <!-- <section class="categories-section">
-      <div class="container">
-        <h2>Browse by category</h2>
-        <div class="categories-grid">
-          <div class="category-card" *ngFor="let category of categories">
-            <div class="category-icon">{{ category.icon }}</div>
-            <h3>{{ category.name }}</h3>
-          </div>
-        </div>
-      </div>
-    </section> -->
   </main>
 </div>

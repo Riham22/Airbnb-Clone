@@ -519,47 +519,11 @@ export class AdminService {
     );
   }
 
-  /**
-   * Create Experience
-   * Uses the DTO keys you provided. If `experienceData.images` contains File objects, send them after creation.
-   */
+  // // Replace the createExperience method in Admin.service.ts with this:
+
   createExperience(experienceData: any): Observable<any> {
-    // Map experience payload using DTO keys you provided
-    const payload: any = {
-      name: experienceData.name,
-      location: experienceData.location,
-      manyExpYear: experienceData.manyExpYear ?? 0,
-      workName: experienceData.workName,
-      expSummary: experienceData.expSummary,
-      expAchievement: experienceData.expAchievement,
-      country: experienceData.country,
-      apartment: experienceData.apartment,
-      street: experienceData.street,
-      city: experienceData.city,
-      governorate: experienceData.governorate,
-      postalCode: experienceData.postalCode,
-      locationName: experienceData.locationName,
-      expTitle: experienceData.expTitle,
-      expDescribe: experienceData.expDescribe,
-      maximumGuest: experienceData.maximumGuest ?? 1,
-      guestPrice: experienceData.guestPrice ?? 0,
-      groupPrice: experienceData.groupPrice ?? 0,
-      durationDiscount: experienceData.durationDiscount ?? 0,
-      earlyDiscount: experienceData.earlyDiscount ?? 0,
-      groupDiscount: experienceData.groupDiscount ?? 0,
-      responsibleGuests: experienceData.responsibleGuests,
-      servingFood: experienceData.servingFood,
-      servingAlcoholic: experienceData.servingAlcoholic,
-      cancelOrder: experienceData.cancelOrder,
-      usingLanguage: experienceData.usingLanguage,
-      status: experienceData.status || 'In_Progress',
-      expCatograyId: experienceData.expCatograyId,
-      expSubCatograyId: experienceData.expSubCatograyId,
-      postedBy: experienceData.postedBy,
-      // backend expects images array objects (you provided an example with imageURL) - but if we have File[] we'll upload separately
-      images: Array.isArray(experienceData.images) ? experienceData.images.filter((i: any) => typeof i.imageURL === 'string') : [],
-      expActivities: experienceData.expActivities || []
-    };
+    // The payload should already be wrapped in experienceDTO from the component
+    const payload = experienceData;
 
     console.log('📤 Sending createExperience payload:', payload);
 
@@ -580,7 +544,6 @@ export class AdminService {
       })
     );
   }
-
   updateUserRole(userId: string, newRole: string): Observable<any> {
     console.log(`Mocking role update for user ${userId} to ${newRole}`);
     return new Observable(observer => {
@@ -607,28 +570,68 @@ export class AdminService {
 
   getExperienceCategories(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/ExpCatogray`).pipe(
+      map(categories => categories.map(c => ({
+        id: c.id || c.Id,
+        name: c.name || c.Name
+      }))),
       catchError(err => {
-        console.warn('ExpCatogray endpoint failed, returning empty array as fallback.', err);
-        return of([]);
+        console.warn('ExpCatogray endpoint failed, returning hardcoded categories.', err);
+        const categories = [
+          { id: 1, name: 'Art and Culture' },
+          { id: 2, name: 'Entertainment' },
+          { id: 3, name: 'Food and Drink' },
+          { id: 4, name: 'Sports' },
+          { id: 5, name: 'Tours' },
+          { id: 6, name: 'Sightseeing' },
+          { id: 7, name: 'Wellness' },
+          { id: 8, name: 'Nature and Outdoors' }
+        ];
+        return of(categories);
       })
     );
   }
 
   getExperienceSubCategories(categoryId?: number): Observable<any[]> {
     const endpoint = `${this.apiUrl}/ExpSubCatogray`;
-    if (categoryId) {
-      return this.http.get<any[]>(endpoint).pipe(
-        map(subs => subs.filter(s => s.expCatograyId === categoryId)),
-        catchError(err => {
-          console.warn('ExpSubCatogray fetch failed, returning empty array.', err);
-          return of([]);
-        })
-      );
-    }
     return this.http.get<any[]>(endpoint).pipe(
+      map(subs => {
+        const mappedSubs = subs.map(s => ({
+          id: s.id || s.Id,
+          name: s.name || s.Name,
+          expCatograyId: s.expCatograyId || s.ExpCatograyId
+        }));
+
+        if (categoryId) {
+          return mappedSubs.filter(s => s.expCatograyId === categoryId);
+        }
+        return mappedSubs;
+      }),
       catchError(err => {
-        console.warn('ExpSubCatogray fetch failed, returning empty array.', err);
-        return of([]);
+        console.warn('ExpSubCatogray fetch failed, returning hardcoded subcategories.', err);
+        const subCategories = [
+          { id: 1, name: 'Painting', expCatograyId: 1 },
+          { id: 2, name: 'Photography', expCatograyId: 1 },
+          { id: 3, name: 'Museums', expCatograyId: 1 },
+          { id: 4, name: 'Concerts', expCatograyId: 2 },
+          { id: 5, name: 'Theater', expCatograyId: 2 },
+          { id: 6, name: 'Cooking Class', expCatograyId: 3 },
+          { id: 7, name: 'Wine Tasting', expCatograyId: 3 },
+          { id: 8, name: 'Food Tour', expCatograyId: 3 },
+          { id: 9, name: 'Surfing', expCatograyId: 4 },
+          { id: 10, name: 'Yoga', expCatograyId: 4 },
+          { id: 11, name: 'Hiking', expCatograyId: 4 },
+          { id: 12, name: 'City Tour', expCatograyId: 5 },
+          { id: 13, name: 'Boat Tour', expCatograyId: 5 },
+          { id: 14, name: 'Landmarks', expCatograyId: 6 },
+          { id: 15, name: 'Spa', expCatograyId: 7 },
+          { id: 16, name: 'Meditation', expCatograyId: 7 },
+          { id: 17, name: 'Camping', expCatograyId: 8 },
+          { id: 18, name: 'Wildlife', expCatograyId: 8 }
+        ];
+        if (categoryId) {
+          return of(subCategories.filter(s => s.expCatograyId === categoryId));
+        }
+        return of(subCategories);
       })
     );
   }
