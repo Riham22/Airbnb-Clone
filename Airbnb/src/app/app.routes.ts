@@ -91,6 +91,11 @@ export const routes: Routes = [
         data: { roles: ['Admin'] }
       },
       {
+        path: 'account-settings',
+        loadComponent: () => import('./Components/personal-account/personal-account.component').then(m => m.PersonalAccountComponent),
+        canActivate: [AuthGuard]
+      },
+      {
         path: '**',
         redirectTo: ''
       }
