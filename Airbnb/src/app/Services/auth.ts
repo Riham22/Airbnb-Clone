@@ -148,12 +148,23 @@ export class AuthService {
   // SIGNUP (returns TEXT)
   // ------------------------
   signup(data: any) {
-    return this.http.post(`${this.apiUrl}/Register`, data, {
+    const payload = {
+      username: data.username,       // make sure matches DTO
+      password: data.password,
+      email: data.email,
+      firstName: data.firstName || null,
+      lastName: data.lastName || null,
+      dateOfBirth: data.dateOfBirth
+        ? new Date(data.dateOfBirth).toISOString().split('T')[0]
+        : null
+    };
+
+    console.log("📤 Sending register payload:", payload);
+
+    return this.http.post(`${this.apiUrl}/Register`, payload, {
       responseType: 'text' as 'json'
     });
   }
-
-
   // ------------------------
   // FORGET PASSWORD
   // ------------------------

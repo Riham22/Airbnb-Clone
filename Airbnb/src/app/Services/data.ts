@@ -22,7 +22,7 @@ import { Review } from '../Models/review';
 })
 export class Data {
   private bookings: Booking[] = [];
-  private wishlistCache: Set<number> = new Set(); // Local cache for wishlist IDs
+  private wishlistCache: Set<string> = new Set(); // Cache for "Type_Id" strings
 
   private propertiesSubject = new BehaviorSubject<RentalProperty[]>([]);
   properties$ = this.propertiesSubject.asObservable();
@@ -34,9 +34,28 @@ export class Data {
   services$ = this.servicesSubject.asObservable();
 
   constructor(private http: HttpClient) {
+    this.loadWishlist(); // Load wishlist first
     this.loadProperties();
     this.loadExperiences();
     this.loadServices();
+  }
+
+  loadWishlist() {
+    this.getWishlist().subscribe({
+      next: (items: any[]) => {
+        this.wishlistCache.clear();
+        items.forEach(item => {
+          if (item.itemType && item.itemId) {
+            this.wishlistCache.add(`${item.itemType}_${item.itemId}`);
+          }
+        });
+        // Reload data to update UI
+        this.loadProperties();
+        this.loadExperiences();
+        this.loadServices();
+      },
+      error: (err) => console.error('Failed to load wishlist', err)
+    });
   }
 
   loadProperties() {
@@ -66,7 +85,8 @@ export class Data {
           },
           description: '',
           highlights: [],
-          reviews: []
+          reviews: [],
+          isWishlisted: this.isWishlistedSync('Property', p.id)
         }));
         this.propertiesSubject.next(mappedProperties);
       },
@@ -308,7 +328,8 @@ export class Data {
           requirements: [],
           meetingPoint: exp.locationName || '',
           languages: exp.usingLanguage ? [exp.usingLanguage] : ['English'],
-          reviews: []
+          reviews: [],
+          isWishlisted: this.isWishlistedSync('Experience', exp.id)
         }));
         this.experiencesSubject.next(mappedExperiences);
       },
@@ -507,7 +528,8 @@ export class Data {
           highlights: [],
           includes: [],
           requirements: [],
-          reviews: []
+          reviews: [],
+          isWishlisted: this.isWishlistedSync('Service', svc.id)
         }));
         this.servicesSubject.next(mappedServices);
       },
@@ -784,10 +806,11 @@ export class Data {
       itemId: itemId
     }).pipe(
       tap((response: any) => {
+        const key = `${itemType}_${itemId}`;
         if (response.wishlisted) {
-          this.wishlistCache.add(itemId);
+          this.wishlistCache.add(key);
         } else {
-          this.wishlistCache.delete(itemId);
+          this.wishlistCache.delete(key);
         }
       })
     );
@@ -805,8 +828,8 @@ export class Data {
     return this.http.get<any>('https://localhost:7020/api/Wishlist/count');
   }
 
-  isWishlistedSync(itemId: number): boolean {
-    return this.wishlistCache.has(itemId);
+  isWishlistedSync(itemType: string, itemId: number): boolean {
+    return this.wishlistCache.has(`${itemType}_${itemId}`);
   }
 
   // Legacy method for backward compatibility (now returns Observable)

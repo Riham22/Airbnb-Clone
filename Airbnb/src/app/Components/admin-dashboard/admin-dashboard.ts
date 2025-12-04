@@ -34,9 +34,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   // Modal States
   showAddUserModal = false;
+  showChangeRoleModal = false;
   showAddListingModal = false;
   showAddServiceModal = false;
   showAddExperienceModal = false;
+
+  selectedUserForRole: AdminUser | null = null;
+  newRoleForUser: string = '';
 
   // Form Data
   newUser: any = { firstName: '', lastName: '', email: '', password: '' };
@@ -47,16 +51,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     location: '',
     maxGuests: 2,
     bedrooms: 1,
+    beds: 1,
     bathrooms: 1,
     propertyTypeId: null,
-    propertyCategoryId: null
+    propertyCategoryId: null,
+    imageUrl: ''
   };
   newService: any = {
     name: '',
     description: '',
     price: 0,
     location: '',
-    serviceCategoryId: null
+    serviceCategoryId: null,
+    imageUrl: ''
   };
   newExperience: any = {
     name: '',
@@ -153,8 +160,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private loadCategories(): void {
     // Load property types and categories
+    // Load property types and categories
     this.subscriptions.add(
-      this.adminService.getPropertyTypesFromData().subscribe({
+      this.adminService.getPropertyTypes().subscribe({
         next: (types) => {
           this.propertyTypes = types;
           console.log('Loaded property types:', types);
@@ -164,7 +172,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     );
 
     this.subscriptions.add(
-      this.adminService.getPropertyCategoriesFromData().subscribe({
+      this.adminService.getPropertyCategories().subscribe({
         next: (categories) => {
           this.propertyCategories = categories;
           console.log('Loaded property categories:', categories);
@@ -231,6 +239,39 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   closeAddUserModal() {
     this.showAddUserModal = false;
     this.newUser = { firstName: '', lastName: '', email: '', password: '' };
+  }
+
+  openChangeRoleModal(user: AdminUser) {
+    this.selectedUserForRole = user;
+    this.newRoleForUser = user.role;
+    this.showChangeRoleModal = true;
+  }
+
+  closeChangeRoleModal() {
+    this.showChangeRoleModal = false;
+    this.selectedUserForRole = null;
+    this.newRoleForUser = '';
+  }
+
+  changeRole() {
+    if (this.selectedUserForRole && this.newRoleForUser) {
+      this.subscriptions.add(
+        this.adminService.updateUserRole(this.selectedUserForRole.id, this.newRoleForUser).subscribe({
+          next: (updatedUser) => {
+            console.log('User role updated:', updatedUser);
+            this.users = this.users.map(user =>
+              user.id === updatedUser.id ? updatedUser : user
+            );
+            this.closeChangeRoleModal();
+            alert('User role updated successfully');
+          },
+          error: (error) => {
+            console.error('Error updating user role:', error);
+            alert('Failed to update user role. Please try again.');
+          }
+        })
+      );
+    }
   }
 
   openAddListingModal() { this.showAddListingModal = true; }
@@ -331,46 +372,37 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
 
     const listingPayload = {
-      Title: this.newListing.name,
-      Description: this.newListing.description,
-      PricePerNight: Number(this.newListing.price),
-      Currency: 'USD',
-      Country: this.newListing.location.split(',')[1]?.trim() || 'Unknown',
-      City: this.newListing.location.split(',')[0]?.trim() || 'Unknown',
-      Address: this.newListing.location,
-      MaxGuests: Number(this.newListing.maxGuests),
-      Bedrooms: Number(this.newListing.bedrooms),
-      Beds: Number(this.newListing.bedrooms),
-      Bathrooms: Number(this.newListing.bathrooms),
-      PropertyTypeId: Number(this.newListing.propertyTypeId),
-      PropertyCategoryId: Number(this.newListing.propertyCategoryId),
-      AmenityIds: []
+      title: this.newListing.name,
+      description: this.newListing.description,
+      pricePerNight: Number(this.newListing.price),
+      currency: 'USD',
+      country: this.newListing.location.split(',')[1]?.trim() || 'Unknown',
+      city: this.newListing.location.split(',')[0]?.trim() || 'Unknown',
+      address: this.newListing.location,
+      latitude: 0,
+      longitude: 0,
+      maxGuests: Number(this.newListing.maxGuests),
+      bedrooms: Number(this.newListing.bedrooms),
+      beds: Number(this.newListing.beds),
+      bathrooms: Number(this.newListing.bathrooms),
+      allowsPets: true,
+      cancellationPolicy: 'Flexible',
+      minNights: 1,
+      maxNights: 30,
+      propertyTypeId: Number(this.newListing.propertyTypeId),
+      propertyCategoryId: Number(this.newListing.propertyCategoryId),
+      subCategoryId: null,
+      amenityIds: [],
+      imageUrl: this.newListing.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image'
     };
 
     console.log('Creating listing with payload:', listingPayload);
 
     this.adminService.createListing(listingPayload).subscribe({
       next: (response: any) => {
-        const listingId = response?.id || response?.Id;
-        if (listingId && this.selectedFile) {
-          this.adminService.uploadPropertyImage(listingId, this.selectedFile).subscribe({
-            next: () => {
-              alert('Listing and image created successfully');
-              this.closeAddListingModal();
-              this.loadDashboardData();
-            },
-            error: (err) => {
-              console.error('Image upload failed', err);
-              alert('Listing created but image upload failed');
-              this.closeAddListingModal();
-              this.loadDashboardData();
-            }
-          });
-        } else {
-          alert('Listing created successfully');
-          this.closeAddListingModal();
-          this.loadDashboardData();
-        }
+        alert('Listing created successfully');
+        this.closeAddListingModal();
+        this.loadDashboardData();
       },
       error: (err) => {
         console.error('Create Listing Error:', err);
@@ -389,41 +421,25 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
 
     const servicePayload = {
-      Title: this.newService.name,
-      Description: this.newService.description,
-      Price: Number(this.newService.price),
-      Currency: 'USD',
-      PricingType: 'PerHour',
-      Country: 'Unknown',
-      City: this.newService.location,
-      Address: this.newService.location,
-      ServiceCategoryId: Number(this.newService.serviceCategoryId)
+      title: this.newService.name,
+      description: this.newService.description,
+      price: Number(this.newService.price),
+      currency: 'USD',
+      pricingType: 'PerHour',
+      country: 'Unknown',
+      city: this.newService.location,
+      address: this.newService.location,
+      serviceCategoryId: Number(this.newService.serviceCategoryId),
+      imageUrl: this.newService.imageUrl
     };
 
     console.log('Creating service with payload:', servicePayload);
 
     this.adminService.createService(servicePayload).subscribe({
       next: (response: any) => {
-        const serviceId = response?.id || response?.Id;
-        if (serviceId && this.selectedFile) {
-          this.adminService.uploadServiceImage(serviceId, this.selectedFile).subscribe({
-            next: () => {
-              alert('Service and image created successfully');
-              this.closeAddServiceModal();
-              this.loadDashboardData();
-            },
-            error: (err) => {
-              console.error('Image upload failed', err);
-              alert('Service created but image upload failed');
-              this.closeAddServiceModal();
-              this.loadDashboardData();
-            }
-          });
-        } else {
-          alert('Service created successfully');
-          this.closeAddServiceModal();
-          this.loadDashboardData();
-        }
+        alert('Service created successfully');
+        this.closeAddServiceModal();
+        this.loadDashboardData();
       },
       error: (err) => {
         console.error('Create Service Error:', err);
