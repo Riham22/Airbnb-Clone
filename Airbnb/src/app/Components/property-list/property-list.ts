@@ -184,19 +184,44 @@ export class PropertyList implements OnInit, OnChanges {
   constructor(private dataService: Data) { }
 
   ngOnInit() {
+    // Subscribe to data service observables for reactive updates
+    this.dataService.properties$.subscribe(() => {
+      this.loadAllData();
+      this.updateAllCategories();
+    });
+
+    this.dataService.experiences$.subscribe(() => {
+      this.loadAllData();
+      this.updateAllCategories();
+    });
+
+    this.dataService.services$.subscribe(() => {
+      this.loadAllData();
+      this.updateAllCategories();
+    });
+
+    // Initial load
     this.loadAllData();
     this.updateAllCategories();
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['properties'] || changes['filters']) {
+      this.loadAllData();
       this.updateAllCategories();
     }
   }
 
   // In your PropertyList component, make sure you're loading properties correctly
   private loadAllData(): void {
-    // Get properties, experiences, and services from data service
+    // If input properties are provided and not empty, use them
+    if (this.properties && this.properties.length > 0) {
+      this.allListings = this.properties;
+      console.log('Using @Input properties:', this.allListings.length);
+      return;
+    }
+
+    // Otherwise, get from data service
     const rentalProperties = this.dataService.getProperties();
     const experiences = (this.dataService as any).getExperiences ? (this.dataService as any).getExperiences() : [];
     const services = (this.dataService as any).getServices ? (this.dataService as any).getServices() : [];
@@ -212,12 +237,7 @@ export class PropertyList implements OnInit, OnChanges {
       ...services
     ];
 
-    console.log('All Listings:', this.allListings); // Debug log
-
-    // If input properties are provided, use them instead
-    if (this.properties && this.properties.length > 0) {
-      this.allListings = this.properties;
-    }
+    console.log('All Listings loaded from service:', this.allListings.length); // Debug log
   }
   private updateAllCategories(): void {
     const filteredProperties = this.applyFilters(this.allListings);

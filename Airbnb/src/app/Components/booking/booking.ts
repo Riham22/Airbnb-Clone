@@ -37,15 +37,30 @@ export class Booking implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
 
+    console.log('📋 Loading bookings from API...');
+
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (this.loading) {
+        this.loading = false;
+        this.error = 'Request timed out. Please check your connection and try again.';
+        console.error('⏱️ Booking request timed out');
+      }
+    }, 10000); // 10 second timeout
+
     this.subscriptions.add(
       this.bookingService.getMyBookings().subscribe({
         next: (response: any) => {
+          clearTimeout(timeout);
+          console.log('✅ Bookings loaded:', response);
           this.bookings = response.data || response || [];
           this.loading = false;
         },
         error: (err) => {
-          console.error('Error loading bookings:', err);
-          this.error = 'Failed to load bookings. Please try again.';
+          clearTimeout(timeout);
+          console.error('❌ Error loading bookings:', err);
+          console.error('Error details:', err.error);
+          this.error = err.error?.message || 'Failed to load bookings. Please try again.';
           this.loading = false;
         }
       })

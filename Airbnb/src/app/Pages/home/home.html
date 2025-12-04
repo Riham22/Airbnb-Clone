@@ -1,13 +1,7 @@
-<!-- home.html - Add this debug button at the very top temporarily -->
+<!-- home.html -->
 <div class="home-container">
 
-  <!-- TEMPORARY DEBUG BUTTON - Remove after fixing
-  <button (click)="debugProperties()"
-    style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: #ff385c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-    🐛 Debug Properties
-  </button> -->
-
-  <!-- Search Bar -->
+  <!--Search Bar -->
   <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
     (activeFiltersChange)="onActiveFiltersChange($event)">
   </app-search-bar>
@@ -24,16 +18,9 @@
     <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">
     </app-filter-modal>
 
-    <!-- Show loading/empty state -->
-    <div *ngIf="filteredProperties.length === 0" style="text-align: center; padding: 50px;">
-      <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
-      <h2>{{ properties.length === 0 ? 'Loading properties...' : 'No properties found' }}</h2>
-      <p *ngIf="properties.length === 0">Please wait while we fetch available properties.</p>
-      <p *ngIf="properties.length > 0">Try adjusting your filters or search criteria.</p>
-    </div>
-
-    <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
-      (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)">
+    <!-- Property List - Pass properties from home component -->
+    <app-property-list [properties]="properties" [filters]="activeFilters" (propertyClick)="onPropertyClick($event)"
+      (wishlistChange)="onWishlistChange($event)">
     </app-property-list>
   </main>
 </div>
