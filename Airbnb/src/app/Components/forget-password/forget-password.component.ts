@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../Services/auth';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-forget-password',
@@ -14,7 +15,7 @@ import { AuthService } from '../../Services/auth';
 export class ForgetPasswordComponent {
   // For forget password form
   email: string = '';
-  
+
   // For reset password form (if you want both in same component)
   resetData = {
     email: '',
@@ -22,7 +23,7 @@ export class ForgetPasswordComponent {
     newPassword: '',
     confirmPassword: ''
   };
-  
+
   isForgetMode: boolean = true;
   isLoading: boolean = false;
   successMessage: string = '';
@@ -48,7 +49,7 @@ export class ForgetPasswordComponent {
       next: (res: any) => {
         this.isLoading = false;
         this.successMessage = res.message || 'Reset link sent to your email!';
-        
+
         // If token is returned (for development), show reset form
         if (res.resetToken) {
           this.resetData.email = this.email;
@@ -81,22 +82,22 @@ export class ForgetPasswordComponent {
       newPassword: this.resetData.newPassword
     };
 
-    this.authService.resetPassword(resetData).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
-        this.successMessage = res.message || 'Password reset successful! You can now login.';
-        
-        // Redirect to login after delay
-        setTimeout(() => {
-          this.router.navigate(['/auth']);
-        }, 3000);
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage = err.error?.message || 'Failed to reset password. Please try again.';
-        console.error('Reset password error:', err);
-      }
-    });
+    // this.authService.resetPassword(resetData).subscribe({
+    //   next: (res: any) => {
+    //     this.isLoading = false;
+    //     this.successMessage = res.message || 'Password reset successful! You can now login.';
+
+    //     // Redirect to login after delay
+    //     setTimeout(() => {
+    //       this.router.navigate(['/auth']);
+    //     }, 3000);
+    //   },
+    //   error: (err:HttpErrorResponse) => {
+    //     this.isLoading = false;
+    //     this.errorMessage = err.error?.message || 'Failed to reset password. Please try again.';
+    //     console.error('Reset password error:', err);
+    //   }
+    // });
   }
 
   // Toggle between forget and reset modes
@@ -139,4 +140,7 @@ export class ForgetPasswordComponent {
     this.successMessage = '';
     this.errorMessage = '';
   }
+
+
+
 }

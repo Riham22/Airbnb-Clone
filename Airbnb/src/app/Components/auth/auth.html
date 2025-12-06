@@ -1,5 +1,5 @@
 <div class="auth-container">
-   <div class="auth-header">
+  <div class="auth-header">
     <div class="logo" (click)="navigateToHome()"> <svg viewBox="0 0 1000 1000" role="presentation" aria-hidden="true"
         focusable="false" style="height: 32px; width: 32px; display: block; fill: #ff385c;">
         <path
@@ -12,11 +12,7 @@
   <div class="auth-card">
     <h1 class="auth-title">{{ isLoginMode ? 'Log in' : 'Sign up' }}</h1>
 
-    <!-- Error Message -->
-    <div *ngIf="errorMessage" class="error-alert">
-      {{ errorMessage }}
-    </div>
-
+    <!-- Login/Signup Form -->
     <form (ngSubmit)="onSubmit()" class="auth-form">
       <!-- Signup Fields -->
       <div *ngIf="!isLoginMode" class="name-fields">
@@ -28,43 +24,43 @@
         </div>
       </div>
 
-      <!-- Email/Username Field -->
+      <!-- Email Field -->
       <div class="form-group">
-        <input *ngIf="isLoginMode" type="text" [(ngModel)]="currentEmail" name="username" placeholder="Username" required>
-        <input *ngIf="!isLoginMode" type="email" [(ngModel)]="currentEmail" name="email" placeholder="Email" required>
+        <input type="email" [(ngModel)]="currentEmail" name="currentEmail" placeholder="Email" required>
       </div>
 
-      <!-- Signup Username Field -->
-      <div *ngIf="!isLoginMode" class="form-group">
-        <input type="text" [(ngModel)]="signupData.username" name="username" placeholder="Username" required>
-      </div>
-
-      <!-- Password Fields -->
+      <!-- Password Field -->
       <div class="form-group">
         <input type="password" [(ngModel)]="currentPassword" name="currentPassword" placeholder="Password" required>
       </div>
 
-      <!-- Confirm Password (Signup only) -->
-      <div *ngIf="!isLoginMode" class="form-group">
-        <input type="password" [(ngModel)]="signupData.confirmPassword" name="confirmPassword" placeholder="Confirm Password" required>
-      </div>
-
       <!-- Forgot Password Link -->
       <div *ngIf="isLoginMode" style="text-align: right; margin-top: 5px;">
-        <a routerLink="/forget-password" style="color: #ff385c; font-size: 0.875rem; text-decoration: none;">Forgot password?</a>
+        <a routerLink="/forget-password" style="color: #ff385c; font-size: 0.875rem; text-decoration: none;">Forgot
+          password?</a>
       </div>
 
-      <!-- Date of Birth (Signup only) -->
+      <!-- Birthday Fields (Signup only) -->
       <div *ngIf="!isLoginMode" class="birthday-section">
         <p class="birthday-label">Date of birth</p>
         <p class="birthday-description">
           To sign up, you need to be at least 13. Your birthday won't be shown to other people.
         </p>
-        <div class="form-group">
-          <input type="date" [(ngModel)]="signupData.dateOfBirth" name="dateOfBirth" required 
-                 [max]="maxDate" [min]="minDate">
+        <div class="birthday-fields">
+          <select title="month" [(ngModel)]="signupData.month" name="month" required>
+            <option value="">Month</option>
+            <option *ngFor="let month of months" [value]="month">{{ month }}</option>
+          </select>
+          <select title="day" [(ngModel)]="signupData.day" name="day" required>
+            <option value="">Day</option>
+            <option *ngFor="let day of days" [value]="day">{{ day }}</option>
+          </select>
+          <select title="year" [(ngModel)]="signupData.year" name="year" required>
+            <option value="">Year</option>
+            <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+          </select>
         </div>
-        <div *ngIf="signupData.dateOfBirth && getAge() < 13" class="error-message">
+        <div *ngIf="signupData.year && getAge() < 13" class="error-message">
           You must be at least 13 years old to create an account.
         </div>
       </div>

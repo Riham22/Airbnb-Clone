@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserService } from '../../Services/user.service';
 import { AuthService } from '../../Services/auth';
-import { User } from '../../Models/User';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-personal-account',
@@ -14,7 +15,7 @@ import { User } from '../../Models/User';
 })
 export class PersonalAccountComponent implements OnInit {
     profileForm: FormGroup;
-    currentUser: User | null = null;
+    currentUser: any = null;
     loading = false;
     successMessage = '';
     errorMessage = '';
@@ -22,69 +23,62 @@ export class PersonalAccountComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private userService: UserService,
-        private authService: AuthService
+        private authService: AuthService,
+        private router: Router
     ) {
         this.profileForm = this.fb.group({
-            firstName: ['', Validators.required],
-            lastName: ['', Validators.required],
-            email: [{ value: '', disabled: true }], // Email usually not editable directly
-            photoURL: [''],
+            firstName: [''],
+            lastName: [''],
+            email: [{ value: '', disabled: true }],
+            username: [{ value: '', disabled: true }],
+            // Additional fields - only include if they exist in your API
             dateOfBirth: [''],
-            work: [''],
-            wantedToTravel: [''],
-            pets: [''],
-            uselessSkill: [''],
-            showTheDecade: [false],
-            funFact: [''],
-            favoriteSong: [''],
-            school: [''],
-            spendTimeDoing: [''],
             location: [''],
             about: ['']
         });
     }
 
     ngOnInit(): void {
-        // Get current user from Auth Service (assuming it has ID)
-        const authUser = this.authService.getCurrentUser();
-        if (authUser && authUser.id) {
-            this.loading = true;
-            this.userService.getUser(authUser.id).subscribe({
-                next: (user) => {
-                    this.currentUser = user;
-                    this.patchForm(user);
-                    this.loading = false;
+        // Check if user is logged in first
+        if (!this.authService.isLoggedIn()) {
+            this.router.navigate(['/auth']);
+            return;
+        }
+
+        // Get current user from Auth Service
+        this.currentUser = this.authService.getCurrentUser();
+
+        if (this.currentUser) {
+            console.log('Current user from AuthService:', this.currentUser);
+            this.patchForm(this.currentUser);
+
+            // Try to get updated profile data from UserService (cached)
+            this.userService.getMyProfile().subscribe({
+                next: (user: any) => {
+                    if (user) {
+                        this.currentUser = { ...this.currentUser, ...user };
+                        this.patchForm(this.currentUser);
+                    }
                 },
-                error: (err) => {
-                    console.error('Error fetching user', err);
-                    this.errorMessage = 'Failed to load user data';
-                    this.loading = false;
+                error: (err: any) => {
+                    console.log('Could not fetch fresh profile, using cached data:', err.message);
                 }
             });
         } else {
-            // Fallback or redirect if no user logged in
-            this.errorMessage = 'No user logged in';
+            this.errorMessage = 'No user data available. Please log in again.';
         }
     }
 
-    patchForm(user: User) {
+    patchForm(user: any) {
+        console.log('Patching form with user data:', user);
         this.profileForm.patchValue({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            photoURL: user.photoURL,
-            dateOfBirth: user.dateOfBirth,
-            work: user.work,
-            wantedToTravel: user.wantedToTravel,
-            pets: user.pets,
-            uselessSkill: user.uselessSkill,
-            showTheDecade: user.showTheDecade,
-            funFact: user.funFact,
-            favoriteSong: user.favoriteSong,
-            school: user.school,
-            spendTimeDoing: user.spendTimeDoing,
-            location: user.location,
-            about: user.about
+            firstName: user.firstName || user.given_name || '',
+            lastName: user.lastName || user.family_name || '',
+            email: user.email || user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '',
+            username: user.username || user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || '',
+            dateOfBirth: user.dateOfBirth || '',
+            location: user.location || '',
+            about: user.about || ''
         });
     }
 
@@ -96,18 +90,40 @@ export class PersonalAccountComponent implements OnInit {
 
             const updatedData = this.profileForm.getRawValue();
 
-            this.userService.updateUser(this.currentUser.id, updatedData).subscribe({
-                next: (res) => {
+            // Get user ID from current user
+            const userId = this.currentUser.id ||
+                          this.currentUser.Id ||
+                          this.currentUser.userId ||
+                          this.currentUser['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+
+            if (!userId) {
+                this.errorMessage = 'Cannot update: No user ID found';
+                this.loading = false;
+                return;
+            }
+
+            // Use UserService to update - this will use AuthService.updateUserProfile
+            this.userService.updateCurrentUser(updatedData).subscribe({
+                next: (res: any) => {
                     this.successMessage = 'Profile updated successfully';
                     this.loading = false;
-                    // Update local auth state if necessary
+
+                    // Update local user data
+                    this.currentUser = { ...this.currentUser, ...updatedData };
+                    // this.authService.updateCurrentUser(this.currentUser);
                 },
-                error: (err) => {
+                error: (err: HttpErrorResponse) => {
                     console.error('Error updating profile', err);
-                    this.errorMessage = 'Failed to update profile';
+                    this.errorMessage = err.error?.message || 'Failed to update profile. Note: Profile update endpoint might not be available.';
                     this.loading = false;
                 }
             });
         }
     }
+
+    logout() {
+        this.authService.logout();
+        this.router.navigate(['/auth']);
+    }
+    
 }

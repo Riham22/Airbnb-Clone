@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, tap, catchError, of, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 @Injectable({
@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class AuthService {
   private apiUrl = "https://localhost:7020/api/Account";
+
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   private currentUser = new BehaviorSubject<any>(null);
 
@@ -17,31 +18,108 @@ export class AuthService {
     this.loadUserFromStorage();
   }
 
-  // Login method
-  login(credentials: { username: string; password: string }): Observable<any> {
-    return this.http.post<{ token: string; expiration: string }>(`${this.apiUrl}/Login`, credentials).pipe(
-      tap((response: any) => {
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('token_expiration', response.expiration);
+  // ============ Enhanced Get User ID Method ============
+  private getUserIdFromUser(user: any): string | null {
+    if (!user) return null;
 
-          // Fetch user profile after successful login
-          this.fetchUserProfile().subscribe({
-            next: (user) => {
-              this.currentUser.next(user);
-              localStorage.setItem('user', JSON.stringify(user));
-              this.isAuthenticated.next(true);
-            },
-            error: (err) => {
-              console.error('Failed to fetch user profile:', err);
-              this.isAuthenticated.next(true);
-            }
-          });
-        }
-      }),
-      catchError(error => {
-        console.error('Login error:', error);
-        return of(null);
+    // Check all possible ID property names
+    const possibleIds = [
+      user.id,
+      user.Id,
+      user.userId,
+      user.UserId,
+      user.sub, // JWT standard claim
+      user.nameid, // Alternative JWT claim
+      user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'], // .NET JWT claim
+      user['http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid'], // Another .NET claim
+      user.uid,
+      user.Uid
+    ];
+
+    // Find the first non-null, non-undefined value
+    const userId = possibleIds.find(id => id !== null && id !== undefined && id !== '');
+
+    console.log('Looking for user ID. Possible IDs:', possibleIds, 'Found:', userId);
+
+    return userId || null;
+  }
+
+  // ============ Update Current User (Local State) ============
+  updateCurrentUser(updatedUser: any): void {
+    this.currentUser.next(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    console.log('User updated in AuthService:', updatedUser);
+  }
+
+  // ============ Update User Profile via API ============
+  updateUserProfile(userData: any): Observable<any> {
+    const currentUser = this.currentUser.value;
+    const userId = this.getUserIdFromUser(currentUser);
+
+    if (!userId) {
+      console.error('No user ID found for update. Current user:', currentUser);
+      throw new Error('No user ID found for update. Please check if user is logged in.');
+    }
+
+    console.log('Updating user profile for ID:', userId, 'Data:', userData);
+
+    return this.http.put(`${this.apiUrl}/${userId}`, userData).pipe(
+      tap((response: any) => {
+        console.log('Profile update API response:', response);
+
+        // Merge the updated data with existing user data
+        const updatedUser = { ...currentUser, ...userData };
+        this.updateCurrentUser(updatedUser);
+      })
+    );
+  }
+
+  // ============ Delete User Account ============
+  deleteUserAccount(): Observable<any> {
+    const currentUser = this.currentUser.value;
+    const userId = this.getUserIdFromUser(currentUser);
+
+    if (!userId) {
+      console.error('No user ID found for deletion. Current user:', currentUser);
+      throw new Error('No user ID found for deletion. Please check if user is logged in.');
+    }
+
+    console.log('Deleting user account ID:', userId);
+
+    return this.http.delete(`${this.apiUrl}/${userId}`).pipe(
+      tap(() => {
+        console.log('Account deleted successfully');
+        this.logout();
+      })
+    );
+  }
+
+  // ============ Change Password ============
+  changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ChangePassword`, data).pipe(
+      tap((response: any) => {
+        console.log('Password change successful:', response);
+      })
+    );
+  }
+
+  // ------------------------
+  // LOGIN (returns JSON)
+  // ------------------------
+  login(credentials: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/Login`, credentials).pipe(
+      tap((res: any) => {
+        const token = res.token;
+        localStorage.setItem('token', token);
+
+        const decodedUser = this.decodeToken(token);
+
+        // Log the decoded user to see what properties are available
+        console.log('Decoded user from token:', decodedUser);
+
+        this.currentUser.next(decodedUser);
+        this.isAuthenticated.next(true);
+        localStorage.setItem('user', JSON.stringify(decodedUser));
       })
     );
   }
@@ -49,9 +127,9 @@ export class AuthService {
   // ------------------------
   // SIGNUP (returns TEXT)
   // ------------------------
-  signup(data: any) {
+  signup(data: any): Observable<any> {
     const payload = {
-      username: data.username,       // make sure matches DTO
+      username: data.username,
       password: data.password,
       email: data.email,
       firstName: data.firstName || null,
@@ -65,178 +143,95 @@ export class AuthService {
 
     return this.http.post(`${this.apiUrl}/Register`, payload, {
       responseType: 'text' as 'json'
-    }).pipe(
-      tap((response: any) => {
-        console.log('Signup successful:', response);
-      }),
-      catchError(error => {
-        console.error('Signup error:', error);
-        throw error;
-      })
-    );
-  }
-<<<<<<< HEAD
-
-  // Forget Password method - ADDED THIS
-  forgetPassword(email: string): Observable<any> {
-    const dto = { email };
-    return this.http.post(`${this.apiUrl}/ForgetPassword`, dto).pipe(
-      tap((response: any) => {
-        console.log('Forget password request sent:', response);
-      }),
-      catchError(error => {
-        console.error('Forget password error:', error);
-        throw error;
-      })
-    );
+    });
   }
 
-  // Reset Password method - You might need this too
-  resetPassword(data: { email: string; token: string; newPassword: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/ResetPassword`, data).pipe(
-      tap((response: any) => {
-        console.log('Password reset successful:', response);
-      }),
-      catchError(error => {
-        console.error('Reset password error:', error);
-        throw error;
-      })
-    );
-=======
   // ------------------------
   // FORGET PASSWORD
   // ------------------------
-  forgetPassword(email: string) {
+  forgetPassword(email: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/ForgetPassword`, { email });
->>>>>>> 4a249da099bf4a9f7fb8005263067d2f40ed00dd
   }
 
-  // Change Password method
-  changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/ChangePassword`, data).pipe(
-      tap((response: any) => {
-        console.log('Password changed successfully:', response);
-      }),
-      catchError(error => {
-        console.error('Change password error:', error);
-        throw error;
-      })
-    );
+  // ------------------------
+  // RESET PASSWORD
+  // ------------------------
+  resetPassword(data: { email: string; token: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ResetPassword`, data);
   }
 
-  // Fetch user profile
-  fetchUserProfile(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/Profile`).pipe(
-      catchError(error => {
-        console.error('Failed to fetch profile:', error);
-        return of(null);
-      })
-    );
-  }
-
-  // Load user from storage
-  loadUserFromStorage() {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    const tokenExpiration = localStorage.getItem('token_expiration');
-
-    if (token && userData && tokenExpiration) {
-      const expirationDate = new Date(tokenExpiration);
-      if (expirationDate > new Date()) {
-        this.isAuthenticated.next(true);
-        this.currentUser.next(JSON.parse(userData));
-      } else {
-        this.logout();
-      }
-    }
-  }
-
-  // Logout
-  logout() {
-    localStorage.clear();
+  // ------------------------
+  // LOGOUT
+  // ------------------------
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     this.isAuthenticated.next(false);
     this.currentUser.next(null);
   }
 
-  // Get token
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  // ------------------------
+  // HELPERS
+  // ------------------------
+  checkAuthentication(): void {
+    this.loadUserFromStorage();
   }
 
-  // Check if logged in
-  isLoggedIn(): boolean {
-    return this.isAuthenticated.value;
-  }
+  loadUserFromStorage(): void {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
 
-  // Get current user
-  getCurrentUser(): any {
-    return this.currentUser.value;
-  }
-
-  // Check authentication
-  checkAuthentication() {
-    const token = this.getToken();
-    if (token) {
-      const tokenExpiration = localStorage.getItem('token_expiration');
-      if (tokenExpiration && new Date(tokenExpiration) > new Date()) {
+    if (token && user) {
+      try {
+        const parsedUser = JSON.parse(user);
+        console.log('Loaded user from storage:', parsedUser);
+        this.currentUser.next(parsedUser);
         this.isAuthenticated.next(true);
-        this.loadUserFromStorage();
-
-        this.fetchUserProfile().subscribe(user => {
-          if (user) {
-            this.currentUser.next(user);
-            localStorage.setItem('user', JSON.stringify(user));
-          }
-        });
-      } else {
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
         this.logout();
       }
     }
   }
 
-  // Optional: Google login
-  googleLogin(idToken: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/GoogleLogin`, { idToken }).pipe(
-      tap((response: any) => {
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('token_expiration', response.expire);
-          this.isAuthenticated.next(true);
+  decodeToken(token: string): any {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch {
+      return null;
+    }
+  }
 
-          this.fetchUserProfile().subscribe(user => {
-            if (user) {
-              this.currentUser.next(user);
-              localStorage.setItem('user', JSON.stringify(user));
-            }
-          });
-        }
-      }),
-      catchError(error => {
-        console.error('Google login error:', error);
-        throw error;
-      })
-    );
-  //   // Debug: Log the user object to see what's inside
-  //   console.log('🔍 Checking admin status for user:', user);
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
 
-  //   // Check for Admin role (case-insensitive)
-  //   const role = user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
-  //     user.role ||
-  //     user.Role;
+  isLoggedIn(): boolean {
+    return this.isAuthenticated.value;
+  }
 
-  //   console.log('🔍 Found role:', role);
+  getCurrentUser(): any {
+    return this.currentUser.value;
+  }
 
-  //   // TEMPORARY WORKAROUND: If no role claim exists, check username
-  //   if (!role) {
-  //     const username = user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || user.name || user.username;
-  //     console.log('⚠️ No role found, checking username:', username);
-  //     const isAdminByUsername = username && username.toLowerCase() === 'admin';
-  //     console.log('🔍 Is admin by username?', isAdminByUsername);
-  //     return isAdminByUsername;
-  //   }
+  getCurrentUserId(): string | null {
+    return this.getUserIdFromUser(this.currentUser.value);
+  }
 
-  //   console.log('🔍 Is admin by role?', role && role.toLowerCase() === 'admin');
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
 
-  //   return role && role.toLowerCase() === 'admin';
-   }
+    const role = user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+      user.role || user.Role;
+
+    console.log('Checking admin status - Role:', role);
+
+    if (!role) {
+      const username = user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || user.name || user.username;
+      return username && username.toLowerCase() === 'admin';
+    }
+
+    return role.toLowerCase() === 'admin';
+  }
 }

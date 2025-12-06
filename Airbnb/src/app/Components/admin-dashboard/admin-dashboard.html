@@ -165,7 +165,7 @@
                 {{ user.role }}
               </span>
             </td>
-            <td>{{ user.joinedDate | date:'MMM d, yyyy' }}</td>
+            <td>{{ user.joinedDate| date:'MMM d, yyyy' }}</td>
             <td>{{ user.listingsCount }}</td>
             <td>{{ user.bookingsCount }}</td>
             <td>
@@ -237,7 +237,7 @@
           <tr *ngFor="let listing of listings">
             <td class="listing-cell">
               <div class="listing-image">
-                <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
+                <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
               </div>
               <div class="listing-info">
                 <strong>{{ listing.title }}</strong>
@@ -389,15 +389,22 @@
     </div>
   </section>
 
-  <!-- Analytics Tab -->
-  <section *ngIf="activeTab === 'analytics'" class="tab-content">
-    <div class="analytics-placeholder">
-      <div class="placeholder-icon">📈</div>
-      <h3>Analytics Dashboard</h3>
-      <p>Advanced analytics and reporting features coming soon.</p>
-      <p>This section will include charts, graphs, and detailed performance metrics.</p>
-    </div>
-  </section>
+    <!-- Analytics Tab -->
+      <section *ngIf="activeTab === 'analytics'" class="tab-content analytics-tab">
+        <div class="analytics-container">
+          <div class="analytics-header">
+            <h2>Analytics Dashboard</h2>
+            <p class="section-subtitle">Advanced metrics and insights</p>
+          </div>
+
+          <div class="analytics-placeholder">
+            <div class="placeholder-icon">📈</div>
+            <h3>Analytics Coming Soon</h3>
+            <p>Advanced analytics and reporting features are in development.</p>
+            <p>This section will include interactive charts, graphs, and detailed performance metrics.</p>
+          </div>
+        </div>
+      </section>
 
   <!-- MODALS -->
 
@@ -424,7 +431,7 @@
         </div>
         <div class="form-group">
           <label>Role</label>
-          <select [(ngModel)]="newUser.role" name="role">
+          <select [(ngModel)]="newUser.role"  title="role" name="role">
             <option value="guest">Guest</option>
             <option value="host">Host</option>
             <option value="admin">Admin</option>
@@ -445,7 +452,7 @@
       <form (ngSubmit)="changeRole()">
         <div class="form-group">
           <label>Select New Role</label>
-          <select [(ngModel)]="newRoleForUser" name="newRole">
+          <select [(ngModel)]="newRoleForUser" title="newRole" name="newRole">
             <option value="guest">Guest</option>
             <option value="host">Host</option>
             <option value="admin">Admin</option>
@@ -482,14 +489,14 @@
         </div>
         <div class="form-group">
           <label>Property Type</label>
-          <select [(ngModel)]="newListing.propertyTypeId" name="propertyTypeId" required>
+          <select [(ngModel)]="newListing.propertyTypeId" title="propertyTypeId" name="propertyTypeId" required>
             <option [ngValue]="null" disabled>Select Property Type</option>
             <option *ngFor="let type of propertyTypes" [value]="type.id">{{ type.name }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>Property Category</label>
-          <select [(ngModel)]="newListing.propertyCategoryId" name="propertyCategoryId" required>
+          <select [(ngModel)]="newListing.propertyCategoryId"  title="propertyCategoryId" name="propertyCategoryId" required>
             <option [ngValue]="null" disabled>Select Property Category</option>
             <option *ngFor="let category of propertyCategories" [value]="category.id">{{ category.name }}</option>
           </select>
@@ -538,7 +545,7 @@
         </div>
         <div class="form-group">
           <label>Category</label>
-          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId" required>
+          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId"  title="serviceCategoryId"  required>
             <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
           </select>
@@ -579,11 +586,11 @@
         </div>
         <div class="form-group">
           <label>Description</label>
-          <input type="text" [(ngModel)]="newExperience.description" name="description" required>
+          <input type="text" [(ngModel)]="newExperience.description" name="description"  title="description"  required>
         </div>
         <div class="form-group">
           <label>Category</label>
-          <select [(ngModel)]="newExperience.category" name="category" required>
+          <select [(ngModel)]="newExperience.category" name="category"  title="category" required>
             <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of experienceCategories" [value]="cat.name">{{ cat.name }}</option>
           </select>

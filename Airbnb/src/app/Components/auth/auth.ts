@@ -1,3 +1,186 @@
+// // auth.component.ts
+// import { Component } from '@angular/core';
+// import { CommonModule } from '@angular/common';
+// import { FormsModule } from '@angular/forms';
+// import { Router, RouterModule } from '@angular/router';
+// import { AuthService } from '../../Services/auth';
+
+// @Component({
+//   selector: 'app-auth',
+//   standalone: true,
+//   imports: [CommonModule, FormsModule, RouterModule],
+//   templateUrl: './auth.html',
+//   styleUrl: './auth.css'
+// })
+// export class AuthComponent {
+//   isLoginMode = true;
+//   isLoading = false;
+
+//   // Form models
+//   loginData = {
+//     username: '',
+//     password: ''
+//   };
+
+//   signupData = {
+//     firstName: '',
+//     lastName: '',
+//     username: '',
+//     password: '',
+//     month: '',
+//     day: '',
+//     year: ''
+//   };
+
+//   // Months for birthday selection
+//   months = [
+//     'January', 'February', 'March', 'April', 'May', 'June',
+//     'July', 'August', 'September', 'October', 'November', 'December'
+//   ];
+
+//   // Days (1-31)
+//   days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+//   // Years (current year - 120 to current year - 13)
+//   currentYear = new Date().getFullYear();
+//   years = Array.from({ length: 108 }, (_, i) => this.currentYear - i - 13);
+
+//   constructor(
+//     private router: Router,
+//     private authService: AuthService
+//   ) { }
+
+//   navigateToHome() {
+//     this.router.navigate(['/']);
+//   }
+
+//   toggleMode() {
+//     this.isLoginMode = !this.isLoginMode;
+//     // Clear form data when switching modes
+//     this.loginData = { username: '', password: '' };
+//     this.signupData = {
+//       firstName: '', lastName: '', username: '', password: '',
+//       month: '', day: '', year: ''
+//     };
+//   }
+
+//   onLogin() {
+//     this.isLoading = true;
+//     console.log('Login attempt:', this.loginData);
+
+//     const userData = {
+//       username: this.loginData.username,
+//       password: this.loginData.password
+//     };
+
+//     this.authService.login(userData).subscribe({
+//       next: () => {
+//         this.isLoading = false;
+//         this.router.navigate(['/']);
+//       },
+//       error: (err) => {
+//         console.error('Login failed', err);
+//         this.isLoading = false;
+//         alert('Login failed. Please check your credentials.');
+//       }
+//     });
+//   }
+
+//   onSignup() {
+//     this.isLoading = true;
+//     console.log('Signup attempt:', this.signupData);
+//    const dateOfBirth = `${this.signupData.year}-${this.months.indexOf(this.signupData.month) + 1}-${this.signupData.day}`;
+
+//     const userData = {
+//       username: this.signupData.username,
+//       firstName: this.signupData.firstName,
+//       lastName: this.signupData.lastName,
+//       email: this.signupData.username,
+//       password: this.signupData.password,
+//       dateOfBirth: dateOfBirth
+//       // Add other fields as expected by your backend registration endpoint
+//     };
+
+//     this.authService.signup(userData).subscribe({
+//       next: () => {
+//         this.isLoading = false;
+//         this.router.navigate(['/']);
+//       },
+//       error: (err) => {
+//         console.error('Signup failed', err);
+//         this.isLoading = false;
+//         alert('Signup failed. Please try again.');
+//       }
+//     });
+//   }
+
+//   onSubmit() {
+//     if (this.isLoginMode) {
+//       this.onLogin();
+//     } else {
+//       this.onSignup();
+//     }
+//   }
+
+//   // Get current username based on mode
+//   get currentEmail(): string {
+//     return this.isLoginMode ? this.loginData.username : this.signupData.username;
+//   }
+
+//   set currentEmail(value: string) {
+//     if (this.isLoginMode) {
+//       this.loginData.username = value;
+//     } else {
+//       this.signupData.username = value;
+//     }
+//   }
+
+//   // Get current password based on mode
+//   get currentPassword(): string {
+//     return this.isLoginMode ? this.loginData.password : this.signupData.password;
+//   }
+
+//   set currentPassword(value: string) {
+//     if (this.isLoginMode) {
+//       this.loginData.password = value;
+//     } else {
+//       this.signupData.password = value;
+//     }
+//   }
+
+
+//   // Utility methods
+//   getAge(): number {
+//     if (!this.signupData.year || !this.signupData.month || !this.signupData.day) {
+//       return 0;
+//     }
+//     const birthDate = new Date(
+//       parseInt(this.signupData.year),
+//       this.months.indexOf(this.signupData.month),
+//       parseInt(this.signupData.day)
+//     );
+//     const ageDiff = Date.now() - birthDate.getTime();
+//     return Math.abs(new Date(ageDiff).getUTCFullYear() - 1970);
+//   }
+
+//   isSignupValid(): boolean {
+//     if (!this.signupData.firstName || !this.signupData.lastName ||
+//       !this.signupData.username || !this.signupData.password) {
+//       return false;
+//     }
+
+//     // Check if birthday is complete and user is at least 13 years old
+//     if (!this.signupData.month || !this.signupData.day || !this.signupData.year) {
+//       return false;
+//     }
+
+//     return this.getAge() >= 13;
+//   }
+
+//   isLoginValid(): boolean {
+//     return !!this.loginData.username && !!this.loginData.password;
+//   }
+// }
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,12 +197,8 @@ import { AuthService } from '../../Services/auth';
 export class AuthComponent {
   isLoginMode = true;
   isLoading = false;
-  errorMessage = '';
 
-  // Date restrictions for date picker
-  maxDate: string;
-  minDate: string;
-
+  // Form models
   loginData = {
     username: '',
     password: ''
@@ -29,28 +208,26 @@ export class AuthComponent {
     firstName: '',
     lastName: '',
     username: '',
-    email: '',
     password: '',
-    confirmPassword: '',
-    dateOfBirth: ''
+    month: '',
+    day: '',
+    year: ''
   };
+
+  months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  days = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  currentYear = new Date().getFullYear();
+  years = Array.from({ length: 108 }, (_, i) => this.currentYear - i - 13);
 
   constructor(
     private router: Router,
     private authService: AuthService
-  ) { 
-    // Set date restrictions (must be at least 13 years old, max 150 years)
-    const today = new Date();
-    this.maxDate = this.formatDate(new Date(today.getFullYear() - 13, today.getMonth(), today.getDate()));
-    this.minDate = this.formatDate(new Date(today.getFullYear() - 150, today.getMonth(), today.getDate()));
-  }
-
-  private formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+  ) { }
 
   navigateToHome() {
     this.router.navigate(['/']);
@@ -58,102 +235,96 @@ export class AuthComponent {
 
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
-    this.errorMessage = '';
     this.loginData = { username: '', password: '' };
     this.signupData = {
       firstName: '',
       lastName: '',
       username: '',
-      email: '',
       password: '',
-      confirmPassword: '',
-      dateOfBirth: ''
+      month: '',
+      day: '',
+      year: ''
     };
   }
 
+  // ------------------------
+  // LOGIN
+  // ------------------------
   onLogin() {
-    if (!this.isLoginValid()) {
-      this.errorMessage = 'Please fill in all fields';
-      return;
-    }
-
     this.isLoading = true;
-    this.errorMessage = '';
 
-    const loginData = {
+    const userData = {
       username: this.loginData.username,
       password: this.loginData.password
     };
 
-    this.authService.login(loginData).subscribe({
-      next: (response) => {
+    this.authService.login(userData).subscribe({
+      next: () => {
         this.isLoading = false;
-        if (response && response.token) {
-          this.router.navigate(['/account']);
-        } else {
-          this.errorMessage = 'Login failed. Please try again.';
-        }
+        this.router.navigate(['/']);
       },
-      error: (error) => {
+      error: (err) => {
+        console.error('Login failed', err);
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Login failed. Please check your credentials.';
+        alert('Login failed. Please check your credentials.');
       }
     });
   }
 
+  // ------------------------
+  // SIGNUP (fixed version)
+  // ------------------------
   onSignup() {
-    if (!this.isSignupValid()) {
-      this.errorMessage = 'Please fill in all required fields and ensure passwords match.';
-      return;
-    }
-
-    if (this.signupData.password !== this.signupData.confirmPassword) {
-      this.errorMessage = 'Passwords do not match';
-      return;
-    }
-
-    if (this.getAge() < 13) {
-      this.errorMessage = 'You must be at least 13 years old to create an account.';
-      return;
-    }
-
     this.isLoading = true;
-    this.errorMessage = '';
 
-    const signupData = {
+    // Zero-pad month/day
+    const monthNum = (this.months.indexOf(this.signupData.month) + 1).toString().padStart(2, '0');
+    const dayNum = this.signupData.day.toString().padStart(2, '0');
+
+    const dateOfBirth = `${this.signupData.year}-${monthNum}-${dayNum}`;
+
+    const userData = {
       username: this.signupData.username,
-      email: this.signupData.email,
       firstName: this.signupData.firstName,
       lastName: this.signupData.lastName,
+      email: this.signupData.username,
       password: this.signupData.password,
-      dateOfBirth: this.signupData.dateOfBirth
+      dateOfBirth: dateOfBirth
     };
 
-    this.authService.signup(signupData).subscribe({
-      next: (response) => {
+    // IMPORTANT FIX → backend expects registerDTO wrapper
+    this.authService.signup(userData).subscribe({
+      next: () => {
         this.isLoading = false;
-        alert('Signup successful! Please log in with your credentials.');
-        this.toggleMode(); // Switch to login mode
+        this.router.navigate(['/']);
       },
-      error: (error) => {
+      error: (err) => {
+        console.error('Signup failed', err);
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Signup failed. Please try again.';
+        alert('Signup failed. Please try again.');
       }
     });
   }
 
   onSubmit() {
-    this.isLoginMode ? this.onLogin() : this.onSignup();
+    if (this.isLoginMode) {
+      this.onLogin();
+    } else {
+      this.onSignup();
+    }
   }
 
-  // Getter/setters for template binding
+  // Dynamic email/password bindings
   get currentEmail(): string {
-    return this.isLoginMode ? this.loginData.username : this.signupData.email;
+    return this.isLoginMode ? this.loginData.username : this.signupData.username;
   }
 
   set currentEmail(value: string) {
-    if (this.isLoginMode) this.loginData.username = value;
-    else this.signupData.email = value;
+    if (this.isLoginMode) {
+      this.loginData.username = value;
+    } else {
+      this.signupData.username = value;
+    }
   }
 
   get currentPassword(): string {
@@ -161,34 +332,37 @@ export class AuthComponent {
   }
 
   set currentPassword(value: string) {
-    if (this.isLoginMode) this.loginData.password = value;
-    else this.signupData.password = value;
+    if (this.isLoginMode) {
+      this.loginData.password = value;
+    } else {
+      this.signupData.password = value;
+    }
   }
 
   getAge(): number {
-    if (!this.signupData.dateOfBirth) return 0;
-    
-    const birthDate = new Date(this.signupData.dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    if (!this.signupData.year || !this.signupData.month || !this.signupData.day) {
+      return 0;
     }
-    
-    return age;
+    const birthDate = new Date(
+      parseInt(this.signupData.year),
+      this.months.indexOf(this.signupData.month),
+      parseInt(this.signupData.day)
+    );
+    const ageDiff = Date.now() - birthDate.getTime();
+    return Math.abs(new Date(ageDiff).getUTCFullYear() - 1970);
   }
 
   isSignupValid(): boolean {
-    return !!this.signupData.firstName &&
-           !!this.signupData.lastName &&
-           !!this.signupData.username &&
-           !!this.signupData.email &&
-           !!this.signupData.password &&
-           !!this.signupData.confirmPassword &&
-           !!this.signupData.dateOfBirth &&
-           this.getAge() >= 13;
+    if (!this.signupData.firstName ||
+        !this.signupData.lastName ||
+        !this.signupData.username ||
+        !this.signupData.password) {
+      return false;
+    }
+    if (!this.signupData.month || !this.signupData.day || !this.signupData.year) {
+      return false;
+    }
+    return this.getAge() >= 13;
   }
 
   isLoginValid(): boolean {

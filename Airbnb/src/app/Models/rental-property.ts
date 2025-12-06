@@ -1,6 +1,7 @@
 import { Review } from "./review";
 
 export interface RentalProperty {
+  isWishlisted: boolean;
   id: number;
   name: string;
   location: string;
