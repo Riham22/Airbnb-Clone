@@ -1,34 +1,33 @@
 <!-- home.html -->
 <div class="home-container">
-
-
-
-  <!--Search Bar -->
-  <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-    (activeFiltersChange)="onActiveFiltersChange($event)">
+  <!-- Search Bar with Filter Button -->
+  <app-search-bar
+    (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+    (activeFiltersChange)="onActiveFiltersChange($event)"
+    (openFilters)="onOpenFilters()"> <!-- Add this event binding -->
   </app-search-bar>
 
   <!-- Main Content -->
   <main class="main-content">
-
-
-    <!-- Category Bar -->
-    <!-- <div class="category-bar-container"> -->
-      <!-- <app-category-bar class=" inline-block m-2 bg-amber-400 z-10 fixed top-8 right-30 "
-
-      (openFilters)="openFilters()">
-      </app-category-bar> -->
-    <!-- </div> -->
-
     <!-- Results Header -->
     <div class="results-header" id="property-list">
       <h2 class="results-title">{{ getResultsTitle() }}</h2>
       <div class="results-count">{{ filteredProperties.length }} properties</div>
     </div>
 
-    <!-- Property List - Pass filtered properties to support search and mixed types -->
-    <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
-      (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)">
+    <!-- Property List -->
+    <app-property-list
+      [properties]="filteredProperties"
+      [filters]="activeFilters"
+      (propertyClick)="onPropertyClick($event)"
+      (wishlistChange)="onWishlistChange($event)">
     </app-property-list>
   </main>
+
+  <!-- Filter Modal -->
+  <app-filter-modal
+    [isOpen]="isFilterModalOpen"
+    (close)="closeFilters()"
+    (applyFilters)="onApplyFilters($event)">
+  </app-filter-modal>
 </div>

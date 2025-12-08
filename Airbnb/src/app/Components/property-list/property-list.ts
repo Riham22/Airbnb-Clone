@@ -722,26 +722,24 @@ export class PropertyList implements OnInit, OnChanges {
     return this.dataService.isWishlistedSync ? this.dataService.isWishlistedSync(type, listing.id) : false;
   }
 
-  // Toggle wishlist
-  toggleWishlist(listing: any): void {
-    const wasInWishlist = this.isInWishlist(listing);
-    if (!listing || !listing.type) return;
+ // When wishlist button is clicked in a property card:
+onWishlistClick(property: any) {
+  // Determine the item type based on the property
+  let itemType = 'Property';
 
-    const type = listing.type.charAt(0).toUpperCase() + listing.type.slice(1);
-
-    if (this.dataService.toggleWishlist) {
-      this.dataService.toggleWishlist(type, listing.id).subscribe({
-        next: (response: any) => {
-          this.wishlistChange.emit({
-            listing,
-            inWishlist: response.wishlisted,
-            wasInWishlist
-          });
-        },
-        error: (err) => console.error('Error toggling wishlist', err)
-      });
-    }
+  if (property.type === 'experience') {
+    itemType = 'Experience';
+  } else if (property.type === 'service') {
+    itemType = 'Service';
   }
+
+  // Emit the event with all necessary information
+  this.wishlistChange.emit({
+    propertyId: property.id,
+    isWishlisted: !property.isWishlisted, // Toggle the state
+    itemType: itemType
+  });
+}
 
   // ADD THESE METHODS
   get hasExperiences(): boolean {

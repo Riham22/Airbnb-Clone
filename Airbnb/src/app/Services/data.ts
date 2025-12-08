@@ -693,4 +693,9 @@ export class Data {
     // Assuming backend is running on localhost:7020
     return `https://localhost:7020/${normalizedUrl}`;
   }
+  // Add this method to your Data service class
+updateWishlist(propertyId: number, isWishlisted: boolean) {
+  return this.toggleWishlist('Property', propertyId);
+
+}
 }

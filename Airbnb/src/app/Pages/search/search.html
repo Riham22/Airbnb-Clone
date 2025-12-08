@@ -1,5 +1,4 @@
 <!-- search.html -->
-<!-- Main Navbar -->
 <nav class="navbar">
   <!-- Top Row: Logo, Property Filters, Icons -->
   <div class="navbar-top">
@@ -54,12 +53,6 @@
       <div class="nav-icon" routerLink="/trips" title="My Trips" *ngIf="isAuthenticated">
         <span style="font-size: 18px;">✈️</span>
       </div>
-      <!-- Language Selector -->
-      <!-- <div class="nav-icon" (click)="toggleLanguagePanel()" title="Choose language">
-        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
-          <path d="M8 .25a7.77 7.77 0 0 1 7.75 7.78 7.75 7.75 0 0 1-7.52 7.72h-.25A7.75 7.75 0 0 1 .25 8.24v-.25A7.75 7.75 0 0 1 8 .25zm1.95 8.5h-3.9c.15 2.9 1.17 5.34 1.88 5.5H8c.68 0 1.72-2.37 1.93-5.23zm4.26 0h-2.76c-.09 1.96-.53 3.75-1.11 4.86 2.47-.88 3.85-2.8 3.87-4.86zM2.58 8.75h2.76c.09-1.96.54-3.75 1.11-4.86-2.46.88-3.84 2.8-3.87 4.86zm3.93-6.24c-.68 0-1.72 2.37-1.93 5.23h3.9c-.15-2.9-1.17-5.34-1.88-5.5zm4.26 0h-2.76c.09-1.96.53-3.75 1.11-4.86 2.47.88 3.85 2.8 3.87 4.86zM8 1.25c-.68 0-1.72 2.37-1.93 5.23h3.86C9.72 3.62 8.68 1.25 8 1.25z"></path>
-        </svg>
-      </div> -->
 
       <!-- User Menu -->
       <div class="user-menu-wrapper">
@@ -109,17 +102,21 @@
 
   <!-- Bottom Row: Main Search Bar -->
   <div class="navbar-bottom">
-     <app-category-bar class=" inline-block  z-10 relative p-2 text-center m-2  "
-
-      (openFilters)="openFilters()">
-      </app-category-bar>
+    <!-- Filter Button -->
+    <div class="filter-button-container">
+      <button class="filter-button" (click)="onOpenFilters()">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
+          <path d="M5 8a3 3 0 0 1 2.83 2H14v2H7.83A3 3 0 1 1 5 8zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm6-8a3 3 0 1 1-2.83 4H2V4h6.17A3 3 0 0 1 11 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path>
+        </svg>
+        Filters
+      </button>
+    </div>
 
     <div class="search-bar">
       <!-- Where -->
       <div class="search-section" [class.active]="activePanel === 'location'" (click)="openPanel('location')">
         <div class="search-label">Where</div>
         <div class="search-value">{{ getLocationDisplay() }}</div>
-
       </div>
 
       <!-- When -->
@@ -133,19 +130,12 @@
         <div class="search-label">Who</div>
         <div class="search-value">{{ getGuestsDisplay() }}</div>
       </div>
-
-      <!-- Search Button -->
-      <!-- <button class="search-button" (click)="onSearch()">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
-          <path d="M13 0a13 13 0 0 1 10.5 20.67l7.91 7.92-2.82 2.82-7.92-7.91A13 13 0 1 1 13 0zm0 2a11 11 0 1 0 0 22 11 11 0 0 0 0-22z"></path>
-        </svg>
-      </button> -->
     </div>
   </div>
 </nav>
 
 <!-- Language Selection Panel -->
-<!-- <div class="language-panel" [class.active]="showLanguagePanel">
+<div class="language-panel" [class.active]="showLanguagePanel">
   <div class="panel-header">
     <h3 class="panel-title">Choose a language</h3>
     <button class="close-panel" (click)="toggleLanguagePanel()">×</button>
@@ -157,7 +147,7 @@
       <span class="language-name">{{ language.name }}</span>
     </div>
   </div>
-</div> -->
+</div>
 
 <!-- Menu Panel -->
 <div class="menu-panel scrollable" [class.active]="showMenuPanel">
@@ -190,7 +180,7 @@
       </div>
     </div>
 
-    <!-- Logout section - sticky at bottom -->
+    <!-- Logout section -->
     <div class="logout-section" *ngIf="isAuthenticated">
       <div class="menu-separator"></div>
       <button class="logout-btn styled" (click)="logout()">
@@ -200,8 +190,6 @@
     </div>
   </div>
 </div>
-
-
 
 <!-- Location Panel -->
 <div class="filter-panel" [class.active]="activePanel === 'location'">
@@ -222,7 +210,6 @@
   </div>
 </div>
 
-
 <!-- Dates Panel -->
 <div class="filter-panel" [class.active]="activePanel === 'dates'">
   <div class="filter-header">
@@ -241,7 +228,7 @@
       <button class="clear-dates" (click)="clearDates()">Clear dates</button>
     </div>
 
-    <!-- Enhanced Quick Actions -->
+    <!-- Quick Actions -->
     <div class="quick-actions">
       <button class="quick-action-btn" (click)="goToCurrentMonth()">
          Today
@@ -258,7 +245,7 @@
     </div>
 
     <div class="calendar">
-      <!-- Enhanced Calendar navigation -->
+      <!-- Calendar navigation -->
       <div class="calendar-header">
         <div class="nav-controls">
           <button class="nav-button nav-year" [class.disabled]="!canNavigatePrev()"
@@ -295,7 +282,7 @@
         </div>
       </div>
 
-      <!-- Enhanced Month View -->
+      <!-- Month View -->
       <div class="calendar-view month-view" *ngIf="calendarView === 'month'">
         <div class="calendar-grid">
           <div class="weekday" *ngFor="let day of ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']">
@@ -315,7 +302,7 @@
         </div>
       </div>
 
-      <!-- Enhanced Year View -->
+      <!-- Year View -->
       <div class="calendar-view year-view" *ngIf="calendarView === 'year'">
         <div class="year-grid">
           <div *ngFor="let month of getMonthsForYear()" class="month-option"
@@ -325,7 +312,7 @@
         </div>
       </div>
 
-      <!-- Enhanced Decade View -->
+      <!-- Decade View -->
       <div class="calendar-view decade-view" *ngIf="calendarView === 'decade'">
         <div class="decade-grid">
           <div *ngFor="let decade of availableDecades" class="decade-option" [class.current]="isCurrentDecade(decade)"
@@ -336,7 +323,7 @@
       </div>
     </div>
 
-    <!-- Enhanced Date range info -->
+    <!-- Date range info -->
     <div class="date-info" *ngIf="dateSelection.start && !dateSelection.end">
       <p>🎯 Now select your checkout date to complete your trip</p>
     </div>
