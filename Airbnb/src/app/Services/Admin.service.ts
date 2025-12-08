@@ -1,8 +1,8 @@
-// Services/Admin.service.ts
+// services/admin.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
+import { tap, map, switchMap, catchError } from 'rxjs/operators';
 import { AdminStats } from '../Models/AdminStats';
 import { AdminUser } from '../Models/AdminUser';
 import { AdminListing } from '../Models/AdminListing';
@@ -11,16 +11,16 @@ import { AdminListing } from '../Models/AdminListing';
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'https://localhost:7020/api'; // Your API base URL
+  private apiUrl = 'https://localhost:7020/api';
+  private statsSubject = new BehaviorSubject<AdminStats>(this.getInitialStats());
+  private usersSubject = new BehaviorSubject<AdminUser[]>([]);
+  private listingsSubject = new BehaviorSubject<AdminListing[]>([]);
+  private servicesSubject = new BehaviorSubject<any[]>([]);
+  private experiencesSubject = new BehaviorSubject<any[]>([]);
   private loadingSubject = new BehaviorSubject<boolean>(false);
-  public loading$ = this.loadingSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-<<<<<<< HEAD
-  private setLoading(loading: boolean): void {
-    this.loadingSubject.next(loading);
-=======
   // Stats Management - Calculated from data
   getStats(): Observable<AdminStats> {
     this.setLoading(true);
@@ -71,39 +71,77 @@ export class AdminService {
   updateStats(updates: Partial<AdminStats>): void {
     const current = this.statsSubject.value;
     this.statsSubject.next({ ...current, ...updates });
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   }
 
-  // Account/User related endpoints
+  // Users Management - Connected to backend
   getUsers(): Observable<AdminUser[]> {
     this.setLoading(true);
-    return this.http.get<AdminUser[]>(`${this.apiUrl}/Account/Profile`)
-      .pipe(
-        map(users => {
-          this.setLoading(false);
-          return users;
-        })
-      );
+    return this.http.get<any>(`${this.apiUrl}/User`).pipe(
+      map((users: any[]) => {
+        const adminUsers: AdminUser[] = users.map(u => ({
+          id: u.id,
+          email: u.email,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          role: u.roles?.[0] || 'guest',
+          joinedDate: new Date(),
+          status: 'active',
+          listingsCount: 0,
+          bookingsCount: 0,
+          lastActive: new Date(),
+          avatar: u.photoURL || ''
+        }));
+        this.usersSubject.next(adminUsers);
+        return adminUsers;
+      }),
+      tap(() => this.setLoading(false)),
+      catchError(err => {
+        this.setLoading(false);
+        console.error('getUsers error', err);
+        return of([]);
+      })
+    );
   }
 
-  createUser(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Account/Register`, userData);
-  }
+  updateUserStatus(userId: string, status: 'active' | 'suspended'): Observable<AdminUser> {
+    return new Observable<AdminUser>(observer => {
+      setTimeout(() => {
+        const users = this.usersSubject.value.map(user =>
+          user.id === userId ? { ...user, status, updatedAt: new Date() } : user
+        );
+        this.usersSubject.next(users);
 
-<<<<<<< HEAD
-  updateUserRole(userId: string, role: string): Observable<AdminUser> {
-    return this.http.post<AdminUser>(`${this.apiUrl}/Account/ChangeRole`, { 
-      userId, 
-      role 
+        const updatedUser = users.find(user => user.id === userId);
+        if (updatedUser) {
+          observer.next(updatedUser);
+        } else {
+          observer.error(new Error('User not found'));
+        }
+        observer.complete();
+      }, 300);
     });
   }
 
-  updateUserStatus(userId: string, status: string): Observable<AdminUser> {
-    return this.http.post<AdminUser>(`${this.apiUrl}/Account/UpdateStatus`, { 
-      userId, 
-      status 
-    });
-=======
+  deleteUser(userId: string): Observable<boolean> {
+    return this.http.delete(`${this.apiUrl}/User/${userId}`).pipe(
+      tap(() => {
+        const users = this.usersSubject.value.filter(user => user.id !== userId);
+        this.usersSubject.next(users);
+
+        const stats = this.statsSubject.value;
+        this.statsSubject.next({
+          ...stats,
+          totalUsers: Math.max(0, stats.totalUsers - 1)
+        });
+      }),
+      map(() => true),
+      catchError(err => {
+        console.error('deleteUser error', err);
+        throw err;
+      })
+    );
+  }
+
   // Listings Management - Connected to backend
   getListings(): Observable<AdminListing[]> {
     this.setLoading(true);
@@ -212,25 +250,31 @@ export class AdminService {
         throw err;
       })
     );
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   }
 
-  deleteUser(userId: string): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/Account/${userId}`);
+  deleteListing(listingId: string): Observable<boolean> {
+    return this.http.delete(`${this.apiUrl}/Properties/${listingId}`).pipe(
+      tap(() => {
+        const listings = this.listingsSubject.value.filter(listing => listing.id !== listingId);
+        this.listingsSubject.next(listings);
+
+        const stats = this.statsSubject.value;
+        this.statsSubject.next({
+          ...stats,
+          totalListings: Math.max(0, stats.totalListings - 1)
+        });
+      }),
+      map(() => true),
+      catchError(err => {
+        console.error('deleteListing error', err);
+        throw err;
+      })
+    );
   }
 
-  // Stats endpoint
-  getStats(): Observable<AdminStats> {
+  // Services Management
+  getServices(): Observable<any[]> {
     this.setLoading(true);
-<<<<<<< HEAD
-    return this.http.get<AdminStats>(`${this.apiUrl}/Dashboard/Stats`)
-      .pipe(
-        map(stats => {
-          this.setLoading(false);
-          return stats;
-        })
-      );
-=======
     // Use the host-specific endpoint to get ALL services
     return this.http.get<any>(`${this.apiUrl}/Services/my-services`).pipe(
       map((response: any) => {
@@ -286,21 +330,11 @@ export class AdminService {
         throw err;
       })
     );
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   }
 
-  // Property/Listing endpoints
-  getListings(): Observable<AdminListing[]> {
+  // Experiences Management
+  getExperiences(): Observable<any[]> {
     this.setLoading(true);
-<<<<<<< HEAD
-    return this.http.get<AdminListing[]>(`${this.apiUrl}/Property`)
-      .pipe(
-        map(listings => {
-          this.setLoading(false);
-          return listings;
-        })
-      );
-=======
     // Use the host-specific endpoint to get ALL experiences
     return this.http.get<any>(`${this.apiUrl}/Experience/my-experiences`).pipe(
       map((response: any) => {
@@ -423,66 +457,15 @@ export class AdminService {
         console.error('❌ Experience endpoint failed:', err);
       }
     });
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   }
 
-  createListing(listingData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Property`, listingData);
+  testAllEndpoints(): void {
+    console.log('🧪 Testing all endpoints...');
+    this.testPropertiesEndpoint();
+    this.testServicesEndpoint();
+    this.testExperienceEndpoint();
   }
 
-<<<<<<< HEAD
-  updateListingStatus(listingId: string, status: string): Observable<AdminListing> {
-    return this.http.put<AdminListing>(`${this.apiUrl}/Property/${listingId}/status`, { status });
-  }
-
-  deleteListing(listingId: string): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/Property/${listingId}`);
-  }
-
-  // Property Categories
-  getPropertyTypes(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/PropertyType`);
-  }
-
-  getPropertyCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/PropertyCategory`);
-  }
-
-  // Services
-  getServices(): Observable<any[]> {
-    this.setLoading(true);
-    return this.http.get<any[]>(`${this.apiUrl}/Service`)
-      .pipe(
-        map(services => {
-          this.setLoading(false);
-          return services;
-        })
-      );
-  }
-
-  createService(serviceData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Service`, serviceData);
-  }
-
-  deleteService(serviceId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/Service/${serviceId}`);
-  }
-
-  getServiceCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/ServiceCategory`);
-  }
-
-  // Experiences
-  getExperiences(): Observable<any[]> {
-    this.setLoading(true);
-    return this.http.get<any[]>(`${this.apiUrl}/Experience`)
-      .pipe(
-        map(experiences => {
-          this.setLoading(false);
-          return experiences;
-        })
-      );
-=======
   // CREATE METHODS
 
   createUser(userData: any): Observable<any> {
@@ -727,71 +710,56 @@ export class AdminService {
         return of(subCategories);
       })
     );
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   }
 
-  createExperience(experienceData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Experience`, experienceData);
+  getPropertyTypes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/PropertyType`).pipe(
+      catchError(err => {
+        console.warn('PropertyType endpoint failed, returning hardcoded types.', err);
+        // fallback (same as before)
+        const types = [
+          { id: 1, name: 'Apartment', description: 'Entire apartment' },
+          { id: 2, name: 'House', description: 'Entire house' },
+          { id: 3, name: 'Villa', description: 'Luxury villa' },
+          { id: 4, name: 'Room', description: 'Private room' },
+          { id: 5, name: 'Double Room', description: 'Room with double bed' },
+          { id: 6, name: 'Single Room', description: 'Room with single bed' },
+          { id: 7, name: 'Shared Room', description: 'Shared space' },
+          { id: 8, name: 'Studio', description: 'Open plan apartment' },
+          { id: 9, name: 'Cabin', description: 'Nature cabin' },
+          { id: 10, name: 'Cottage', description: 'Cozy cottage' }
+        ];
+        return of(types);
+      })
+    );
   }
 
-  uploadExperienceImage(experienceId: string, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/Experience/${experienceId}/upload`, formData);
+  getPropertyCategories(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/PropertyCategory`).pipe(
+      catchError(err => {
+        console.warn('PropertyCategory endpoint failed, returning hardcoded categories.', err);
+        const categories = [
+          { id: 1, name: 'Beachfront', description: 'Properties right on the beach' },
+          { id: 2, name: 'City', description: 'Urban apartments and lofts' },
+          { id: 3, name: 'Countryside', description: 'Peaceful countryside retreats' },
+          { id: 4, name: 'Lakefront', description: 'Properties by the lake' },
+          { id: 5, name: 'Mansions', description: 'Luxury mansions' },
+          { id: 6, name: 'Castles', description: 'Historic castles' },
+          { id: 7, name: 'Islands', description: 'Private islands' },
+          { id: 8, name: 'Camping', description: 'Camping and glamping spots' },
+          { id: 9, name: 'Trending', description: 'Highly rated and popular properties' },
+          { id: 10, name: 'Cabins', description: 'Cozy cabins in nature' }
+        ];
+        return of(categories);
+      })
+    );
   }
 
-  deleteExperience(experienceId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/Experience/${experienceId}`);
+  createPropertyCategory(categoryData: any): Observable<any> {
+    // Mock implementation maintained for now
+    return of({ id: Math.floor(Math.random() * 1000) + 11, ...categoryData });
   }
 
-<<<<<<< HEAD
-  getExperienceCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/ExpCatogray`);
-  }
-
-  getExperienceSubCategories(categoryId?: string): Observable<any[]> {
-    const url = categoryId 
-      ? `${this.apiUrl}/ExpSubCatogray?categoryId=${categoryId}`
-      : `${this.apiUrl}/ExpSubCatogray`;
-    return this.http.get<any[]>(url);
-  }
-
-  // Analytics
-  getAnalytics(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/Analytics`);
-  }
-
- // Test all endpoints - Fixed version
-testAllEndpoints(): void {
-  console.log('Testing API endpoints...');
-  
-  // Create properly typed endpoints array
-  const endpoints: Array<{ 
-    name: string; 
-    observable: Observable<any> 
-  }> = [
-    { name: 'Stats', observable: this.getStats() },
-    { name: 'Users', observable: this.getUsers() },
-    { name: 'Listings', observable: this.getListings() },
-    { name: 'Services', observable: this.getServices() },
-    { name: 'Experiences', observable: this.getExperiences() },
-    { name: 'Property Types', observable: this.getPropertyTypes() },
-    { name: 'Property Categories', observable: this.getPropertyCategories() },
-    { name: 'Service Categories', observable: this.getServiceCategories() },
-    { name: 'Experience Categories', observable: this.getExperienceCategories() }
-  ];
-
-  endpoints.forEach((endpoint, index) => {
-    // Use setTimeout to avoid overwhelming the API
-    setTimeout(() => {
-      console.log(`Testing ${endpoint.name}...`);
-      endpoint.observable.subscribe({
-        next: (data: any) => console.log(`✅ ${endpoint.name} working:`, data),
-        error: (error: any) => console.error(`❌ ${endpoint.name} failed:`, error.message || error)
-      });
-    }, index * 300);
-  });
-=======
   // ============================================
   // EXPERIENCE CATEGORY CRUD OPERATIONS
   // ============================================
@@ -885,11 +853,5 @@ testAllEndpoints(): void {
         throw err;
       })
     );
-  }
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
-}
-
-  getLoadingState(): Observable<boolean> {
-    return this.loading$;
   }
 }
