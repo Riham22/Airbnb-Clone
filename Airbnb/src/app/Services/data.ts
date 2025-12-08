@@ -2,14 +2,12 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, tap, catchError, of, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-
+import { BehaviorSubject, tap } from 'rxjs';
+import { RentalProperty } from '../Models/rental-property';
 import { Experience } from '../Models/experience';
 import { Service } from '../Models/service';
 import { SearchFilters } from '../Models/search-filters';
 import { Booking } from '../Models/booking';
-import { RentalProperty } from '../Models/rental-property';
 
 export type ListingType = RentalProperty | Experience | Service;
 
@@ -17,9 +15,6 @@ export type ListingType = RentalProperty | Experience | Service;
   providedIn: 'root',
 })
 export class Data {
-  getAmenities(): string[] {
-    throw new Error('Method not implemented.');
-  }
   private bookings: Booking[] = [];
   private wishlistCache: Set<string> = new Set();
 
@@ -46,72 +41,8 @@ export class Data {
     }, 100);
   }
 
-  /**
-   * Check if backend server is running
-   */
-  private checkBackendHealth(): Observable<boolean> {
-    return this.http.get(`${this.apiUrl}/health`, {
-      responseType: 'text',
-      observe: 'response'
-    }).pipe(
-      tap(response => console.log('Backend health check:', response.status)),
-      map(response => response.status === 200),
-      catchError((error) => {
-        console.warn('Backend health check failed:', error.message);
-        return of(false);
-      })
-    );
-  }
-
-  /**
-   * Load all mock data when backend is unavailable
-   */
-  private loadMockData(): void {
-    const properties = this.getHardcodedProperties();
-    const experiences = this.getHardcodedExperiences();
-    const services = this.getHardcodedServices();
-
-    // Apply wishlist status to mock data
-    this.wishlistCache.forEach(key => {
-      const [itemType, itemId] = key.split('_');
-      const id = parseInt(itemId);
-
-      switch(itemType) {
-        case 'Property':
-          const property = properties.find(p => p.id === id);
-          if (property) property.isWishlisted = true;
-          break;
-        case 'Experience':
-          const experience = experiences.find(e => e.id === id);
-          if (experience) experience.isWishlisted = true;
-          break;
-        case 'Service':
-          const service = services.find(s => s.id === id);
-          if (service) service.isWishlisted = true;
-          break;
-      }
-    });
-
-    this.propertiesSubject.next(properties);
-    this.experiencesSubject.next(experiences);
-    this.servicesSubject.next(services);
-  }
-
-  /**
-   * Load wishlist - FIXED: Removed circular reloading
-   */
   loadWishlist() {
-    this.http.get<any[]>(`${this.apiUrl}/api/Wishlist`).pipe(
-      catchError((error) => {
-        console.warn('Cannot load wishlist from backend, using local cache');
-        // Try to load from localStorage as fallback
-        const storedWishlist = localStorage.getItem('wishlist');
-        if (storedWishlist) {
-          return of(JSON.parse(storedWishlist));
-        }
-        return of([]);
-      })
-    ).subscribe({
+    this.getWishlist().subscribe({
       next: (items: any[]) => {
         this.wishlistCache.clear();
         items.forEach(item => {
@@ -121,21 +52,15 @@ export class Data {
             this.wishlistCache.add(`${type}_${id}`);
           }
         });
-        // Save to localStorage for offline use
-        localStorage.setItem('wishlist', JSON.stringify(items));
-
-        // Only update UI if using mock data
-        if (this.useMockData) {
-          this.loadMockData();
-        }
+        // Reload data to update UI
+        this.loadProperties();
+        this.loadExperiences();
+        this.loadServices();
       },
       error: (err) => console.error('Failed to load wishlist', err)
     });
   }
 
-  /**
-   * Load properties with proper error handling
-   */
   loadProperties() {
     console.log('🔄 Loading properties from API...');
 
@@ -328,9 +253,6 @@ export class Data {
     return this.propertiesSubject.value;
   }
 
-  /**
-   * Load experiences with proper error handling
-   */
   loadExperiences() {
     console.log('🔄 Loading experiences from API...');
 
@@ -475,165 +397,6 @@ export class Data {
     return this.servicesSubject.value;
   }
 
-<<<<<<< HEAD
-  /**
-   * Fallback hardcoded services
-   */
-  private getHardcodedServices(): Service[] {
-    return [
-      {
-        id: 201,
-        type: 'service',
-        name: 'Professional House Cleaning',
-        location: 'Los Angeles, California',
-        price: 120,
-        rating: 4.90,
-        reviewCount: 345,
-        imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'cleaning',
-        duration: '3 hours',
-        provider: {
-          name: 'CleanPro Services',
-          joinedDate: '2018',
-          isVerified: true,
-          avatar: 'https://images.unsplash.com/photo-1560250056-07ba64664864?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Professional deep cleaning service for homes and apartments. We use eco-friendly products and pay attention to every detail.',
-        highlights: ['Eco-friendly products', 'Professional team', 'Satisfaction guaranteed', 'Flexible scheduling'],
-        includes: ['Deep cleaning', 'Kitchen & bathroom', 'Floor cleaning', 'Dusting'],
-        requirements: ['Access to property', 'Clear workspace'],
-        reviews: [
-          {
-            id: 301,
-            user: 'Jennifer T.',
-            date: '2024-01-22',
-            rating: 5,
-            comment: 'My apartment has never been cleaner! Highly recommended.',
-            userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ],
-        isWishlisted: this.isWishlistedSync('Service', 201)
-      },
-      // Add more services as needed
-    ];
-  }
-
-  /**
-   * Toggle wishlist with offline support
-   */
-  toggleWishlist(itemType: string, itemId: number) {
-    const key = `${itemType}_${itemId}`;
-    const currentlyWishlisted = this.wishlistCache.has(key);
-
-    if (this.useMockData) {
-      // Handle locally when backend is unavailable
-      if (currentlyWishlisted) {
-        this.wishlistCache.delete(key);
-      } else {
-        this.wishlistCache.add(key);
-      }
-
-      // Update UI
-      this.updateWishlistStatus(itemType, itemId, !currentlyWishlisted);
-
-      // Save to localStorage
-      this.saveWishlistToStorage();
-
-      return of({ wishlisted: !currentlyWishlisted });
-    }
-
-    // Call backend API
-    return this.http.post<any>(`${this.apiUrl}/api/Wishlist/toggle`, {
-      itemType: itemType,
-      itemId: itemId
-    }).pipe(
-      tap((response: any) => {
-        if (response.wishlisted) {
-          this.wishlistCache.add(key);
-        } else {
-          this.wishlistCache.delete(key);
-        }
-        // Update UI
-        this.updateWishlistStatus(itemType, itemId, response.wishlisted);
-        // Save to localStorage
-        this.saveWishlistToStorage();
-      }),
-      catchError((error) => {
-        console.warn('Failed to toggle wishlist on backend, updating locally');
-        // Update locally
-        if (currentlyWishlisted) {
-          this.wishlistCache.delete(key);
-          this.updateWishlistStatus(itemType, itemId, false);
-        } else {
-          this.wishlistCache.add(key);
-          this.updateWishlistStatus(itemType, itemId, true);
-        }
-        this.saveWishlistToStorage();
-        return of({ wishlisted: !currentlyWishlisted });
-      })
-    );
-  }
-
-  /**
-   * Update wishlist status in UI
-   */
-  private updateWishlistStatus(itemType: string, itemId: number, isWishlisted: boolean): void {
-    switch(itemType) {
-      case 'Property':
-        const properties = this.propertiesSubject.value.map(p => {
-          if (p.id === itemId) {
-            return { ...p, isWishlisted };
-          }
-          return p;
-        });
-        this.propertiesSubject.next(properties);
-        break;
-
-      case 'Experience':
-        const experiences = this.experiencesSubject.value.map(e => {
-          if (e.id === itemId) {
-            return { ...e, isWishlisted };
-          }
-          return e;
-        });
-        this.experiencesSubject.next(experiences);
-        break;
-
-      case 'Service':
-        const services = this.servicesSubject.value.map(s => {
-          if (s.id === itemId) {
-            return { ...s, isWishlisted };
-          }
-          return s;
-        });
-        this.servicesSubject.next(services);
-        break;
-    }
-  }
-
-  /**
-   * Save wishlist to localStorage
-   */
-  private saveWishlistToStorage(): void {
-    const wishlistItems = Array.from(this.wishlistCache).map(key => {
-      const [itemType, itemId] = key.split('_');
-      return {
-        itemType,
-        itemId: parseInt(itemId)
-      };
-    });
-    localStorage.setItem('wishlist', JSON.stringify(wishlistItems));
-  }
-
-  // Keep all your existing methods below (searchAllListings, getPropertyById, etc.)
-  // Make sure they reference the BehaviorSubjects correctly
-
-=======
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   searchAllListings(filters: SearchFilters): ListingType[] {
     const allListings: ListingType[] = [
       ...this.getProperties(),
@@ -684,8 +447,6 @@ export class Data {
     return (item as Service).duration !== undefined && (item as any).type === 'service';
   }
 
-<<<<<<< HEAD
-=======
   getAmenities(): string[] {
     const allAmenities = this.getProperties().flatMap(p => p.amenities);
     return Array.from(new Set(allAmenities));
@@ -786,40 +547,26 @@ export class Data {
     );
   }
 
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   getWishlist() {
-    return this.http.get<any>(`${this.apiUrl}/api/Wishlist`);
+    return this.http.get<any>('https://localhost:7020/api/Wishlist');
   }
 
   isInWishlist(itemType: string, itemId: number) {
-    return this.http.get<any>(`${this.apiUrl}/api/Wishlist/check/${itemType}/${itemId}`);
+    return this.http.get<any>(`https://localhost:7020/api/Wishlist/check/${itemType}/${itemId}`);
   }
 
   getWishlistCount() {
-    return this.http.get<any>(`${this.apiUrl}/api/Wishlist/count`);
+    return this.http.get<any>('https://localhost:7020/api/Wishlist/count');
   }
 
   isWishlistedSync(itemType: string, itemId: number): boolean {
     return this.wishlistCache.has(`${itemType}_${itemId}`);
   }
 
-<<<<<<< HEAD
-  // Legacy method for backward compatibility
-=======
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   toggleWishlistLegacy(propertyId: number) {
     return this.toggleWishlist('Property', propertyId);
   }
 
-<<<<<<< HEAD
-  // getPropertyById(id: number): RentalProperty | undefined {
-//     return this.getProperties().find(property => property.id === id);
-//   }
-// getAmenities(): string[] {
-//     const allAmenities = this.getProperties().flatMap(p => p.amenities);
-//     return Array.from(new Set(allAmenities));
-//   }
-=======
   createBooking(bookingData: Omit<Booking, 'id' | 'createdAt'>): Booking {
     const newBooking: Booking = {
       ...bookingData,
@@ -830,46 +577,27 @@ export class Data {
     this.saveBookingsToStorage();
     return newBooking;
   }
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
-  getPropertyTypes(): string[] {
-    const properties = this.getProperties();
-    const types = [...new Set(properties.map(p => p.type))];
-    return ['property', 'experience', 'service', ...types];
+  getUserBookings(userId: number): Booking[] {
+    this.loadBookingsFromStorage();
+    return this.bookings.filter(booking => booking.userId === userId);
   }
 
-  getGuestsRange(): { min: number, max: number } {
-    const properties = this.getProperties();
-    const guests = properties.map(p => p.maxGuests);
-    return {
-      min: Math.min(...guests),
-      max: Math.max(...guests)
-    };
+  getBookingById(bookingId: number): Booking | undefined {
+    this.loadBookingsFromStorage();
+    return this.bookings.find(booking => booking.id === bookingId);
   }
 
-  getPropertyById(id: number): RentalProperty | undefined{
-    return this.getProperties().find(property => property.id === id);
+  cancelBooking(bookingId: number): boolean {
+    const bookingIndex = this.bookings.findIndex(b => b.id === bookingId);
+    if (bookingIndex > -1) {
+      this.bookings[bookingIndex].status = 'cancelled';
+      this.saveBookingsToStorage();
+      return true;
+    }
+    return false;
   }
 
-<<<<<<< HEAD
-
-
-  searchProperties(filters: SearchFilters): RentalProperty[] {
-  let properties = this.getProperties();
-
-  // Location filter
-  if (filters.location && filters.location.trim() !== '') {
-    properties = properties.filter(p =>
-      p.location.toLowerCase().includes(filters.location.toLowerCase())
-    );
-  }
-
-  // Price range filter
-  properties = properties.filter(p =>
-    p.price >= filters.priceRange.min &&
-    p.price <= filters.priceRange.max
-  );
-=======
   getRecommendedProperties(propertyId?: number, limit: number = 6): RentalProperty[] {
     const properties = this.getProperties();
 
@@ -909,26 +637,10 @@ export class Data {
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     const average = prices.reduce((sum, price) => sum + price, 0) / prices.length;
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
-  // Property types filter
-  if (filters.propertyTypes && filters.propertyTypes.length > 0) {
-    properties = properties.filter(p =>
-      filters.propertyTypes.includes(p.type)
-    );
+    return { min, max, average: Math.round(average) };
   }
 
-<<<<<<< HEAD
-  // Amenities filter
-  if (filters.amenities && filters.amenities.length > 0) {
-    properties = properties.filter(p =>
-      filters.amenities.every(amenity => p.amenities.includes(amenity))
-    );
-  }
-
-  // Rating filter
-  properties = properties.filter(p => p.rating >= filters.minRating);
-=======
   private generateBookingId(): number {
     return Math.max(0, ...this.bookings.map(b => b.id)) + 1;
   }
@@ -937,22 +649,20 @@ export class Data {
     const instantBookProperties = [1, 2, 4, 7, 8];
     return instantBookProperties.includes(propertyId);
   }
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
-  // Superhost filter
-  if (filters.superhost) {
-    properties = properties.filter(p => p.host.isSuperhost);
+  private saveBookingsToStorage(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('airbnb_bookings', JSON.stringify(this.bookings));
+    }
   }
 
+  private loadBookingsFromStorage(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const stored = localStorage.getItem('airbnb_bookings');
+      this.bookings = stored ? JSON.parse(stored) : [];
+    }
+  }
 
-<<<<<<< HEAD
-
-
-  // ADD THIS RETURN STATEMENT
-  return properties;
-}
-}
-=======
   getPropertiesByHost(hostName: string): RentalProperty[] {
     return this.getProperties().filter(p =>
       p.host.name.toLowerCase().includes(hostName.toLowerCase())
@@ -984,4 +694,3 @@ export class Data {
     return `https://localhost:7020/${normalizedUrl}`;
   }
 }
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
