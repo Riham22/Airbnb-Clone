@@ -6,13 +6,13 @@ import { RentalProperty } from '../../Models/rental-property';
 import { PropertyList } from '../../Components/property-list/property-list';
 import { SearchComponent } from '../search/search';
 import { Data } from '../../Services/data';
-import { CategoryBarComponent } from '../../Components/category-bar/category-bar.component';
-import { FilterModalComponent } from '../../Components/filter-modal/filter-modal.component';
+// import { CategoryBarComponent } from '../../Components/category-bar/category-bar.component';
+// import { FilterModalComponent } from '../../Components/filter-modal/filter-modal.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, SearchComponent, PropertyList, CategoryBarComponent, FilterModalComponent],
+  imports: [CommonModule, SearchComponent, PropertyList],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
