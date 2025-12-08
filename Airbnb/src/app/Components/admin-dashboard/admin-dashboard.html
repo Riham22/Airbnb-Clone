@@ -415,24 +415,6 @@
     </div>
   </section>
 
-<<<<<<< HEAD
-    <!-- Analytics Tab -->
-      <section *ngIf="activeTab === 'analytics'" class="tab-content analytics-tab">
-        <div class="analytics-container">
-          <div class="analytics-header">
-            <h2>Analytics Dashboard</h2>
-            <p class="section-subtitle">Advanced metrics and insights</p>
-          </div>
-
-          <div class="analytics-placeholder">
-            <div class="placeholder-icon">📈</div>
-            <h3>Analytics Coming Soon</h3>
-            <p>Advanced analytics and reporting features are in development.</p>
-            <p>This section will include interactive charts, graphs, and detailed performance metrics.</p>
-          </div>
-        </div>
-      </section>
-=======
   <!-- Categories Tab -->
   <section *ngIf="activeTab === 'categories'" class="tab-content">
     <div class="section-header">
@@ -520,7 +502,6 @@
       <p>This section will include charts, graphs, and detailed performance metrics.</p>
     </div>
   </section>
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
   <!-- MODALS -->
 
@@ -702,33 +683,19 @@
         </div>
 
         <div class="form-group">
-<<<<<<< HEAD
-          <label>Description</label>
-          <input type="text" [(ngModel)]="newExperience.description" name="description"  title="description"  required>
-=======
           <label>Description *</label>
           <textarea [(ngModel)]="newExperience.description" name="description" required
             placeholder="Describe the experience" rows="3"></textarea>
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
         </div>
 
         <div class="form-group">
-<<<<<<< HEAD
-          <label>Category</label>
-          <select [(ngModel)]="newExperience.category" name="category"  title="category" required>
-=======
           <label>Category *</label>
-          <select [(ngModel)]="newExperience.expCatograyId" name="expCatograyId"
-            (ngModelChange)="onExperienceCategoryChange()" required>
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
-            <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of experienceCategories" [ngValue]="cat.id">{{ cat.name }}</option>
-          </select>
+          <!-- </select> -->
         </div>
-
         <div class="form-group">
           <label>Subcategory *</label>
-          <select [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required
+          <select title="k" [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required
             [disabled]="!newExperience.expCatograyId">
             <option [ngValue]="null" disabled>
               {{ newExperience.expCatograyId ? 'Select Subcategory' : 'First select a category' }}
@@ -798,8 +765,8 @@
 
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
-          <button type="submit" class="btn-primary" [disabled]="!newExperience.name || !newExperience.description || 
-                            !newExperience.expCatograyId || !newExperience.expSubCatograyId || 
+          <button type="submit" class="btn-primary" [disabled]="!newExperience.name || !newExperience.description ||
+                            !newExperience.expCatograyId || !newExperience.expSubCatograyId ||
                             !newExperience.price || !newExperience.location">
             Create Experience
           </button>
@@ -808,9 +775,8 @@
     </div>
   </div>
 
-<<<<<<< HEAD
-</div>
-=======
+
+
   <!-- Category Modal -->
   <div *ngIf="showCategoryModal" class="modal-overlay" (click)="closeAddCategoryModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
@@ -859,4 +825,3 @@
   </div>
 
 </div>
->>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
