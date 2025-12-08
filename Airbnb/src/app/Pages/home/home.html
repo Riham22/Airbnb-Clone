@@ -1,55 +1,86 @@
 <!-- home.html -->
 <div class="home-container">
-  <!-- Search Bar -->
-  <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-    (activeFiltersChange)="onActiveFiltersChange($event)">
-  </app-search-bar>
+  <!-- Fixed Search Bar -->
+  <div class="search-bar-container">
+    <app-search-bar
+      (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+      (activeFiltersChange)="onActiveFiltersChange($event)">
+    </app-search-bar>
+  </div>
 
   <!-- Main Content -->
   <main class="main-content">
     <!-- Hero Section -->
-    <!-- <section class="hero-section">
+    <section class="hero-section" *ngIf="!activeFilters.location || activeFilters.location === 'anywhere'">
       <div class="hero-content">
-        <h1>Find your next getaway</h1>
-        <p>Discover homes, experiences, and unique stays tailored just for you.</p>
+        <h1>Find your perfect getaway</h1>
+        <p>Discover unique homes, experiences, and stays that match your travel style</p>
+        <a href="#property-list" class="hero-cta">
+          <span>Explore Stays</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
       </div>
-    </section> -->
-    <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-      (activeFiltersChange)="onActiveFiltersChange($event)">
-    </app-search-bar>
+    </section>
 
-    <app-category-bar (openFilters)="openFilters()">
-    </app-category-bar>
+    <!-- Category Bar -->
+    <!-- <div class="category-bar-container"> -->
+      <!-- <app-category-bar class=" inline-block m-2 bg-amber-400 z-10 fixed top-8 right-30 "
 
-    <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">
+      (openFilters)="openFilters()">
+      </app-category-bar> -->
+    <!-- </div> -->
+
+    <!-- Results Header -->
+    <div class="results-header" id="property-list">
+      <h2 class="results-title">{{ getResultsTitle() }}</h2>
+      <div class="results-count">{{ filteredProperties.length }} properties</div>
+    </div>
+
+    <!-- Property List -->
+    <div class="property-list-container">
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="properties.length === 0">
+        <div class="loading-spinner"></div>
+        <p>Loading properties...</p>
+      </div>
+
+      <!-- No Results State -->
+      <div class="no-results" *ngIf="properties.length > 0 && filteredProperties.length === 0">
+        <div class="no-results-icon">🏠</div>
+        <h3 class="no-results-title">No properties found</h3>
+        <p class="no-results-description">
+          Try adjusting your filters or search criteria to find more options.
+        </p>
+        <button
+          class="btn-primary"
+          (click)="openFilters()">
+          Adjust Filters
+        </button>
+      </div>
+
+      <!-- Property List Component -->
+      <app-property-list
+        *ngIf="filteredProperties.length > 0"
+        [properties]="filteredProperties"
+        [filters]="activeFilters"
+
+        (wishlistChange)="onWishlistChange($event)">
+      </app-property-list>
+    </div>
+
+    <!-- Filter Modal -->
+    <app-filter-modal
+      [isOpen]="isFilterModalOpen"
+      (close)="closeFilters()"
+      (applyFilters)="onApplyFilters($event)">
     </app-filter-modal>
 
-    <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
-      (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)">
-    </app-property-list>
-    <!-- Search Results Section -->
-    <!-- <section class="search-results-section">
-    <app-property-list
-    [properties]="filteredProperties"
-    [title]="getResultsTitle()"
-    [filters]="activeFilters"
-    (propertyClick)="onPropertyClick($event)"
-
-></app-property-list>
-
-    </section> -->
-
-    <!-- Categories Section -->
-    <!-- <section class="categories-section">
-      <div class="container">
-        <h2>Browse by category</h2>
-        <div class="categories-grid">
-          <div class="category-card" *ngFor="let category of categories">
-            <div class="category-icon">{{ category.icon }}</div>
-            <h3>{{ category.name }}</h3>
-          </div>
-        </div>
-      </div>
-    </section> -->
+    <!-- Footer -->
+    <footer class="home-footer">
+      <p>© 2024 StayFinder. All rights reserved.</p>
+      <p>Discover your next adventure with unique stays around the world.</p>
+    </footer>
   </main>
 </div>

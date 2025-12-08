@@ -11,6 +11,7 @@ import { RentalProperty } from '../../Models/rental-property';
 import { Experience } from '../../Models/experience';
 import { Service } from '../../Models/service';
 import { DateRange } from '../../Models/DateRange';
+import { CategoryBarComponent } from "../../Components/category-bar/category-bar.component";
 
 // Menu item type definition
 export type MenuItem =
@@ -21,7 +22,7 @@ export type MenuItem =
 @Component({
   selector: 'app-search-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CategoryBarComponent],
   templateUrl: './search.html',
   styleUrls: ['./search.css']
 })
@@ -152,6 +153,13 @@ export class SearchComponent implements OnInit {
   instantBookOnly = false;
   superhostOnly = false;
 
+  filteredProperties: RentalProperty[] = [];
+  activeFilters: any = {};
+  isFilterModalOpen = false;
+  selectedCategory: string = 'All';
+  isLoading = true;
+  isScrolled = false;
+  Router: any;
   constructor(
     private dataService: Data,
     private router: Router,
@@ -1010,6 +1018,78 @@ export class SearchComponent implements OnInit {
     } else {
       this.selectedCategories.push(category);
     }
+  }
+
+  openFilters() {
+    this.isFilterModalOpen = true;
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeFilters() {
+    this.isFilterModalOpen = false;
+    // Restore body scroll
+    document.body.style.overflow = 'auto';
+  }
+
+  onApplyFilters(filters: any) {
+    console.log('Filters applied:', filters);
+    this.activeFilters = { ...this.activeFilters, ...filters };
+    this.applyComplexFilters();
+    this.closeFilters();
+  }
+
+  applyComplexFilters() {
+    let filtered = [...this.properties];
+
+    // Apply location filter
+    if (this.activeFilters.location && this.activeFilters.location !== 'anywhere') {
+      filtered = filtered.filter(property =>
+        property.location?.toLowerCase().includes(this.activeFilters.location.toLowerCase())
+
+      );
+    }
+
+    // Apply price filter
+    if (this.activeFilters.minPrice || this.activeFilters.maxPrice) {
+      const minPrice = this.activeFilters.minPrice || 0;
+      const maxPrice = this.activeFilters.maxPrice || Infinity;
+      filtered = filtered.filter(property =>
+        property.price >= minPrice && property.price <= maxPrice
+      );
+    }
+
+    // Apply dates filter
+    if (this.activeFilters.checkIn && this.activeFilters.checkOut) {
+      // Here you would implement actual date availability logic
+      // For now, just filter by availability flag
+      filtered = filtered.filter(property => property.availableDates);
+    }
+
+    // Apply guests filter
+    if (this.activeFilters.guests) {
+      filtered = filtered.filter(property =>
+        property.maxGuests >= this.activeFilters.guests
+      );
+    }
+
+    // Apply amenities filter
+    if (this.activeFilters.amenities && this.activeFilters.amenities.length > 0) {
+      filtered = filtered.filter(property =>
+        this.activeFilters.amenities.every((amenity: string) =>
+          property.amenities?.includes(amenity)
+        )
+      );
+    }
+
+    // Apply category filter
+    if (this.selectedCategory && this.selectedCategory !== 'All') {
+      filtered = filtered.filter(property =>
+        property.propertyType?.includes(this.selectedCategory.toLowerCase())
+      );
+    }
+
+    this.filteredProperties = filtered;
   }
 }
 
