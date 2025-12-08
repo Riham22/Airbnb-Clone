@@ -16,7 +16,7 @@ export interface BookingListDto {
     id: number;
     propertyId: number;
     propertyTitle: string;
-    propertyImage: string;
+    propertyCoverImage: string;
     checkInDate: string;
     checkOutDate: string;
     numberOfNights: number;

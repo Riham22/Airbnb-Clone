@@ -1,0 +1,135 @@
+<!-- Loading State -->
+<div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading payment details...</p>
+</div>
+
+<!-- Error State -->
+<div class="error-state" *ngIf="error && !loading">
+    <div class="error-icon">⚠️</div>
+    <h3>Something went wrong</h3>
+    <p>{{ error }}</p>
+    <button class="back-btn-text" (click)="goBack()">Go Back</button>
+</div>
+
+<!-- Main Content -->
+<div class="payment-container" *ngIf="booking && !loading && !error">
+    <!-- Header -->
+    <div class="payment-header">
+        <div class="header-controls">
+            <button class="back-btn" (click)="goBack()" title="Back">
+                <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+                    focusable="false"
+                    style="display: block; fill: none; height: 16px; width: 16px; stroke: currentcolor; stroke-width: 4; overflow: visible;">
+                    <path fill="none" d="M20 28 8.7 16.7a1 1 0 0 1 0-1.4L20 4"></path>
+                </svg>
+            </button>
+            <a routerLink="/" class="home-btn-icon" title="Go Home">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+            </a>
+        </div>
+        <h1>Confirm and pay</h1>
+    </div>
+
+    <div class="payment-content">
+        <!-- Left Column: Payment Details -->
+        <div class="payment-column">
+            <div class="payment-methods">
+                <h2>Pay with</h2>
+                <div class="method-selector">
+                    <div class="method-option">
+                        <div class="method-info">
+                            <span>Credit or debit card</span>
+                        </div>
+                        <div class="method-icons">
+                            💳 💳
+                        </div>
+                    </div>
+                    <!-- Mock Card Form -->
+                    <div class="card-form">
+                        <div class="input-group">
+                            <label>Card Number</label>
+                            <input type="text" placeholder="0000 0000 0000 0000" disabled value="•••• •••• •••• 4242">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>Expiration</label>
+                                <input type="text" placeholder="MM/YY" disabled value="12/26">
+                            </div>
+                            <div class="input-group">
+                                <label>CVV</label>
+                                <input type="text" placeholder="123" disabled value="•••">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="method-option">
+                        <div class="method-info">
+                            <span>PayPal</span>
+                        </div>
+                        <div class="method-icons">
+                            🅿️
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cancellation-policy">
+                <h2>Cancellation policy</h2>
+                <p>Free cancellation for 48 hours. After that, cancel before check-in and get a 50% refund, minus the
+                    service fee.</p>
+            </div>
+        </div>
+
+        <!-- Right Column: Summary Card -->
+        <div class="summary-card">
+            <div class="property-preview">
+                <img [src]="booking.property?.coverImage || booking.propertyCoverImage" alt="Property"
+                    class="preview-image">
+                <div class="preview-details">
+                    <!-- Title fallback -->
+                    <span class="preview-subtitle">{{ booking.property?.title || booking.propertyTitle }}</span>
+                    <!-- Address fallback -->
+                    <span class="preview-title">{{ booking.property?.city || 'Beautiful Home' }}</span>
+                    <div class="preview-rating">
+                        ★ 4.95 (Superhost)
+                    </div>
+                </div>
+            </div>
+
+            <div class="price-details">
+                <h2>Price details</h2>
+                <div class="price-row">
+                    <span>{{ booking.currency }} {{ (booking.pricePerNight || booking.totalPrice /
+                        booking.numberOfNights) | number:'1.0-0' }} x {{
+                        booking.numberOfNights }} nights</span>
+                    <span>{{ booking.currency }} {{ booking.totalPrice | number:'1.0-2' }}</span>
+                </div>
+                <div class="price-row">
+                    <span>Cleaning fee</span>
+                    <span>{{ booking.currency }} 50.00</span>
+                </div>
+                <div class="price-row">
+                    <span>Service fee</span>
+                    <span>{{ booking.currency }} 85.00</span>
+                </div>
+                <div class="price-row total">
+                    <span>Total ({{ booking.currency }})</span>
+                    <span>{{ booking.currency }} {{ booking.totalPrice + 135 | number:'1.0-2' }}</span>
+                </div>
+            </div>
+
+            <button class="pay-btn" (click)="processPayment()" [disabled]="processing">
+                {{ processing ? 'Processing...' : 'Confirm and pay' }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay (Processing) -->
+<div class="loading-overlay" *ngIf="processing && !loading && !error">
+    <div class="spinner"></div>
+    <h3>Securely processing your payment...</h3>
+</div>

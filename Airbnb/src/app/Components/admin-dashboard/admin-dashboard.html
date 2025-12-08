@@ -8,9 +8,13 @@
   <header class="admin-header">
     <h1>Admin Dashboard</h1>
     <div class="admin-actions">
-      <button class="btn-secondary" (click)="testAPIs()" [disabled]="loading">
+      <!-- <button class="btn-secondary" (click)="testAPIs()" [disabled]="loading">
         🧪 Test APIs
-      </button>
+      </button> -->
+      <a routerLink="/" class="btn-secondary"
+        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+        🏠 Home
+      </a>
       <button class="btn-primary" (click)="loadDashboardData()" [disabled]="loading">
         Refresh Data
       </button>
@@ -34,9 +38,12 @@
     <button [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')" class="tab-button">
       🏄 Experiences
     </button>
-    <button [class.active]="activeTab === 'analytics'" (click)="setActiveTab('analytics')" class="tab-button">
-      📈 Analytics
+    <button [class.active]="activeTab === 'categories'" (click)="setActiveTab('categories')" class="tab-button">
+      📂 Categories
     </button>
+    <!-- <button [class.active]="activeTab === 'analytics'" (click)="setActiveTab('analytics')" class="tab-button">
+      📈 Analytics
+    </button> -->
   </nav>
 
   <!-- Overview Tab -->
@@ -259,10 +266,7 @@
                   title="Suspend Listing">
                   Suspend
                 </button>
-                <button *ngIf="listing.status === 'suspended' || listing.status === 'pending'"
-                  (click)="approveListing(listing.id)" class="btn-success" title="Approve Listing">
-                  Approve
-                </button>
+                <!-- Approve button removed as per request -->
                 <button (click)="deleteListing(listing.id)" class="btn-danger" title="Delete Listing">
                   Delete
                 </button>
@@ -298,6 +302,7 @@
             <th>Category</th>
             <th>Price</th>
             <th>Rating</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -317,7 +322,17 @@
             <td>${{ service.price }}</td>
             <td>⭐ {{ service.rating }} ({{ service.reviewCount }})</td>
             <td>
+              <span [class]="'status-badge ' + getListingStatusClass(service.status)">
+                {{ service.status }}
+              </span>
+            </td>
+            <td>
               <div class="action-buttons">
+                <button *ngIf="service.status === 'active'" (click)="suspendService(service.id)" class="btn-warning"
+                  title="Suspend Service">
+                  Suspend
+                </button>
+                <!-- Approve button removed as per request -->
                 <button (click)="deleteService(service.id)" class="btn-danger" title="Delete Service">
                   Delete
                 </button>
@@ -353,6 +368,7 @@
             <th>Category</th>
             <th>Price</th>
             <th>Rating</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -372,7 +388,17 @@
             <td>${{ experience.price }}</td>
             <td>⭐ {{ experience.rating }} ({{ experience.reviewCount }})</td>
             <td>
+              <span [class]="'status-badge ' + getListingStatusClass(experience.status)">
+                {{ experience.status }}
+              </span>
+            </td>
+            <td>
               <div class="action-buttons">
+                <button *ngIf="experience.status === 'active'" (click)="suspendExperience(experience.id)"
+                  class="btn-warning" title="Suspend Experience">
+                  Suspend
+                </button>
+                <!-- Approve button removed as per request -->
                 <button (click)="deleteExperience(experience.id)" class="btn-danger" title="Delete Experience">
                   Delete
                 </button>
@@ -389,6 +415,7 @@
     </div>
   </section>
 
+<<<<<<< HEAD
     <!-- Analytics Tab -->
       <section *ngIf="activeTab === 'analytics'" class="tab-content analytics-tab">
         <div class="analytics-container">
@@ -405,6 +432,95 @@
           </div>
         </div>
       </section>
+=======
+  <!-- Categories Tab -->
+  <section *ngIf="activeTab === 'categories'" class="tab-content">
+    <div class="section-header">
+      <h2>Category Management</h2>
+      <p>Manage experience categories and subcategories</p>
+    </div>
+
+    <!-- Experience Categories -->
+    <div class="management-section">
+      <div class="section-title">
+        <h3>Experience Categories</h3>
+        <button class="btn-primary" (click)="openAddCategoryModal()">+ Add Category</button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>VAT</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let category of experienceCategories">
+            <td>{{ category.id }}</td>
+            <td>{{ category.name }}</td>
+            <td>{{ category.vat }}%</td>
+            <td class="actions">
+              <button class="btn-edit" (click)="openEditCategoryModal(category)">Edit</button>
+              <button class="btn-delete" (click)="deleteCategory(category.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="experienceCategories.length === 0" class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No categories found</h3>
+      </div>
+    </div>
+
+    <!-- Experience Subcategories -->
+    <div class="management-section">
+      <div class="section-title">
+        <h3>Experience Subcategories</h3>
+        <button class="btn-primary" (click)="openAddSubcategoryModal()">+ Add Subcategory</button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Parent Category</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let subcategory of experienceSubCategories">
+            <td>{{ subcategory.id }}</td>
+            <td>{{ subcategory.name }}</td>
+            <td>{{ getCategoryName(subcategory.expCatograyId) }}</td>
+            <td class="actions">
+              <button class="btn-edit" (click)="openEditSubcategoryModal(subcategory)">Edit</button>
+              <button class="btn-delete" (click)="deleteSubcategory(subcategory.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="experienceSubCategories.length === 0" class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No subcategories found</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- Analytics Tab -->
+  <section *ngIf="activeTab === 'analytics'" class="tab-content">
+    <div class="analytics-placeholder">
+      <div class="placeholder-icon">📈</div>
+      <h3>Analytics Dashboard</h3>
+      <p>Advanced analytics and reporting features coming soon.</p>
+      <p>This section will include charts, graphs, and detailed performance metrics.</p>
+    </div>
+  </section>
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
   <!-- MODALS -->
 
@@ -518,9 +634,9 @@
           <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" required>
         </div>
         <div class="form-group">
-          <label>Image URL</label>
-          <input type="url" [(ngModel)]="newListing.imageUrl" name="imageUrl"
-            placeholder="https://example.com/image.jpg">
+          <label>Images</label>
+          <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
+          <small class="text-muted">Select one or more images</small>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
@@ -563,9 +679,9 @@
           <input type="text" [(ngModel)]="newService.duration" name="duration" required>
         </div>
         <div class="form-group">
-          <label>Image URL</label>
-          <input type="url" [(ngModel)]="newService.imageUrl" name="imageUrl"
-            placeholder="https://example.com/service-image.jpg">
+          <label>Images</label>
+          <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
+          <small class="text-muted">Select one or more images</small>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
@@ -581,50 +697,166 @@
       <h3>Add New Experience</h3>
       <form (ngSubmit)="addExperience()">
         <div class="form-group">
-          <label>Experience Name</label>
-          <input type="text" [(ngModel)]="newExperience.name" name="name" required>
+          <label>Experience Name *</label>
+          <input type="text" [(ngModel)]="newExperience.name" name="name" required placeholder="Enter experience name">
         </div>
+
         <div class="form-group">
+<<<<<<< HEAD
           <label>Description</label>
           <input type="text" [(ngModel)]="newExperience.description" name="description"  title="description"  required>
+=======
+          <label>Description *</label>
+          <textarea [(ngModel)]="newExperience.description" name="description" required
+            placeholder="Describe the experience" rows="3"></textarea>
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
         </div>
+
         <div class="form-group">
+<<<<<<< HEAD
           <label>Category</label>
           <select [(ngModel)]="newExperience.category" name="category"  title="category" required>
+=======
+          <label>Category *</label>
+          <select [(ngModel)]="newExperience.expCatograyId" name="expCatograyId"
+            (ngModelChange)="onExperienceCategoryChange()" required>
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
             <option [ngValue]="null" disabled>Select Category</option>
-            <option *ngFor="let cat of experienceCategories" [value]="cat.name">{{ cat.name }}</option>
+            <option *ngFor="let cat of experienceCategories" [ngValue]="cat.id">{{ cat.name }}</option>
           </select>
         </div>
+
         <div class="form-group">
-          <label>Price</label>
-          <input type="number" [(ngModel)]="newExperience.price" name="price" required>
+          <label>Subcategory *</label>
+          <select [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required
+            [disabled]="!newExperience.expCatograyId">
+            <option [ngValue]="null" disabled>
+              {{ newExperience.expCatograyId ? 'Select Subcategory' : 'First select a category' }}
+            </option>
+            <option *ngFor="let sub of experienceSubCategories" [ngValue]="sub.id">{{ sub.name }}</option>
+          </select>
         </div>
+
         <div class="form-group">
-          <label>Duration</label>
-          <input type="text" [(ngModel)]="newExperience.duration" name="duration" required>
+          <label>Price per Guest *</label>
+          <input type="number" [(ngModel)]="newExperience.price" name="price" required min="0"
+            placeholder="Enter price">
         </div>
+
         <div class="form-group">
-          <label>Location</label>
-          <input type="text" [(ngModel)]="newExperience.location" name="location" required>
+          <label>Location *</label>
+          <input type="text" [(ngModel)]="newExperience.location" name="location" required placeholder="Enter location">
         </div>
+
         <div class="form-group">
-          <label>Max Participants</label>
-          <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required>
+          <label>Max Participants *</label>
+          <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required min="1"
+            max="100" placeholder="Maximum number of guests">
         </div>
+
+        <!-- Activities Section -->
+        <div class="form-group" style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px;">
+          <label style="display: block; margin-bottom: 10px; font-weight: 600;">Activities</label>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="text" [(ngModel)]="newActivity.name" name="actName" placeholder="Activity Name"
+              style="flex: 2; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="number" [(ngModel)]="newActivity.timeMinute" name="actTime" placeholder="Duration (min)"
+              style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          </div>
+
+          <div style="margin-bottom: 10px;">
+            <textarea [(ngModel)]="newActivity.describe" name="actDesc" placeholder="Description" rows="2"
+              style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+          </div>
+
+          <button type="button" (click)="addActivity()"
+            style="background: #222; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+            + Add Activity
+          </button>
+
+          <!-- Added Activities List -->
+          <div *ngIf="newExperience.expActivities && newExperience.expActivities.length > 0"
+            style="margin-top: 15px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+            <div *ngFor="let act of newExperience.expActivities; let i = index"
+              style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: start; background: #fafafa;">
+              <div>
+                <div style="font-weight: 600;">{{act.name}} <span
+                    style="font-weight: normal; color: #666; font-size: 0.9em;">({{act.timeMinute}} min)</span></div>
+                <div style="font-size: 0.9em; color: #444; margin-top: 2px;">{{act.describe}}</div>
+              </div>
+              <button type="button" (click)="removeActivity(i)"
+                style="color: #ff385c; background: none; border: none; cursor: pointer; font-size: 18px; padding: 0 5px;">&times;</button>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label>Meeting Point</label>
-          <input type="text" [(ngModel)]="newExperience.meetingPoint" name="meetingPoint" required>
+          <label>Images (optional)</label>
+          <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
         </div>
-        <div class="form-group">
-          <label>Image</label>
-          <input type="file" (change)="onFileSelected($event)" accept="image/*">
-        </div>
+
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Create Experience</button>
+          <button type="submit" class="btn-primary" [disabled]="!newExperience.name || !newExperience.description || 
+                            !newExperience.expCatograyId || !newExperience.expSubCatograyId || 
+                            !newExperience.price || !newExperience.location">
+            Create Experience
+          </button>
         </div>
       </form>
     </div>
   </div>
 
+<<<<<<< HEAD
 </div>
+=======
+  <!-- Category Modal -->
+  <div *ngIf="showCategoryModal" class="modal-overlay" (click)="closeAddCategoryModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ categoryModalMode === 'edit' ? 'Edit Category' : 'Add New Category' }}</h2>
+        <button class="close-button" (click)="closeAddCategoryModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label for="categoryName">Category Name *</label>
+        <input type="text" id="categoryName" [(ngModel)]="newCategory.name" placeholder="Enter category name"
+          required />
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeAddCategoryModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveCategory()">{{ categoryModalMode === 'edit' ? 'Update' : 'Create' }}
+          Category</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subcategory Modal -->
+  <div *ngIf="showSubcategoryModal" class="modal-overlay" (click)="closeAddSubcategoryModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ subcategoryModalMode === 'edit' ? 'Edit Subcategory' : 'Add New Subcategory' }}</h2>
+        <button class="close-button" (click)="closeAddSubcategoryModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label for="subcategoryName">Subcategory Name *</label>
+        <input type="text" id="subcategoryName" [(ngModel)]="newSubcategory.name" placeholder="Enter subcategory name"
+          required />
+      </div>
+      <div class="form-group">
+        <label for="parentCategory">Parent Category *</label>
+        <select id="parentCategory" [(ngModel)]="newSubcategory.expCatograyId" required>
+          <option value="">Select a category</option>
+          <option *ngFor="let category of experienceCategories" [value]="category.id">{{ category.name }}</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeAddSubcategoryModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveSubcategory()">{{ subcategoryModalMode === 'edit' ? 'Update' : 'Create'
+          }} Subcategory</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3

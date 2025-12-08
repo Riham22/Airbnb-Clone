@@ -27,9 +27,9 @@
   font-size: 21px;
   font-weight: 700;
   color: #ff385c;
-position: fixed;
-left: 0;
-margin: 1rem;
+  position: fixed;
+  left: 0;
+  margin: 1rem;
   flex-shrink: 0;
 }
 
@@ -57,6 +57,9 @@ margin: 1rem;
   transition: all 0.2s ease;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .property-type-option:hover {
@@ -316,6 +319,7 @@ margin: 1rem;
     transform: translateX(0);
   }
 }
+
 /* Logout Button Styles */
 .logout-section {
   padding: 8px 0;
@@ -382,7 +386,8 @@ margin: 1rem;
   top: 60px;
   right: 20px;
   width: 240px;
-  max-height: 80vh; /* Limit height and enable scrolling */
+  max-height: 80vh;
+  /* Limit height and enable scrolling */
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
@@ -391,12 +396,15 @@ margin: 1rem;
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.2s ease;
-  overflow: hidden; /* Contain the scroll */
+  overflow: hidden;
+  /* Contain the scroll */
 }
 
 .menu-list {
-  max-height: calc(80vh - 60px); /* Account for header */
-  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: calc(80vh - 60px);
+  /* Account for header */
+  overflow-y: auto;
+  /* Enable vertical scrolling */
   padding: 8px 0;
 }
 
@@ -1174,6 +1182,7 @@ margin: 1rem;
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1189,6 +1198,7 @@ margin: 1rem;
     opacity: 0;
     transform: scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -1344,6 +1354,7 @@ margin: 1rem;
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1377,6 +1388,7 @@ margin: 1rem;
 
 /* Responsive Design */
 @media (max-width: 1128px) {
+
   .navbar-top,
   .navbar-bottom {
     padding: 14px 24px;
@@ -1392,6 +1404,7 @@ margin: 1rem;
 }
 
 @media (max-width: 743px) {
+
   .navbar-top,
   .navbar-bottom {
     padding: 12px 16px;
@@ -1712,12 +1725,12 @@ margin: 1rem;
   border-color: #000;
 }
 
-.type-filter-option input:checked + .checkmark {
+.type-filter-option input:checked+.checkmark {
   background: #000;
   border-color: #000;
 }
 
-.type-filter-option input:checked + .checkmark::after {
+.type-filter-option input:checked+.checkmark::after {
   content: '✓';
   color: white;
   font-size: 12px;
@@ -1762,12 +1775,12 @@ input[type="checkbox"] {
   display: none;
 }
 
-input[type="checkbox"]:checked + .checkmark {
+input[type="checkbox"]:checked+.checkmark {
   background: #000;
   border-color: #000;
 }
 
-input[type="checkbox"]:checked + .checkmark::after {
+input[type="checkbox"]:checked+.checkmark::after {
   content: '✓';
   color: white;
   font-size: 12px;

@@ -1,4 +1,4 @@
-// data.service.ts - FIXED VERSION
+// data.service.ts - Complete Fixed Version
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -23,9 +23,6 @@ export class Data {
   private bookings: Booking[] = [];
   private wishlistCache: Set<string> = new Set();
 
-  private apiUrl = 'https://localhost:7020'; // Backend URL
-  private useMockData = false; // Flag to use mock data when backend fails
-
   private propertiesSubject = new BehaviorSubject<RentalProperty[]>([]);
   properties$ = this.propertiesSubject.asObservable();
 
@@ -36,21 +33,17 @@ export class Data {
   services$ = this.servicesSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    // First, check if backend is available
-    this.checkBackendHealth().subscribe(isHealthy => {
-      if (isHealthy) {
-        console.log('Backend is available, loading data from API');
-        this.useMockData = false;
-        this.loadWishlist();
-        this.loadProperties();
-        this.loadExperiences();
-        this.loadServices();
-      } else {
-        console.warn('Backend not available, using mock data');
-        this.useMockData = true;
-        this.loadMockData();
-      }
-    });
+    console.log('🚀 DataService initialized');
+
+    // Load wishlist first, then data
+    this.loadWishlist();
+
+    // Give a small delay to ensure wishlist loads first
+    setTimeout(() => {
+      this.loadProperties();
+      this.loadExperiences();
+      this.loadServices();
+    }, 100);
   }
 
   /**
@@ -122,9 +115,10 @@ export class Data {
       next: (items: any[]) => {
         this.wishlistCache.clear();
         items.forEach(item => {
-          if (item.itemType && item.itemId) {
-            const key = `${item.itemType}_${item.itemId}`;
-            this.wishlistCache.add(key);
+          const type = item.itemType || item.ItemType;
+          const id = item.itemId || item.ItemId;
+          if (type && id) {
+            this.wishlistCache.add(`${type}_${id}`);
           }
         });
         // Save to localStorage for offline use
@@ -143,172 +137,191 @@ export class Data {
    * Load properties with proper error handling
    */
   loadProperties() {
-    // Don't load from API if using mock data
-    if (this.useMockData) return;
+    console.log('🔄 Loading properties from API...');
 
-    this.http.get<any[]>(`${this.apiUrl}/api/properties`).pipe(
-      catchError((error) => {
-        console.warn('Failed to load properties from API, switching to mock data');
-        this.useMockData = true;
-        return of(this.getHardcodedProperties());
-      })
-    ).subscribe({
-      next: (data) => {
-        if (this.useMockData && Array.isArray(data) && data.length > 0) {
-          // This is mock data from catchError
-          this.propertiesSubject.next(data);
-        } else if (Array.isArray(data)) {
-          // This is real API data
-          const mappedProperties: RentalProperty[] = data.map(p => ({
-            id: p.id,
-            name: p.title,
-            location: `${p.city}, ${p.country}`,
-            price: p.pricePerNight,
-            rating: p.averageRating,
-            reviewCount: p.reviewsCount,
-            imageUrl: p.coverImageUrl,
-            images: [p.coverImageUrl],
+    // Note: Using capital 'P' in Properties to match your API
+    this.http.get<any>('https://localhost:7020/api/Properties').subscribe({
+      next: (response) => {
+        console.log('✅ API Response received:', response);
+
+        // Handle different response formats
+        let data: any[] = [];
+
+        // Check if response is wrapped in a data property
+        if (response && typeof response === 'object') {
+          if (Array.isArray(response)) {
+            data = response;
+          } else if (response.data && Array.isArray(response.data)) {
+            data = response.data;
+          } else if (response.items && Array.isArray(response.items)) {
+            data = response.items;
+          } else if (response.properties && Array.isArray(response.properties)) {
+            data = response.properties;
+          } else {
+            console.warn('⚠️ Unexpected response format:', response);
+            data = [];
+          }
+        }
+
+        console.log('📊 Number of properties:', data?.length);
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No properties returned from API');
+          this.propertiesSubject.next([]);
+          return;
+        }
+
+        const mappedProperties: RentalProperty[] = data.map(p => {
+          console.log('=== Mapping property ===');
+          console.log('ID:', p.id);
+          console.log('Title:', p.title);
+          console.log('PropertyCategory:', p.propertyCategory);
+          console.log('PropertyType:', p.propertyType);
+
+          // Try to get category name from multiple sources (PascalCase & camelCase)
+          let categoryName =
+            p.propertyCategory?.name || p.PropertyCategory?.Name ||
+            p.propertyCategory?.title || p.PropertyCategory?.Title ||
+            p.categoryName || p.CategoryName ||
+            p.category?.name || p.Category?.Name;
+
+          // If no category found, try to guess from title
+          if (!categoryName) {
+            const title = (p.title || p.Title || '').toLowerCase();
+            if (title.includes('beach')) categoryName = 'Beachfront';
+            else if (title.includes('city')) categoryName = 'City';
+            else if (title.includes('countryside') || title.includes('cottage')) categoryName = 'Countryside';
+            else if (title.includes('mountain')) categoryName = 'Mountain';
+            else if (title.includes('lake')) categoryName = 'Lake';
+            else categoryName = 'City'; // Default
+          }
+
+          console.log('Using category name:', categoryName);
+
+          const categoryForUI = this.mapPropertyType(categoryName);
+
+          console.log('Mapped to UI category:', categoryForUI);
+          console.log('===================');
+
+          // PascalCase fallbacks
+          const id = p.id || p.Id;
+          const title = p.title || p.Title;
+          const city = p.city || p.City;
+          const country = p.country || p.Country;
+          const price = p.pricePerNight || p.PricePerNight || p.price || p.Price;
+          const rating = p.averageRating || p.AverageRating;
+          const reviewCount = p.reviewsCount || p.ReviewsCount;
+          const coverImage = p.coverImageUrl || p.CoverImageUrl;
+          const images = p.images || p.Images;
+          const maxGuests = p.maxGuests || p.MaxGuests;
+          const bedrooms = p.bedrooms || p.Bedrooms;
+          const beds = p.beds || p.Beds;
+          const bathrooms = p.bathrooms || p.Bathrooms;
+          const amenities = p.amenities || p.Amenities;
+          const hostName = p.hostName || p.HostName;
+          const description = p.description || p.Description;
+
+          return {
+            id: id,
+            name: title || 'Untitled Property',
+            location: `${city || 'Unknown'}, ${country || 'Unknown'}`,
+            price: price || 0,
+            rating: rating || 0,
+            reviewCount: reviewCount || 0,
+            imageUrl: this.processImageUrl(coverImage),
+            images: images?.length > 0
+              ? images.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl || img.imageURL)).filter((url: string) => url)
+              : [this.processImageUrl(coverImage)],
             type: 'property',
-            propertyType: this.mapPropertyType(p.propertyType?.name || 'apartment'),
-            maxGuests: p.maxGuests || 2,
-            bedrooms: p.bedrooms || 1,
-            beds: p.beds || 1,
-            bathrooms: p.bathrooms || 1,
-            amenities: p.amenities?.map((a: any) => a.name) || [],
+            propertyType: categoryForUI,
+            maxGuests: maxGuests || 2,
+            bedrooms: bedrooms || 1,
+            beds: beds || 1,
+            bathrooms: bathrooms || 1,
+            amenities: Array.isArray(amenities)
+              ? amenities.map((a: any) => a.name || a.Name || a).filter((name: string) => name)
+              : [],
             host: {
-              name: p.host?.name || 'Host',
+              name: hostName || 'Host',
               joinedDate: '2024',
-              isSuperhost: p.host?.isSuperhost || false,
-              avatar: p.host?.avatar || ''
+              isSuperhost: false,
+              avatar: ''
             },
-            description: p.description || '',
+            description: description || '',
             highlights: [],
             reviews: [],
-            isWishlisted: this.isWishlistedSync('Property', p.id)
-          }));
-          this.propertiesSubject.next(mappedProperties);
-        }
+            isWishlisted: this.isWishlistedSync('Property', id)
+          };
+        });
+
+        console.log('✅ Mapped properties:', mappedProperties.length);
+        console.log('📦 First property:', mappedProperties[0]);
+
+        this.propertiesSubject.next(mappedProperties);
       },
       error: (err) => {
-        console.error('Error in loadProperties:', err);
-        // Fallback to mock data
-        this.propertiesSubject.next(this.getHardcodedProperties());
+        console.error('❌ Failed to load properties:', err);
+        console.error('Error details:', {
+          status: err.status,
+          statusText: err.statusText,
+          message: err.message,
+          url: err.url
+        });
+
+        // Return empty array on error
+        this.propertiesSubject.next([]);
       }
     });
   }
 
   private mapPropertyType(backendType: string): string {
-    const type = backendType.toLowerCase();
-    if (type.includes('beach') || type.includes('coast')) return 'beach';
-    if (type.includes('city') || type.includes('apartment') || type.includes('loft')) return 'city';
-    if (type.includes('mountain') || type.includes('cabin') || type.includes('ski')) return 'mountain';
-    if (type.includes('lake') || type.includes('water')) return 'lake';
-    if (type.includes('country') || type.includes('farm') || type.includes('barn')) return 'countryside';
-    return 'city'; // Default fallback
-  }
+    if (!backendType) {
+      console.warn('⚠️ No property type provided, defaulting to "city"');
+      return 'city';
+    }
 
-  /**
-   * Get hardcoded properties
-   */
-  private getHardcodedProperties(): RentalProperty[] {
-    return [
-      {
-        id: 1,
-        name: 'Cozy Beachfront Apartment',
-        location: 'Malibu, California',
-        price: 245,
-        rating: 4.92,
-        reviewCount: 128,
-        imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-        images: [
-          'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
-          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
-          'https://images.unsplash.com/photo-1554995207-c18c203602cb',
-          'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'
-        ],
-        type: 'property',
-        propertyType: 'beach',
-        maxGuests: 4,
-        bedrooms: 2,
-        beds: 3,
-        bathrooms: 1.5,
-        amenities: [
-          'WiFi', 'Kitchen', 'Parking', 'Beach Access',
-          'Air Conditioning', 'TV', 'Washer'
-        ],
-        host: {
-          name: 'Sarah Johnson',
-          joinedDate: '2018',
-          isSuperhost: true,
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786'
-        },
-        description: 'Beautiful beachfront apartment with stunning ocean views. Perfect for a relaxing getaway with direct beach access.',
-        highlights: [
-          'Beachfront location',
-          'Stunning ocean views',
-          'Modern amenities',
-          'Direct beach access'
-        ],
-        reviews: [
-          {
-            id: 1,
-            user: 'Michael T.',
-            date: '2024-01-15',
-            rating: 5,
-            comment: 'Absolutely stunning views! The apartment was even better than pictured.',
-            userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'
-          }
-        ],
-        isWishlisted: this.isWishlistedSync('Property', 1)
-      },
-      {
-        id: 2,
-        name: 'Modern City Loft',
-        location: 'New York City, New York',
-        price: 189,
-        rating: 4.78,
-        reviewCount: 95,
-        imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-        images: [
-          'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00',
-          'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
-          'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5',
-          'https://images.unsplash.com/photo-1505691938895-1758d7feb511'
-        ],
-        type: 'property',
-        propertyType: 'city',
-        maxGuests: 2,
-        bedrooms: 1,
-        beds: 1,
-        bathrooms: 1,
-        amenities: ['WiFi', 'Kitchen', 'Gym', 'City View', 'Heating'],
-        host: {
-          name: 'Daniel Price',
-          joinedDate: '2020',
-          isSuperhost: false,
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'
-        },
-        description: 'Stylish loft located in the heart of NYC. Walking distance to major attractions and subway stations.',
-        highlights: [
-          'Central location',
-          'Modern interior',
-          'High-speed WiFi',
-          'Gym access'
-        ],
-        reviews: [
-          {
-            id: 1,
-            user: 'Emily R.',
-            date: '2024-02-02',
-            rating: 5,
-            comment: 'Perfect location & super clean!',
-            userAvatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e'
-          }
-        ],
-        isWishlisted: this.isWishlistedSync('Property', 2)
-      },
-      // Add more properties as needed
-    ];
+    const type = backendType.toLowerCase().trim();
+    console.log('Mapping category:', backendType, '→', type);
+
+    // Exact matches first
+    if (type === 'beachfront' || type === 'beach') return 'beach';
+    if (type === 'city' || type === 'urban') return 'city';
+    if (type === 'countryside' || type === 'country') return 'countryside';
+    if (type === 'mountain' || type === 'mountains') return 'mountain';
+    if (type === 'lakefront' || type === 'lake') return 'lake';
+
+    // Contains matches
+    if (type.includes('beach') || type.includes('coast') || type.includes('seaside') || type.includes('ocean')) {
+      console.log('→ Mapped to: beach');
+      return 'beach';
+    }
+    if (type.includes('city') || type.includes('urban') || type.includes('downtown')) {
+      console.log('→ Mapped to: city');
+      return 'city';
+    }
+    if (type.includes('mountain') || type.includes('alpine') || type.includes('ski')) {
+      console.log('→ Mapped to: mountain');
+      return 'mountain';
+    }
+    if (type.includes('lake') || type.includes('water')) {
+      console.log('→ Mapped to: lake');
+      return 'lake';
+    }
+    if (type.includes('country') || type.includes('farm') || type.includes('rural') || type.includes('cottage')) {
+      console.log('→ Mapped to: countryside');
+      return 'countryside';
+    }
+
+    // For Apartment, House, Villa etc - default to city
+    if (type.includes('apartment') || type.includes('house') || type.includes('villa') ||
+      type.includes('studio') || type.includes('cabin') || type.includes('room')) {
+      console.warn('⚠️ Found building type "' + backendType + '", defaulting to "city"');
+      return 'city';
+    }
+
+    // Default fallback
+    console.warn('⚠️ Category "' + backendType + '" did not match, defaulting to "city"');
+    return 'city';
   }
 
   getProperties(): RentalProperty[] {
@@ -319,56 +332,68 @@ export class Data {
    * Load experiences with proper error handling
    */
   loadExperiences() {
-    // Don't load from API if using mock data
-    if (this.useMockData) return;
+    console.log('🔄 Loading experiences from API...');
 
-    this.http.get<any[]>(`${this.apiUrl}/api/Experience`).pipe(
-      catchError((error) => {
-        console.warn('Failed to load experiences from API, using mock data');
-        return of(this.getHardcodedExperiences());
-      })
-    ).subscribe({
+    this.http.get<any[]>('https://localhost:7020/api/Experience').subscribe({
       next: (data) => {
-        if (this.useMockData && Array.isArray(data) && data.length > 0) {
-          // This is mock data from catchError
-          this.experiencesSubject.next(data);
-        } else if (Array.isArray(data)) {
-          // This is real API data
-          const mappedExperiences: Experience[] = data.map(exp => ({
-            id: exp.id,
-            type: 'experience',
-            name: exp.expTitle || exp.name || 'Experience',
-            location: `${exp.city || ''}, ${exp.country || ''}`.trim(),
-            price: exp.guestPrice || 0,
-            rating: exp.averageRating || 4.5,
-            reviewCount: exp.reviewsCount || 0,
-            imageUrl: exp.images?.[0]?.imageURL || '',
-            images: exp.images?.map((img: any) => img.imageURL) || [],
-            category: exp.expCatograyName || 'general',
-            duration: exp.duration || '3 hours',
-            maxParticipants: exp.maximumGuest || 10,
-            host: {
-              name: exp.host?.name || 'Host',
-              joinedDate: new Date(exp.postedDate || Date.now()).getFullYear().toString(),
-              isSuperhost: exp.host?.isSuperhost || false,
-              avatar: exp.host?.avatar || ''
-            },
-            description: exp.expDescribe || exp.expSummary || '',
-            highlights: exp.highlights || [],
-            includes: exp.includes || [],
-            requirements: exp.requirements || [],
-            meetingPoint: exp.locationName || '',
-            languages: exp.usingLanguage ? [exp.usingLanguage] : ['English'],
-            reviews: [],
-            isWishlisted: this.isWishlistedSync('Experience', exp.id)
-          }));
-          this.experiencesSubject.next(mappedExperiences);
+        console.log('✅ Experiences API Response:', data?.length);
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No experiences returned from API');
+          this.experiencesSubject.next([]);
+          return;
         }
+
+        const mappedExperiences: Experience[] = data.map(exp => {
+          const id = exp.id || exp.Id;
+          const title = exp.expTitle || exp.ExpTitle || exp.title || exp.Title || exp.name || exp.Name || 'Experience';
+          const city = exp.city || exp.City;
+          const country = exp.country || exp.Country;
+          const price = exp.guestPrice || exp.GuestPrice || exp.price || exp.Price;
+          const images = exp.images || exp.Images;
+          const desc = exp.expDescribe || exp.ExpDescribe || exp.expSummary || exp.ExpSummary || exp.description || exp.Description;
+          const catName = exp.expCatograyName || exp.ExpCatograyName || exp.categoryName || exp.CategoryName;
+          const maxGuest = exp.maximumGuest || exp.MaximumGuest || exp.maxParticipants || exp.MaxParticipants;
+          const postedDate = exp.postedDate || exp.PostedDate;
+          const locationName = exp.locationName || exp.LocationName;
+          const language = exp.usingLanguage || exp.UsingLanguage;
+
+          return {
+            id: id,
+            type: 'experience',
+            name: title,
+            location: `${city || ''}, ${country || ''}`.trim(),
+            price: price || 0,
+            rating: 4.5,
+            reviewCount: 0,
+            imageUrl: this.processImageUrl(images?.[0]?.imageURL || images?.[0]?.ImageUrl || images?.[0]?.imageUrl),
+            images: images?.map((img: any) => this.processImageUrl(img.imageURL || img.ImageUrl || img.imageUrl)) || [],
+            category: catName || 'general',
+            duration: '3 hours',
+            maxParticipants: maxGuest || 10,
+            host: {
+              name: 'Host',
+              joinedDate: new Date(postedDate || Date.now()).getFullYear().toString(),
+              isSuperhost: false,
+              avatar: ''
+            },
+            description: desc || '',
+            highlights: [],
+            includes: [],
+            requirements: [],
+            meetingPoint: locationName || '',
+            languages: language ? [language] : ['English'],
+            reviews: [],
+            isWishlisted: this.isWishlistedSync('Experience', id)
+          };
+        });
+
+        console.log('✅ Mapped experiences:', mappedExperiences.length);
+        this.experiencesSubject.next(mappedExperiences);
       },
       error: (err) => {
-        console.error('Error in loadExperiences:', err);
-        // Fallback to mock data
-        this.experiencesSubject.next(this.getHardcodedExperiences());
+        console.error('❌ Failed to load experiences:', err);
+        this.experiencesSubject.next([]);
       }
     });
   }
@@ -377,106 +402,71 @@ export class Data {
     return this.experiencesSubject.value;
   }
 
-  /**
-   * Fallback hardcoded experiences
-   */
-  private getHardcodedExperiences(): Experience[] {
-    return [
-      {
-        id: 101,
-        type: 'experience',
-        name: 'Wine Tasting in Napa Valley',
-        location: 'Napa Valley, California',
-        price: 89,
-        rating: 4.95,
-        reviewCount: 234,
-        imageUrl: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
-        ],
-        category: 'food-drink',
-        duration: '3 hours',
-        maxParticipants: 12,
-        host: {
-          name: 'Sophia Martinez',
-          joinedDate: '2019',
-          isSuperhost: true,
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-        },
-        description: 'Join us for an exclusive wine tasting experience at a family-owned vineyard. Learn about wine production while enjoying stunning valley views.',
-        highlights: ['Local winery', 'Expert sommelier', 'Beautiful scenery', 'Small group'],
-        includes: ['Wine tasting (5 varieties)', 'Cheese platter', 'Vineyard tour'],
-        requirements: ['Age 21+', 'Comfortable walking shoes'],
-        meetingPoint: 'Main Winery Entrance',
-        languages: ['English', 'Spanish'],
-        reviews: [
-          {
-            id: 201,
-            user: 'David L.',
-            date: '2024-01-20',
-            rating: 5,
-            comment: 'Amazing experience! Sophia was incredibly knowledgeable.',
-            userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80'
-          }
-        ],
-        isWishlisted: this.isWishlistedSync('Experience', 101)
-      },
-      // Add more experiences as needed
-    ];
-  }
-
-  /**
-   * Load services with proper error handling
-   */
   loadServices() {
-    // Don't load from API if using mock data
-    if (this.useMockData) return;
+    console.log('🔄 Loading services from API...');
 
-    this.http.get<any[]>(`${this.apiUrl}/api/Services`).pipe(
-      catchError((error) => {
-        console.warn('Failed to load services from API, using mock data');
-        return of(this.getHardcodedServices());
-      })
-    ).subscribe({
+    this.http.get<any[]>('https://localhost:7020/api/Services').subscribe({
       next: (data) => {
-        if (this.useMockData && Array.isArray(data) && data.length > 0) {
-          // This is mock data from catchError
-          this.servicesSubject.next(data);
-        } else if (Array.isArray(data)) {
-          // This is real API data
-          const mappedServices: Service[] = data.map(svc => ({
-            id: svc.id,
-            type: 'service',
-            name: svc.title || 'Service',
-            location: `${svc.city || ''}, ${svc.country || ''}`.trim(),
-            price: svc.price || 0,
-            rating: svc.averageRating || 0,
-            reviewCount: svc.reviewsCount || 0,
-            imageUrl: svc.coverImageUrl || '',
-            images: svc.images?.map((img: any) => img.imageUrl) || [svc.coverImageUrl],
-            category: svc.categoryName || 'general',
-            duration: svc.duration || '3 hours',
-            provider: {
-              name: svc.provider?.name || 'Provider',
-              joinedDate: '2024',
-              isVerified: svc.provider?.isVerified || true,
-              avatar: svc.provider?.avatar || ''
-            },
-            description: svc.description || '',
-            highlights: svc.highlights || [],
-            includes: svc.includes || [],
-            requirements: svc.requirements || [],
-            reviews: [],
-            isWishlisted: this.isWishlistedSync('Service', svc.id)
-          }));
+        console.log('✅ Services API Response:', data?.length);
+
+        if (!data || data.length === 0) {
+          console.warn('⚠️ No services returned from API');
+          this.servicesSubject.next([]);
+          return;
+        }
+
+        try {
+          const mappedServices: Service[] = data.map(svc => {
+            const id = svc.id || svc.Id;
+            const title = svc.title || svc.Title || svc.name || svc.Name || 'Service';
+            const city = svc.city || svc.City;
+            const country = svc.country || svc.Country;
+            const price = svc.price || svc.Price;
+            const rating = svc.averageRating || svc.AverageRating;
+            const reviewCount = svc.reviewsCount || svc.ReviewsCount;
+            const coverImage = svc.coverImageUrl || svc.CoverImageUrl || svc.imageUrl || svc.ImageUrl;
+            const images = svc.images || svc.Images;
+            const catName = svc.categoryName || svc.CategoryName || svc.category?.name || svc.Category?.Name;
+            const description = svc.description || svc.Description;
+
+            return {
+              id: id,
+              type: 'service',
+              name: title,
+              location: `${city || ''}, ${country || ''}`.trim(),
+              price: price || 0,
+              rating: rating || 0,
+              reviewCount: reviewCount || 0,
+              imageUrl: this.processImageUrl(coverImage),
+              images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [this.processImageUrl(coverImage)],
+              category: catName || 'general',
+              duration: '3 hours',
+              provider: {
+                name: 'Provider',
+                joinedDate: '2024',
+                isVerified: true,
+                avatar: ''
+              },
+              description: description || '',
+              highlights: [],
+              includes: [],
+              requirements: [],
+              reviews: [],
+              isWishlisted: this.isWishlistedSync('Service', id)
+            };
+          });
+
+          console.log('✅ Mapped services:', mappedServices.length);
           this.servicesSubject.next(mappedServices);
+        } catch (e) {
+          console.error('❌ Error mapping services:', e);
+          this.servicesSubject.next([]);
         }
       },
       error: (err) => {
-        console.error('Error in loadServices:', err);
-        // Fallback to mock data
-        this.servicesSubject.next(this.getHardcodedServices());
+        console.error('❌ Failed to load services:', err);
+        // FORCE emit empty array so observers don't hang
+        this.servicesSubject.next([]);
       }
     });
   }
@@ -485,6 +475,7 @@ export class Data {
     return this.servicesSubject.value;
   }
 
+<<<<<<< HEAD
   /**
    * Fallback hardcoded services
    */
@@ -641,6 +632,8 @@ export class Data {
   // Keep all your existing methods below (searchAllListings, getPropertyById, etc.)
   // Make sure they reference the BehaviorSubjects correctly
 
+=======
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   searchAllListings(filters: SearchFilters): ListingType[] {
     const allListings: ListingType[] = [
       ...this.getProperties(),
@@ -649,24 +642,20 @@ export class Data {
     ];
 
     return allListings.filter(listing => {
-      // Location filter
       if (filters.location && filters.location.trim() !== '') {
         if (!listing.location.toLowerCase().includes(filters.location.toLowerCase())) {
           return false;
         }
       }
 
-      // Price range filter
       if (listing.price < filters.priceRange.min || listing.price > filters.priceRange.max) {
         return false;
       }
 
-      // Rating filter
       if (listing.rating < filters.minRating) {
         return false;
       }
 
-      // Property type filter (enhanced for all types)
       if (filters.propertyTypes && filters.propertyTypes.length > 0) {
         if (this.isProperty(listing) && !filters.propertyTypes.includes(listing.type)) {
           return false;
@@ -683,7 +672,6 @@ export class Data {
     });
   }
 
-  // Type guards
   private isProperty(item: ListingType): item is RentalProperty {
     return (item as RentalProperty).bedrooms !== undefined;
   }
@@ -696,6 +684,109 @@ export class Data {
     return (item as Service).duration !== undefined && (item as any).type === 'service';
   }
 
+<<<<<<< HEAD
+=======
+  getAmenities(): string[] {
+    const allAmenities = this.getProperties().flatMap(p => p.amenities);
+    return Array.from(new Set(allAmenities));
+  }
+
+  getPropertyTypes(): string[] {
+    const properties = this.getProperties();
+    const types = [...new Set(properties.map(p => p.type))];
+    return ['property', 'experience', 'service', ...types];
+  }
+
+  getGuestsRange(): { min: number, max: number } {
+    const properties = this.getProperties();
+    const guests = properties.map(p => p.maxGuests);
+    return {
+      min: Math.min(...guests),
+      max: Math.max(...guests)
+    };
+  }
+
+  getPropertyById(id: number): RentalProperty | undefined {
+    return this.getProperties().find(property => property.id === id);
+  }
+
+  searchProperties(filters: SearchFilters): RentalProperty[] {
+    let properties = this.getProperties();
+
+    if (filters.location && filters.location.trim() !== '') {
+      properties = properties.filter(p =>
+        p.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    properties = properties.filter(p =>
+      p.price >= filters.priceRange.min &&
+      p.price <= filters.priceRange.max
+    );
+
+    if (filters.propertyTypes && filters.propertyTypes.length > 0) {
+      properties = properties.filter(p =>
+        filters.propertyTypes.includes(p.type)
+      );
+    }
+
+    if (filters.amenities && filters.amenities.length > 0) {
+      properties = properties.filter(p =>
+        filters.amenities.every(amenity => p.amenities.includes(amenity))
+      );
+    }
+
+    properties = properties.filter(p => p.rating >= filters.minRating);
+
+    if (filters.superhost) {
+      properties = properties.filter(p => p.host.isSuperhost);
+    }
+
+    if (filters.instantBook) {
+      properties = properties.filter(p => this.isInstantBookAvailable(p.id));
+    }
+
+    return properties;
+  }
+
+  toggleWishlist(itemType: string, itemId: number) {
+    return this.http.post<any>('https://localhost:7020/api/Wishlist/toggle', {
+      itemType: itemType,
+      itemId: itemId
+    }).pipe(
+      tap((response: any) => {
+        const key = `${itemType}_${itemId}`;
+        if (response.wishlisted) {
+          this.wishlistCache.add(key);
+        } else {
+          this.wishlistCache.delete(key);
+        }
+
+        // Update the observables to reflect wishlist changes in UI
+        if (itemType === 'Property') {
+          const currentProperties = this.propertiesSubject.value;
+          const updatedProperties = currentProperties.map(prop =>
+            prop.id === itemId ? { ...prop, isWishlisted: response.wishlisted } : prop
+          );
+          this.propertiesSubject.next(updatedProperties);
+        } else if (itemType === 'Experience') {
+          const currentExperiences = this.experiencesSubject.value;
+          const updatedExperiences = currentExperiences.map(exp =>
+            exp.id === itemId ? { ...exp, isWishlisted: response.wishlisted } : exp
+          );
+          this.experiencesSubject.next(updatedExperiences);
+        } else if (itemType === 'Service') {
+          const currentServices = this.servicesSubject.value;
+          const updatedServices = currentServices.map(svc =>
+            svc.id === itemId ? { ...svc, isWishlisted: response.wishlisted } : svc
+          );
+          this.servicesSubject.next(updatedServices);
+        }
+      })
+    );
+  }
+
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   getWishlist() {
     return this.http.get<any>(`${this.apiUrl}/api/Wishlist`);
   }
@@ -712,11 +803,15 @@ export class Data {
     return this.wishlistCache.has(`${itemType}_${itemId}`);
   }
 
+<<<<<<< HEAD
   // Legacy method for backward compatibility
+=======
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
   toggleWishlistLegacy(propertyId: number) {
     return this.toggleWishlist('Property', propertyId);
   }
 
+<<<<<<< HEAD
   // getPropertyById(id: number): RentalProperty | undefined {
 //     return this.getProperties().find(property => property.id === id);
 //   }
@@ -724,6 +819,18 @@ export class Data {
 //     const allAmenities = this.getProperties().flatMap(p => p.amenities);
 //     return Array.from(new Set(allAmenities));
 //   }
+=======
+  createBooking(bookingData: Omit<Booking, 'id' | 'createdAt'>): Booking {
+    const newBooking: Booking = {
+      ...bookingData,
+      id: this.generateBookingId(),
+      createdAt: new Date()
+    };
+    this.bookings.push(newBooking);
+    this.saveBookingsToStorage();
+    return newBooking;
+  }
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
   getPropertyTypes(): string[] {
     const properties = this.getProperties();
@@ -744,6 +851,7 @@ export class Data {
     return this.getProperties().find(property => property.id === id);
   }
 
+<<<<<<< HEAD
 
 
   searchProperties(filters: SearchFilters): RentalProperty[] {
@@ -761,6 +869,47 @@ export class Data {
     p.price >= filters.priceRange.min &&
     p.price <= filters.priceRange.max
   );
+=======
+  getRecommendedProperties(propertyId?: number, limit: number = 6): RentalProperty[] {
+    const properties = this.getProperties();
+
+    if (propertyId) {
+      const currentProperty = this.getPropertyById(propertyId);
+      if (currentProperty) {
+        return properties
+          .filter(p => p.id !== propertyId && p.type === currentProperty.type)
+          .slice(0, limit);
+      }
+    }
+
+    return properties
+      .sort((a, b) => {
+        const scoreA = a.rating * a.reviewCount;
+        const scoreB = b.rating * b.reviewCount;
+        return scoreB - scoreA;
+      })
+      .slice(0, limit);
+  }
+
+  getSearchSuggestions(query: string): string[] {
+    const properties = this.getProperties();
+    const locations = properties.map(p => p.location);
+    const uniqueLocations = [...new Set(locations)];
+
+    return uniqueLocations
+      .filter(location =>
+        location.toLowerCase().includes(query.toLowerCase())
+      )
+      .slice(0, 5);
+  }
+
+  getPriceStatistics(): { min: number; max: number; average: number } {
+    const properties = this.getProperties();
+    const prices = properties.map(p => p.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const average = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
   // Property types filter
   if (filters.propertyTypes && filters.propertyTypes.length > 0) {
@@ -769,6 +918,7 @@ export class Data {
     );
   }
 
+<<<<<<< HEAD
   // Amenities filter
   if (filters.amenities && filters.amenities.length > 0) {
     properties = properties.filter(p =>
@@ -778,6 +928,16 @@ export class Data {
 
   // Rating filter
   properties = properties.filter(p => p.rating >= filters.minRating);
+=======
+  private generateBookingId(): number {
+    return Math.max(0, ...this.bookings.map(b => b.id)) + 1;
+  }
+
+  private isInstantBookAvailable(propertyId: number): boolean {
+    const instantBookProperties = [1, 2, 4, 7, 8];
+    return instantBookProperties.includes(propertyId);
+  }
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3
 
   // Superhost filter
   if (filters.superhost) {
@@ -785,9 +945,43 @@ export class Data {
   }
 
 
+<<<<<<< HEAD
 
 
   // ADD THIS RETURN STATEMENT
   return properties;
 }
 }
+=======
+  getPropertiesByHost(hostName: string): RentalProperty[] {
+    return this.getProperties().filter(p =>
+      p.host.name.toLowerCase().includes(hostName.toLowerCase())
+    );
+  }
+
+  getAvailableProperties(checkIn: Date, checkOut: Date): RentalProperty[] {
+    return this.getProperties().filter(property =>
+      this.isPropertyAvailable(property.id, checkIn, checkOut)
+    );
+  }
+
+  private isPropertyAvailable(propertyId: number, checkIn: Date, checkOut: Date): boolean {
+    return Math.random() > 0.2;
+  }
+  private processImageUrl(url: string | null | undefined): string {
+    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
+    if (url.startsWith('http') || url.startsWith('assets')) return url;
+
+    // Normalize path separators (Windows backslashes to forward slashes)
+    let normalizedUrl = url.replace(/\\/g, '/');
+
+    // Remove leading slash if present to avoid double slashes with base URL
+    if (normalizedUrl.startsWith('/')) {
+      normalizedUrl = normalizedUrl.substring(1);
+    }
+
+    // Assuming backend is running on localhost:7020
+    return `https://localhost:7020/${normalizedUrl}`;
+  }
+}
+>>>>>>> 6c1b37138f6275b6b13adc2f9f507f0959f26db3

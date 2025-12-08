@@ -1,0 +1,49 @@
+<div class="chat-widget">
+  <!-- Floating Toggle Button -->
+  <button class="chat-toggle-btn" (click)="toggleChat()" [class.open]="isOpen">
+    <svg *ngIf="!isOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <svg *ngIf="isOpen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+
+  <!-- Chat Popup -->
+  <div class="chat-container" *ngIf="isOpen">
+    <div class="chat-header">
+      <h3>Airbnb Assistant</h3>
+      <div style="display: flex; gap: 10px;">
+        <button (click)="newChat()" style="background:none; border:none; color:white; cursor:pointer;" title="New Chat">
+             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="messages-list">
+      <div *ngFor="let msg of messages" [class.user-message]="msg.sender === 'user'"
+        [class.bot-message]="msg.sender === 'bot'" class="message-bubble">
+        <div class="message-content" [innerHTML]="formatMessageWithLinks(msg.text)"></div>
+      </div>
+
+      <div *ngIf="isLoading" class="message-bubble bot-message loading">
+        <div class="typing-indicator">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <input [(ngModel)]="userInput" (keyup.enter)="sendMessage()" placeholder="Ask about Airbnb..."
+        [disabled]="isLoading" type="text">
+      <button (click)="sendMessage()" [disabled]="!userInput.trim() || isLoading">
+        Send
+      </button>
+    </div>
+  </div>
+</div>

@@ -17,7 +17,7 @@
   padding: 20px 0;
   border-bottom: 1px solid #ebebeb;
   background-color: #ebebeb;
-z-index: 1000;
+  z-index: 1000;
 }
 
 .back-button {
@@ -38,7 +38,8 @@ z-index: 1000;
   gap: 10px;
 }
 
-.share-button, .save-button {
+.share-button,
+.save-button {
   background: white;
   border: 1px solid #ddd;
   border-radius: 20px;
@@ -303,19 +304,22 @@ z-index: 1000;
   margin-bottom: 16px;
 }
 
-.date-input, .guests-selector {
+.date-input,
+.guests-selector {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.date-input label, .guests-selector label {
+.date-input label,
+.guests-selector label {
   font-size: 12px;
   font-weight: 600;
   color: #666;
 }
 
-.date-input input, .guests-selector select {
+.date-input input,
+.guests-selector select {
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -340,7 +344,8 @@ z-index: 1000;
   padding-top: 20px;
 }
 
-.price-item, .price-total {
+.price-item,
+.price-total {
   display: flex;
   justify-content: space-between;
   margin-bottom: 12px;
@@ -357,17 +362,138 @@ z-index: 1000;
   .property-content {
     grid-template-columns: 1fr;
   }
-  
+
   .amenities-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .thumbnail-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .property-highlights {
     flex-direction: column;
     gap: 12px;
+  }
+}
+
+/* Review Button & Modal */
+.write-review-btn {
+  background: black;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.write-review-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+/* Modal Styles Reuse */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  /* Higher than header */
+}
+
+.modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-content h3 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+}
+
+.rating-input {
+  margin-bottom: 20px;
+}
+
+.stars {
+  font-size: 32px;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.stars .filled {
+  color: #FF385C;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-modal-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.submit-modal-btn {
+  background: #FF385C;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-modal-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

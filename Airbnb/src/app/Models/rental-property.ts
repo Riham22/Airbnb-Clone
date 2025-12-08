@@ -28,4 +28,5 @@ export interface RentalProperty {
   reviews: Review[];
   availableDates?: string;
   totalPrice?: number;
+  isWishlisted?: boolean;
 }
