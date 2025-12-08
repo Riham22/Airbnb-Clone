@@ -46,8 +46,10 @@ export class Data {
       next: (items: any[]) => {
         this.wishlistCache.clear();
         items.forEach(item => {
-          if (item.itemType && item.itemId) {
-            this.wishlistCache.add(`${item.itemType}_${item.itemId}`);
+          const type = item.itemType || item.ItemType;
+          const id = item.itemId || item.ItemId;
+          if (type && id) {
+            this.wishlistCache.add(`${type}_${id}`);
           }
         });
         // Reload data to update UI
@@ -101,17 +103,16 @@ export class Data {
           console.log('PropertyCategory:', p.propertyCategory);
           console.log('PropertyType:', p.propertyType);
 
-          // Try to get category name from multiple sources
+          // Try to get category name from multiple sources (PascalCase & camelCase)
           let categoryName =
-            p.propertyCategory?.name ||     // Best: from PropertyCategory relationship
-            p.propertyCategory?.title ||
-            p.categoryName ||               // Fallback: direct field
-            p.category?.name;
+            p.propertyCategory?.name || p.PropertyCategory?.Name ||
+            p.propertyCategory?.title || p.PropertyCategory?.Title ||
+            p.categoryName || p.CategoryName ||
+            p.category?.name || p.Category?.Name;
 
           // If no category found, try to guess from title
           if (!categoryName) {
-            console.warn('⚠️ No category found, guessing from title:', p.title);
-            const title = (p.title || '').toLowerCase();
+            const title = (p.title || p.Title || '').toLowerCase();
             if (title.includes('beach')) categoryName = 'Beachfront';
             else if (title.includes('city')) categoryName = 'City';
             else if (title.includes('countryside') || title.includes('cottage')) categoryName = 'Countryside';
@@ -127,36 +128,54 @@ export class Data {
           console.log('Mapped to UI category:', categoryForUI);
           console.log('===================');
 
+          // PascalCase fallbacks
+          const id = p.id || p.Id;
+          const title = p.title || p.Title;
+          const city = p.city || p.City;
+          const country = p.country || p.Country;
+          const price = p.pricePerNight || p.PricePerNight || p.price || p.Price;
+          const rating = p.averageRating || p.AverageRating;
+          const reviewCount = p.reviewsCount || p.ReviewsCount;
+          const coverImage = p.coverImageUrl || p.CoverImageUrl;
+          const images = p.images || p.Images;
+          const maxGuests = p.maxGuests || p.MaxGuests;
+          const bedrooms = p.bedrooms || p.Bedrooms;
+          const beds = p.beds || p.Beds;
+          const bathrooms = p.bathrooms || p.Bathrooms;
+          const amenities = p.amenities || p.Amenities;
+          const hostName = p.hostName || p.HostName;
+          const description = p.description || p.Description;
+
           return {
-            id: p.id,
-            name: p.title || 'Untitled Property',
-            location: `${p.city || 'Unknown'}, ${p.country || 'Unknown'}`,
-            price: p.pricePerNight || 0,
-            rating: p.averageRating || 0,
-            reviewCount: p.reviewsCount || 0,
-            imageUrl: p.coverImageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
-            images: p.images?.length > 0
-              ? p.images.map((img: any) => img.imageUrl || img.imageURL).filter((url: string) => url)
-              : [p.coverImageUrl || 'https://via.placeholder.com/400x300?text=No+Image'],
+            id: id,
+            name: title || 'Untitled Property',
+            location: `${city || 'Unknown'}, ${country || 'Unknown'}`,
+            price: price || 0,
+            rating: rating || 0,
+            reviewCount: reviewCount || 0,
+            imageUrl: this.processImageUrl(coverImage),
+            images: images?.length > 0
+              ? images.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl || img.imageURL)).filter((url: string) => url)
+              : [this.processImageUrl(coverImage)],
             type: 'property',
             propertyType: categoryForUI,
-            maxGuests: p.maxGuests || 2,
-            bedrooms: p.bedrooms || 1,
-            beds: p.beds || 1,
-            bathrooms: p.bathrooms || 1,
-            amenities: Array.isArray(p.amenities)
-              ? p.amenities.map((a: any) => a.name || a).filter((name: string) => name)
+            maxGuests: maxGuests || 2,
+            bedrooms: bedrooms || 1,
+            beds: beds || 1,
+            bathrooms: bathrooms || 1,
+            amenities: Array.isArray(amenities)
+              ? amenities.map((a: any) => a.name || a.Name || a).filter((name: string) => name)
               : [],
             host: {
-              name: p.hostName || 'Host',
+              name: hostName || 'Host',
               joinedDate: '2024',
               isSuperhost: false,
               avatar: ''
             },
-            description: p.description || '',
+            description: description || '',
             highlights: [],
             reviews: [],
-            isWishlisted: this.isWishlistedSync('Property', p.id)
+            isWishlisted: this.isWishlistedSync('Property', id)
           };
         });
 
@@ -247,34 +266,49 @@ export class Data {
           return;
         }
 
-        const mappedExperiences: Experience[] = data.map(exp => ({
-          id: exp.id,
-          type: 'experience',
-          name: exp.expTitle || exp.name || 'Experience',
-          location: `${exp.city || ''}, ${exp.country || ''}`.trim(),
-          price: exp.guestPrice || 0,
-          rating: 4.5,
-          reviewCount: 0,
-          imageUrl: exp.images?.[0]?.imageURL || 'https://via.placeholder.com/400x300?text=No+Image',
-          images: exp.images?.map((img: any) => img.imageURL) || [],
-          category: exp.expCatograyName || 'general',
-          duration: '3 hours',
-          maxParticipants: exp.maximumGuest || 10,
-          host: {
-            name: 'Host',
-            joinedDate: new Date(exp.postedDate || Date.now()).getFullYear().toString(),
-            isSuperhost: false,
-            avatar: ''
-          },
-          description: exp.expDescribe || exp.expSummary || '',
-          highlights: [],
-          includes: [],
-          requirements: [],
-          meetingPoint: exp.locationName || '',
-          languages: exp.usingLanguage ? [exp.usingLanguage] : ['English'],
-          reviews: [],
-          isWishlisted: this.isWishlistedSync('Experience', exp.id)
-        }));
+        const mappedExperiences: Experience[] = data.map(exp => {
+          const id = exp.id || exp.Id;
+          const title = exp.expTitle || exp.ExpTitle || exp.title || exp.Title || exp.name || exp.Name || 'Experience';
+          const city = exp.city || exp.City;
+          const country = exp.country || exp.Country;
+          const price = exp.guestPrice || exp.GuestPrice || exp.price || exp.Price;
+          const images = exp.images || exp.Images;
+          const desc = exp.expDescribe || exp.ExpDescribe || exp.expSummary || exp.ExpSummary || exp.description || exp.Description;
+          const catName = exp.expCatograyName || exp.ExpCatograyName || exp.categoryName || exp.CategoryName;
+          const maxGuest = exp.maximumGuest || exp.MaximumGuest || exp.maxParticipants || exp.MaxParticipants;
+          const postedDate = exp.postedDate || exp.PostedDate;
+          const locationName = exp.locationName || exp.LocationName;
+          const language = exp.usingLanguage || exp.UsingLanguage;
+
+          return {
+            id: id,
+            type: 'experience',
+            name: title,
+            location: `${city || ''}, ${country || ''}`.trim(),
+            price: price || 0,
+            rating: 4.5,
+            reviewCount: 0,
+            imageUrl: this.processImageUrl(images?.[0]?.imageURL || images?.[0]?.ImageUrl || images?.[0]?.imageUrl),
+            images: images?.map((img: any) => this.processImageUrl(img.imageURL || img.ImageUrl || img.imageUrl)) || [],
+            category: catName || 'general',
+            duration: '3 hours',
+            maxParticipants: maxGuest || 10,
+            host: {
+              name: 'Host',
+              joinedDate: new Date(postedDate || Date.now()).getFullYear().toString(),
+              isSuperhost: false,
+              avatar: ''
+            },
+            description: desc || '',
+            highlights: [],
+            includes: [],
+            requirements: [],
+            meetingPoint: locationName || '',
+            languages: language ? [language] : ['English'],
+            reviews: [],
+            isWishlisted: this.isWishlistedSync('Experience', id)
+          };
+        });
 
         console.log('✅ Mapped experiences:', mappedExperiences.length);
         this.experiencesSubject.next(mappedExperiences);
@@ -303,37 +337,57 @@ export class Data {
           return;
         }
 
-        const mappedServices: Service[] = data.map(svc => ({
-          id: svc.id,
-          type: 'service',
-          name: svc.title || 'Service',
-          location: `${svc.city || ''}, ${svc.country || ''}`.trim(),
-          price: svc.price || 0,
-          rating: svc.averageRating || 0,
-          reviewCount: svc.reviewsCount || 0,
-          imageUrl: svc.coverImageUrl || 'https://via.placeholder.com/400x300?text=No+Image',
-          images: svc.images?.map((img: any) => img.imageUrl) || [svc.coverImageUrl],
-          category: svc.categoryName || 'general',
-          duration: '3 hours',
-          provider: {
-            name: 'Provider',
-            joinedDate: '2024',
-            isVerified: true,
-            avatar: ''
-          },
-          description: svc.description || '',
-          highlights: [],
-          includes: [],
-          requirements: [],
-          reviews: [],
-          isWishlisted: this.isWishlistedSync('Service', svc.id)
-        }));
+        try {
+          const mappedServices: Service[] = data.map(svc => {
+            const id = svc.id || svc.Id;
+            const title = svc.title || svc.Title || svc.name || svc.Name || 'Service';
+            const city = svc.city || svc.City;
+            const country = svc.country || svc.Country;
+            const price = svc.price || svc.Price;
+            const rating = svc.averageRating || svc.AverageRating;
+            const reviewCount = svc.reviewsCount || svc.ReviewsCount;
+            const coverImage = svc.coverImageUrl || svc.CoverImageUrl || svc.imageUrl || svc.ImageUrl;
+            const images = svc.images || svc.Images;
+            const catName = svc.categoryName || svc.CategoryName || svc.category?.name || svc.Category?.Name;
+            const description = svc.description || svc.Description;
 
-        console.log('✅ Mapped services:', mappedServices.length);
-        this.servicesSubject.next(mappedServices);
+            return {
+              id: id,
+              type: 'service',
+              name: title,
+              location: `${city || ''}, ${country || ''}`.trim(),
+              price: price || 0,
+              rating: rating || 0,
+              reviewCount: reviewCount || 0,
+              imageUrl: this.processImageUrl(coverImage),
+              images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [this.processImageUrl(coverImage)],
+              category: catName || 'general',
+              duration: '3 hours',
+              provider: {
+                name: 'Provider',
+                joinedDate: '2024',
+                isVerified: true,
+                avatar: ''
+              },
+              description: description || '',
+              highlights: [],
+              includes: [],
+              requirements: [],
+              reviews: [],
+              isWishlisted: this.isWishlistedSync('Service', id)
+            };
+          });
+
+          console.log('✅ Mapped services:', mappedServices.length);
+          this.servicesSubject.next(mappedServices);
+        } catch (e) {
+          console.error('❌ Error mapping services:', e);
+          this.servicesSubject.next([]);
+        }
       },
       error: (err) => {
         console.error('❌ Failed to load services:', err);
+        // FORCE emit empty array so observers don't hang
         this.servicesSubject.next([]);
       }
     });
@@ -467,6 +521,27 @@ export class Data {
           this.wishlistCache.add(key);
         } else {
           this.wishlistCache.delete(key);
+        }
+
+        // Update the observables to reflect wishlist changes in UI
+        if (itemType === 'Property') {
+          const currentProperties = this.propertiesSubject.value;
+          const updatedProperties = currentProperties.map(prop =>
+            prop.id === itemId ? { ...prop, isWishlisted: response.wishlisted } : prop
+          );
+          this.propertiesSubject.next(updatedProperties);
+        } else if (itemType === 'Experience') {
+          const currentExperiences = this.experiencesSubject.value;
+          const updatedExperiences = currentExperiences.map(exp =>
+            exp.id === itemId ? { ...exp, isWishlisted: response.wishlisted } : exp
+          );
+          this.experiencesSubject.next(updatedExperiences);
+        } else if (itemType === 'Service') {
+          const currentServices = this.servicesSubject.value;
+          const updatedServices = currentServices.map(svc =>
+            svc.id === itemId ? { ...svc, isWishlisted: response.wishlisted } : svc
+          );
+          this.servicesSubject.next(updatedServices);
         }
       })
     );
@@ -602,5 +677,20 @@ export class Data {
 
   private isPropertyAvailable(propertyId: number, checkIn: Date, checkOut: Date): boolean {
     return Math.random() > 0.2;
+  }
+  private processImageUrl(url: string | null | undefined): string {
+    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
+    if (url.startsWith('http') || url.startsWith('assets')) return url;
+
+    // Normalize path separators (Windows backslashes to forward slashes)
+    let normalizedUrl = url.replace(/\\/g, '/');
+
+    // Remove leading slash if present to avoid double slashes with base URL
+    if (normalizedUrl.startsWith('/')) {
+      normalizedUrl = normalizedUrl.substring(1);
+    }
+
+    // Assuming backend is running on localhost:7020
+    return `https://localhost:7020/${normalizedUrl}`;
   }
 }

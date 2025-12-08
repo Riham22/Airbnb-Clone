@@ -24,72 +24,48 @@ export class AdminService {
   // Stats Management - Calculated from data
   getStats(): Observable<AdminStats> {
     this.setLoading(true);
-    return new Observable<AdminStats>(observer => {
-      let totalUsers = 0;
-      let totalListings = 0;
-      let totalBookings = 0;
 
-      this.http.get<any>(`${this.apiUrl}/User`).subscribe({
-        next: (users) => {
-          totalUsers = users.length || 0;
+    // 1. Create Observables for all necessary data sources
+    const users$ = this.http.get<any[]>(`${this.apiUrl}/User`).pipe(catchError(() => of([])));
+    const properties$ = this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(catchError(() => of([])));
+    const bookings$ = this.http.get<any>(`${this.apiUrl}/Booking`).pipe(
+      map(res => res.data || res || []),
+      catchError(() => of([]))
+    );
 
-          this.http.get<any>(`${this.apiUrl}/Properties`).subscribe({
-            next: (props) => {
-              totalListings = props.length || 0;
+    // 2. Use forkJoin to wait for all three requests to complete
+    return forkJoin({
+      users: users$,
+      props: properties$,
+      bookings: bookings$
+    }).pipe(
+      map(({ users, props, bookings }) => {
+        const totalUsers = users.length;
+        const totalListings = props.length;
+        const totalBookings = bookings.length;
 
-              this.http.get<any>(`${this.apiUrl}/Booking`).subscribe({
-                next: (bookings) => {
-                  const bookingsData = bookings.data || bookings || [];
-                  totalBookings = bookingsData.length || 0;
+        const stats: AdminStats = {
+          totalUsers,
+          totalListings,
+          totalBookings,
+          totalRevenue: totalBookings * 150, // Your existing calculation
+          pendingVerifications: 0,
+          activeHosts: Math.floor(totalUsers * 0.3),
+          monthlyGrowth: 0,
+          weeklyRevenue: 0,
+          activeBookings: totalBookings
+        };
 
-                  const stats: AdminStats = {
-                    totalUsers,
-                    totalListings,
-                    totalBookings,
-                    totalRevenue: totalBookings * 150,
-                    pendingVerifications: 0,
-                    activeHosts: Math.floor(totalUsers * 0.3),
-                    monthlyGrowth: 0,
-                    weeklyRevenue: 0,
-                    activeBookings: totalBookings
-                  };
-
-                  this.statsSubject.next(stats);
-                  observer.next(stats);
-                  observer.complete();
-                  this.setLoading(false);
-                },
-                error: () => {
-                  const stats: AdminStats = {
-                    totalUsers,
-                    totalListings,
-                    totalBookings: 0,
-                    totalRevenue: 0,
-                    pendingVerifications: 0,
-                    activeHosts: Math.floor(totalUsers * 0.3),
-                    monthlyGrowth: 0,
-                    weeklyRevenue: 0,
-                    activeBookings: 0
-                  };
-                  this.statsSubject.next(stats);
-                  observer.next(stats);
-                  observer.complete();
-                  this.setLoading(false);
-                }
-              });
-            },
-            error: () => {
-              observer.error('Failed to load properties');
-              this.setLoading(false);
-            }
-          });
-        },
-        error: () => {
-          observer.error('Failed to load users');
-          this.setLoading(false);
-        }
-      });
-    });
+        this.statsSubject.next(stats);
+        return stats;
+      }),
+      tap(() => this.setLoading(false)),
+      catchError(err => {
+        console.error('getStats forkJoin error', err);
+        this.setLoading(false);
+        return of(this.getInitialStats());
+      })
+    );
   }
 
   updateStats(updates: Partial<AdminStats>): void {
@@ -169,27 +145,36 @@ export class AdminService {
   // Listings Management - Connected to backend
   getListings(): Observable<AdminListing[]> {
     this.setLoading(true);
-    return this.http.get<any>(`${this.apiUrl}/Properties`).pipe(
-      map((properties: any[]) => {
-        const adminListings: AdminListing[] = properties.map(p => ({
-          id: p.id?.toString() ?? '',
-          title: p.title || p.name,
-          host: p.hostName || 'Host',
-          hostId: p.hostId || '1',
-          type: 'Property',
-          status: p.isPublished ? 'active' : 'pending',
-          price: p.pricePerNight || p.price,
-          location: p.city && p.country ? `${p.city}, ${p.country}` : p.location,
-          rating: p.averageRating || p.rating || 0,
-          reviewCount: p.reviewsCount || p.reviewCount || 0,
-          createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-          lastBooking: p.lastBooking ? new Date(p.lastBooking) : new Date(),
-          bedrooms: p.bedrooms || 0,
-          bathrooms: p.bathrooms || 0,
-          maxGuests: p.maxGuests || 0,
-          images: p.images?.length ? p.images.map((i: any) => i.imageUrl || i.imageURL) : [p.coverImageUrl || p.imageUrl],
-          amenities: p.amenities || []
-        }));
+    // Use the host-specific endpoint to get ALL properties (published and unpublished)
+    return this.http.get<any>(`${this.apiUrl}/Properties/my-properties`).pipe(
+      map((response: any) => {
+        const properties = Array.isArray(response) ? response : (response?.data || []);
+        const adminListings: AdminListing[] = properties.map((p: any) => {
+          const host = p.host || p.Host;
+          const city = p.city || p.City;
+          const country = p.country || p.Country;
+          const images = p.images || p.Images;
+
+          return {
+            id: (p.id || p.Id)?.toString() ?? '',
+            title: p.title || p.Title || p.name || p.Name,
+            host: host ? `${host.firstName || host.FirstName} ${host.lastName || host.LastName}` : (p.hostName || p.HostName || 'Host'),
+            hostId: p.hostId || p.HostId || '1',
+            type: 'Property',
+            status: (p.isPublished || p.IsPublished) ? 'active' : 'pending',
+            price: p.pricePerNight || p.PricePerNight || p.price || p.Price,
+            location: city && country ? `${city}, ${country}` : (p.location || p.Location),
+            rating: p.averageRating || p.AverageRating || p.rating || p.Rating || 0,
+            reviewCount: p.reviewsCount || p.ReviewsCount || p.reviewCount || p.ReviewCount || 0,
+            createdAt: (p.createdAt || p.CreatedAt) ? new Date(p.createdAt || p.CreatedAt) : new Date(),
+            lastBooking: (p.lastBooking || p.LastBooking) ? new Date(p.lastBooking || p.LastBooking) : new Date(),
+            bedrooms: p.bedrooms || p.Bedrooms || 0,
+            bathrooms: p.bathrooms || p.Bathrooms || 0,
+            maxGuests: p.maxGuests || p.MaxGuests || 0,
+            images: images?.length ? images.map((i: any) => i.imageUrl || i.ImageUrl || i.imageURL) : [p.coverImageUrl || p.CoverImageUrl || p.imageUrl || p.ImageUrl],
+            amenities: p.amenities || p.Amenities || []
+          };
+        });
         this.listingsSubject.next(adminListings);
         return adminListings;
       }),
@@ -202,23 +187,69 @@ export class AdminService {
     );
   }
 
+  // ... (existing updateListingStatus and deleteListing methods) ...
+
   updateListingStatus(listingId: string, status: 'active' | 'suspended' | 'pending'): Observable<AdminListing> {
-    return new Observable<AdminListing>(observer => {
-      setTimeout(() => {
+    let apiCall: Observable<any>;
+
+    if (status === 'active') {
+      apiCall = this.http.put(`${this.apiUrl}/Properties/${listingId}/publish`, {});
+    } else if (status === 'suspended') {
+      apiCall = this.http.put(`${this.apiUrl}/Properties/${listingId}/unpublish`, {});
+    } else {
+      // Pending status handling if needed, or default
+      return of(this.listingsSubject.value.find(l => l.id === listingId)!);
+    }
+
+    return apiCall.pipe(
+      map(() => {
+        // Update local state
         const listings = this.listingsSubject.value.map(listing =>
           listing.id === listingId ? { ...listing, status, updatedAt: new Date() } : listing
         );
         this.listingsSubject.next(listings);
 
-        const updatedListing = listings.find(listing => listing.id === listingId);
-        if (updatedListing) {
-          observer.next(updatedListing);
-        } else {
-          observer.error(new Error('Listing not found'));
-        }
-        observer.complete();
-      }, 300);
-    });
+        return listings.find(listing => listing.id === listingId)!;
+      }),
+      catchError(err => {
+        console.error(`updateListingStatus to ${status} error`, err);
+        throw err;
+      })
+    );
+  }
+
+  updateServiceStatus(serviceId: string, status: 'active' | 'suspended'): Observable<any> {
+    const action = status === 'active' ? 'publish' : 'unpublish';
+    return this.http.put(`${this.apiUrl}/Services/${serviceId}/${action}`, {}).pipe(
+      tap(() => {
+        // Update local state
+        const services = this.servicesSubject.value.map(s =>
+          s.id === serviceId ? { ...s, status: status } : s
+        );
+        this.servicesSubject.next(services);
+      }),
+      catchError(err => {
+        console.error(`updateServiceStatus to ${status} error`, err);
+        throw err;
+      })
+    );
+  }
+
+  updateExperienceStatus(experienceId: string, status: 'active' | 'suspended'): Observable<any> {
+    const action = status === 'active' ? 'publish' : 'unpublish';
+    return this.http.put(`${this.apiUrl}/Experience/${experienceId}/${action}`, {}).pipe(
+      tap(() => {
+        // Update local state
+        const experiences = this.experiencesSubject.value.map(e =>
+          e.id === experienceId ? { ...e, status: status } : e
+        );
+        this.experiencesSubject.next(experiences);
+      }),
+      catchError(err => {
+        console.error(`updateExperienceStatus to ${status} error`, err);
+        throw err;
+      })
+    );
   }
 
   deleteListing(listingId: string): Observable<boolean> {
@@ -244,10 +275,37 @@ export class AdminService {
   // Services Management
   getServices(): Observable<any[]> {
     this.setLoading(true);
-    return this.http.get<any>(`${this.apiUrl}/Services`).pipe(
-      map((services: any[]) => {
-        this.servicesSubject.next(services);
-        return services;
+    // Use the host-specific endpoint to get ALL services
+    return this.http.get<any>(`${this.apiUrl}/Services/my-services`).pipe(
+      map((response: any) => {
+        const services = Array.isArray(response) ? response : (response?.data || []);
+        const mappedServices = services.map((s: any) => {
+          const provider = s.provider || s.Provider;
+          const category = s.category || s.Category;
+          const city = s.city || s.City;
+          const country = s.country || s.Country;
+          const images = s.images || s.Images;
+
+          return {
+            id: (s.id || s.Id)?.toString() || '',
+            name: s.title || s.Title || s.name || s.Name || 'Unnamed Service',
+            description: s.description || s.Description,
+            price: s.price || s.Price,
+            currency: s.currency || s.Currency,
+            location: city && country ? `${city}, ${country}` : (city || country || 'Unknown'),
+            provider: {
+              name: provider ? `${provider.firstName || provider.FirstName} ${provider.lastName || provider.LastName}` : (s.providerName || s.ProviderName || 'Unknown')
+            },
+            category: category?.name || category?.Name || s.categoryName || s.CategoryName || 'Uncategorized',
+            rating: s.averageRating || s.AverageRating || 0,
+            reviewCount: s.reviews?.length || s.Reviews?.length || 0,
+            status: (s.isPublished || s.IsPublished) ? 'active' : 'pending',
+            imageUrl: images?.[0]?.imageUrl || images?.[0]?.ImageUrl || s.imageUrl || s.ImageUrl || 'assets/default-service.jpg',
+            images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || []
+          };
+        });
+        this.servicesSubject.next(mappedServices);
+        return mappedServices;
       }),
       tap(() => this.setLoading(false)),
       catchError(err => {
@@ -257,6 +315,8 @@ export class AdminService {
       })
     );
   }
+
+  // ... (existing deleteService method) ...
 
   deleteService(serviceId: string): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Services/${serviceId}`).pipe(
@@ -275,10 +335,40 @@ export class AdminService {
   // Experiences Management
   getExperiences(): Observable<any[]> {
     this.setLoading(true);
-    return this.http.get<any>(`${this.apiUrl}/Experience`).pipe(
-      map((experiences: any[]) => {
-        this.experiencesSubject.next(experiences);
-        return experiences;
+    // Use the host-specific endpoint to get ALL experiences
+    return this.http.get<any>(`${this.apiUrl}/Experience/my-experiences`).pipe(
+      map((response: any) => {
+        const experiences = Array.isArray(response) ? response : (response?.data || []);
+        const mappedExperiences = experiences.map((e: any) => {
+          const host = e.host || e.Host;
+          const category = e.category || e.Category || e.expCatogray || e.ExpCatogray;
+          const city = e.city || e.City;
+          const country = e.country || e.Country;
+          const images = e.images || e.Images;
+
+          // Experience Status: 3 = Published
+          const rawStatus = e.status || e.Status;
+          const isActive = rawStatus === 3 || rawStatus === 'Published';
+
+          return {
+            id: (e.id || e.Id)?.toString() || '',
+            name: e.title || e.Title || e.name || e.Name || e.expTitle || e.ExpTitle || 'Unnamed Experience',
+            description: e.description || e.Description || e.expDescribe || e.ExpDescribe,
+            location: e.location || e.Location || (city && country ? `${city}, ${country}` : 'Unknown'),
+            price: e.price || e.Price || e.guestPrice || e.GuestPrice,
+            host: {
+              name: host ? `${host.firstName || host.FirstName} ${host.lastName || host.LastName}` : (e.hostName || e.HostName || 'Unknown Host')
+            },
+            category: category?.name || category?.Name || 'Uncategorized',
+            rating: e.averageRating || e.AverageRating || 0,
+            reviewCount: e.reviews?.length || e.Reviews?.length || 0,
+            status: isActive ? 'active' : 'pending',
+            imageUrl: images?.[0]?.imageUrl || images?.[0]?.ImageUrl || e.imageUrl || e.ImageUrl || 'assets/default-experience.jpg',
+            images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || []
+          };
+        });
+        this.experiencesSubject.next(mappedExperiences);
+        return mappedExperiences;
       }),
       tap(() => this.setLoading(false)),
       catchError(err => {
@@ -380,18 +470,40 @@ export class AdminService {
 
   createUser(userData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/Account/Register`, userData, { responseType: 'text' }).pipe(
-      tap(() => {
-        this.getUsers().subscribe();
-      })
+      switchMap(res => this.getUsers().pipe(map(() => res)))
     );
   }
 
   /**
    * Create Property
    * - Uses the exact fields from your DTO.
-   * - If `listingData.imageFiles` is provided (File[]), uploads them after property creation.
    */
-  createListing(listingData: any): Observable<any> {
+  uploadPropertyImages(propertyId: number, files: File[]): Observable<any> {
+    console.log(`Uploading ${files.length} property images for ID ${propertyId}`);
+    const formData = new FormData();
+    files.forEach((f, index) => {
+      console.log(`   File[${index}]: ${f.name}, Size: ${f.size}, Type: ${f.type}`);
+      formData.append(`Images[${index}]`, f);
+    });
+    formData.append("CoverImageIndex", "0");
+    return this.http.post(`${this.apiUrl}/Properties/${propertyId}/images`, formData);
+  }
+
+  uploadServiceImages(serviceId: number, files: File[]): Observable<any> {
+    console.log(`Uploading ${files.length} service images for ID ${serviceId}`);
+    const formData = new FormData();
+    files.forEach(f => formData.append('Images', f));
+    formData.append('CoverImageIndex', '0');
+    return this.http.post(`${this.apiUrl}/Services/${serviceId}/images`, formData);
+  }
+
+  uploadExperienceImages(experienceId: number, files: File[]): Observable<any> {
+    const formData = new FormData();
+    files.forEach(f => formData.append('Images', f));
+    return this.http.post(`${this.apiUrl}/Experience/${experienceId}/images`, formData);
+  }
+
+  createListing(listingData: any, files: File[] = []): Observable<any> {
     const payload = {
       title: listingData.title,
       description: listingData.description,
@@ -421,22 +533,21 @@ export class AdminService {
     return this.http.post<any>(`${this.apiUrl}/Properties`, payload).pipe(
       switchMap((created: any) => {
         const createdId = created?.id || created?.data?.id;
-        // if there are image files to upload, do that now
-        if (createdId && listingData.imageFiles && Array.isArray(listingData.imageFiles) && listingData.imageFiles.length) {
-          const uploads = listingData.imageFiles.map((file: File) => this.uploadPropertyImage(createdId, file));
-          return forkJoin(uploads).pipe(
-            map(results => {
-              return { created, uploads: results };
+        if (createdId && files.length > 0) {
+          return this.uploadPropertyImages(createdId, files).pipe(
+            map(results => ({ created, uploads: results })),
+            catchError(err => {
+              console.error('Failed to upload images', err);
+              return of({ created, imageError: err });
             })
           );
         }
         return of({ created });
       }),
       tap((res) => {
-        // Refresh listings
-        this.getListings().subscribe();
         console.log('createListing response:', res);
       }),
+      switchMap((res) => this.getListings().pipe(map(() => res))),
       catchError(err => {
         console.error('createListing error', err);
         throw err;
@@ -444,50 +555,9 @@ export class AdminService {
     );
   }
 
-  uploadPropertyImage(propertyId: number, file: File): Observable<any> {
-    const formData = new FormData();
-    // backend expects field name "Images" (your screenshot indicated that)
-    formData.append("Images", file);
-    // Add CoverImageIndex if you want first file to be cover
-    formData.append("CoverImageIndex", "0");
-    return this.http.post(`${this.apiUrl}/Properties/${propertyId}/images`, formData).pipe(
-      catchError(err => {
-        console.error('uploadPropertyImage error', err);
-        throw err;
-      })
-    );
-  }
+  // // Replace the createExperience method in Admin.service.ts with this:
 
-  uploadServiceImage(serviceId: number, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('Images', file);
-    return this.http.post(`${this.apiUrl}/Services/${serviceId}/images`, formData).pipe(
-      catchError(err => {
-        console.error('uploadServiceImage error', err);
-        throw err;
-      })
-    );
-  }
-
-  uploadExperienceImage(experienceId: number, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('Images', file);
-    return this.http.post(`${this.apiUrl}/Experience/${experienceId}/images`, formData).pipe(
-      catchError(err => {
-        console.error('uploadExperienceImage error', err);
-        throw err;
-      })
-    );
-  }
-
-
-
-  /**
-   * Create Service
-   * DTO fields: Title, Description, Price, Currency, PricingType, Country, City, Address, ServiceCategoryId
-   * If `serviceData.imageFiles` is provided (File[]), will upload after creation.
-   */
-  createService(serviceData: any): Observable<any> {
+  createService(serviceData: any, files: File[] = []): Observable<any> {
     const payload = {
       Title: serviceData.title,
       Description: serviceData.description,
@@ -497,7 +567,8 @@ export class AdminService {
       Country: serviceData.country,
       City: serviceData.city,
       Address: serviceData.address || '',
-      ServiceCategoryId: Number(serviceData.serviceCategoryId)
+      ServiceCategoryId: Number(serviceData.serviceCategoryId),
+      IsPublished: true
     };
 
     console.log('📤 Sending createService payload:', payload);
@@ -505,13 +576,18 @@ export class AdminService {
     return this.http.post<any>(`${this.apiUrl}/Services`, payload).pipe(
       switchMap((created: any) => {
         const id = created?.id || created?.data?.id;
-        if (id && serviceData.imageFiles && Array.isArray(serviceData.imageFiles) && serviceData.imageFiles.length) {
-          const uploads = serviceData.imageFiles.map((f: File) => this.uploadServiceImage(id, f));
-          return forkJoin(uploads).pipe(map(u => ({ created, uploads: u })));
+        if (id && files.length > 0) {
+          return this.uploadServiceImages(id, files).pipe(
+            map(u => ({ created, uploads: u })),
+            catchError(err => {
+              console.error('Failed to upload service images', err);
+              return of({ created, imageError: err });
+            })
+          );
         }
         return of({ created });
       }),
-      tap(() => this.getServices().subscribe()),
+      switchMap((res) => this.getServices().pipe(map(() => res))),
       catchError(err => {
         console.error('createService error', err);
         throw err;
@@ -519,25 +595,25 @@ export class AdminService {
     );
   }
 
-  // // Replace the createExperience method in Admin.service.ts with this:
-
-  createExperience(experienceData: any): Observable<any> {
-    // The payload should already be wrapped in experienceDTO from the component
+  createExperience(experienceData: any, files: File[] = []): Observable<any> {
     const payload = experienceData;
-
     console.log('📤 Sending createExperience payload:', payload);
 
     return this.http.post<any>(`${this.apiUrl}/Experience`, payload).pipe(
       switchMap((created: any) => {
         const id = created?.id || created?.data?.id;
-        // if user passed imageFiles (File[]) -> upload them
-        if (id && experienceData.imageFiles && Array.isArray(experienceData.imageFiles) && experienceData.imageFiles.length) {
-          const uploads = experienceData.imageFiles.map((f: File) => this.uploadExperienceImage(id, f));
-          return forkJoin(uploads).pipe(map(u => ({ created, uploads: u })));
+        if (id && files.length > 0) {
+          return this.uploadExperienceImages(id, files).pipe(
+            map(u => ({ created, uploads: u })),
+            catchError(err => {
+              console.error('Failed to upload experience images', err);
+              return of({ created, imageError: err });
+            })
+          );
         }
         return of({ created });
       }),
-      tap(() => this.getExperiences().subscribe()),
+      switchMap((res) => this.getExperiences().pipe(map(() => res))),
       catchError(err => {
         console.error('createExperience error', err);
         throw err;
@@ -682,5 +758,100 @@ export class AdminService {
   createPropertyCategory(categoryData: any): Observable<any> {
     // Mock implementation maintained for now
     return of({ id: Math.floor(Math.random() * 1000) + 11, ...categoryData });
+  }
+
+  // ============================================
+  // EXPERIENCE CATEGORY CRUD OPERATIONS
+  // ============================================
+
+  createExperienceCategory(data: { name: string; description?: string }): Observable<any> {
+    const payload = {
+      Name: data.name,
+      VAT: 0 // Required field by backend (default to 0)
+    };
+    return this.http.post<any>(`${this.apiUrl}/ExpCatogray`, payload).pipe(
+      catchError(err => {
+        console.error('createExperienceCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  updateExperienceCategory(id: number, data: { name: string; description?: string }): Observable<any> {
+    const payload = {
+      Id: id,
+      Name: data.name,
+      VAT: 0 // Required field by backend (default to 0)
+    };
+    return this.http.put<any>(`${this.apiUrl}/ExpCatogray/${id}`, payload).pipe(
+      catchError(err => {
+        console.error('updateExperienceCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  deleteExperienceCategory(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/ExpCatogray/${id}`).pipe(
+      catchError(err => {
+        console.error('deleteExperienceCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  // ============================================
+  // EXPERIENCE SUBCATEGORY CRUD OPERATIONS
+  // ============================================
+
+  getExperienceSubcategories(categoryId?: number): Observable<any[]> {
+    const url = categoryId
+      ? `${this.apiUrl}/ExpSubCatogray/CatograyId/${categoryId}`
+      : `${this.apiUrl}/ExpSubCatogray`;
+
+    return this.http.get<any[]>(url).pipe(
+      catchError(err => {
+        console.error('getExperienceSubcategories error', err);
+        return of([]);
+      })
+    );
+  }
+
+  createExperienceSubcategory(data: { name: string; description?: string; expCatograyId: number }): Observable<any> {
+    const payload = {
+      Name: data.name,
+      Description: data.description || '',
+      ExpCatograyId: data.expCatograyId
+    };
+    return this.http.post<any>(`${this.apiUrl}/ExpSubCatogray`, payload).pipe(
+      catchError(err => {
+        console.error('createExperienceSubcategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  updateExperienceSubcategory(id: number, data: { name: string; description?: string; expCatograyId: number }): Observable<any> {
+    const payload = {
+      Id: id,
+      Name: data.name,
+      Description: data.description || '',
+      ExpCatograyId: data.expCatograyId
+    };
+    return this.http.put<any>(`${this.apiUrl}/ExpSubCatogray/${id}`, payload).pipe(
+      catchError(err => {
+        console.error('updateExperienceSubcategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  deleteExperienceSubcategory(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/ExpSubCatogray/${id}`).pipe(
+      catchError(err => {
+        console.error('deleteExperienceSubcategory error', err);
+        throw err;
+      })
+    );
   }
 }

@@ -4,24 +4,21 @@
     <h2 class="carousel-title">{{ title }}</h2>
 
     <div class="carousel-controls" *ngIf="showControls && properties.length > 0">
-      <button
-        class="carousel-button prev"
-        (click)="scrollLeft()"
-        [class.hidden]="!canScrollLeft"
-        aria-label="Scroll left"
-        type="button">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
-          <path d="m20 28-11.29289322-11.2928932c-.39052429-.3905243-.39052429-1.0236893 0-1.4142136l11.29289322-11.2928932"></path>
+      <button class="carousel-button prev" (click)="scrollLeft()" [class.hidden]="!canScrollLeft"
+        aria-label="Scroll left" type="button">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+          focusable="false">
+          <path
+            d="m20 28-11.29289322-11.2928932c-.39052429-.3905243-.39052429-1.0236893 0-1.4142136l11.29289322-11.2928932">
+          </path>
         </svg>
       </button>
-      <button
-        class="carousel-button next"
-        (click)="scrollRight()"
-        [class.hidden]="!canScrollRight"
-        aria-label="Scroll right"
-        type="button">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
-          <path d="m12 4 11.2928932 11.2928932c.3905243.3905243.3905243 1.0236893 0 1.4142136l-11.2928932 11.2928932"></path>
+      <button class="carousel-button next" (click)="scrollRight()" [class.hidden]="!canScrollRight"
+        aria-label="Scroll right" type="button">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+          focusable="false">
+          <path d="m12 4 11.2928932 11.2928932c.3905243.3905243.3905243 1.0236893 0 1.4142136l-11.2928932 11.2928932">
+          </path>
         </svg>
       </button>
     </div>
@@ -29,14 +26,9 @@
 
   <div class="carousel-container" #carouselContainer (scroll)="checkScrollStatus()">
     <div class="carousel-track" #carouselTrack>
-      <app-property-card
-    *ngFor="let p of properties; trackBy: trackByPropertyId"
-    [property]="p"
-    (cardClick)="onPropertyClick(p)"
-      (wishlistChange)="onWishlistChange($event)"
-
->
-</app-property-card>
+      <app-property-card class="carousel-item" *ngFor="let p of properties; trackBy: trackByPropertyId" [property]="p"
+        (cardClick)="onPropertyClick(p)" (wishlistChange)="onWishlistChange($event)">
+      </app-property-card>
 
     </div>
   </div>
@@ -44,8 +36,11 @@
   <!-- Empty State -->
   <div *ngIf="properties.length === 0" class="empty-state">
     <div class="empty-content">
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
-        <path d="m32 8a6 6 0 0 1 6 6 6 6 0 0 1 -6 6 6 6 0 0 1 -6-6 6 6 0 0 1 6-6zm18 30-6-6-6 6 6 6 6-6zm-36 0 6-6 6 6-6 6-6-6zm6-18-6-6-6 6 6 6 6-6zm36 0 6-6 6 6-6 6-6-6zm-24-6-6 6 6 6 6-6-6-6zm12 0-6 6 6 6 6-6-6-6zm-6 36-6-6-6 6 6 6 6-6zm12 0 6-6 6 6-6 6-6-6z"></path>
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+        focusable="false">
+        <path
+          d="m32 8a6 6 0 0 1 6 6 6 6 0 0 1 -6 6 6 6 0 0 1 -6-6 6 6 0 0 1 6-6zm18 30-6-6-6 6 6 6 6-6zm-36 0 6-6 6 6-6 6-6-6zm6-18-6-6-6 6 6 6 6-6zm36 0 6-6 6 6-6 6-6-6zm-24-6-6 6 6 6 6-6-6-6zm12 0-6 6 6 6 6-6-6-6zm-6 36-6-6-6 6 6 6 6-6zm12 0 6-6 6 6-6 6-6-6z">
+        </path>
       </svg>
       <h3>No properties found</h3>
       <p>Try adjusting your search criteria</p>

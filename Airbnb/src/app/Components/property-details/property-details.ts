@@ -6,11 +6,14 @@ import { RentalProperty } from '../../Models/rental-property';
 import { Data } from '../../Services/data';
 import { BookingService } from '../../Services/booking.service';
 import { AuthService } from '../../Services/auth';
+import { ReviewService } from '../../Services/review.service';
+import { ReviewListComponent } from '../reviews/review-list/review-list.component';
+import { ReviewFormComponent } from '../reviews/review-form/review-form.component';
 
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReviewListComponent, ReviewFormComponent],
   templateUrl: './property-details.html',
   styleUrls: ['./property-details.css']
 })
@@ -22,25 +25,79 @@ export class PropertyDetailsComponent implements OnInit {
   checkOutDate: string = '';
   guests = 1;
   creatingBooking = false;
+  hasBooking = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private dataService: Data,
     private bookingService: BookingService,
-    private authService: AuthService
+    private authService: AuthService,
+    private reviewService: ReviewService
   ) { }
 
   ngOnInit() {
     const propertyId = Number(this.route.snapshot.paramMap.get('id'));
+    const routeType = this.route.snapshot.data['type'] || 'property';
 
-    this.dataService.properties$.subscribe(props => {
-      const foundProperty = props.find(p => p.id === propertyId);
-      if (foundProperty) {
-        this.property = foundProperty;
-      } else if (props.length > 0) {
-        this.property = props[0];
-      }
+    console.log(`🔎 Details View: Loading ${routeType} with ID ${propertyId}`);
+
+    // DEBUG: List existing bookings to help identify conflicts
+    this.bookingService.getPropertyBookings(propertyId).subscribe({
+      next: (res) => console.log('🛑 Existing Bookings blocking this property:', res.data),
+      error: (err) => console.log('ℹ️ Cannot view existing bookings (Not Host/Admin)')
+    });
+
+    if (routeType === 'experience') {
+      this.dataService.experiences$.subscribe(exps => {
+        const found = exps.find(e => e.id === propertyId);
+        if (found) {
+          this.property = found as any; // Cast to satisfy RentalProperty interface roughly
+          console.log('✨ Found Experience:', this.property.name);
+        }
+      });
+    } else if (routeType === 'service') {
+      this.dataService.services$.subscribe(svcs => {
+        const found = svcs.find(s => s.id === propertyId);
+        if (found) {
+          this.property = found as any;
+          console.log('✨ Found Service:', this.property.name);
+        }
+      });
+    } else {
+      // Default: Property
+      this.dataService.properties$.subscribe(props => {
+        const foundProperty = props.find(p => p.id === propertyId);
+        if (foundProperty) {
+          this.property = foundProperty;
+          this.checkBookingStatus(propertyId);
+        } else if (props.length > 0 && props[0].id === propertyId) { // Only fallback if ID matches (unlikely) or strict mode disabled?
+          // Don't fallback randomly! Only if we are desperate or debugging.
+          // For now, let's keep it strict to avoid showing wrong images.
+          console.warn(`❌ Property ${propertyId} not found in loaded properties.`);
+        }
+      });
+    }
+  }
+
+  checkBookingStatus(propertyId: number) {
+    if (this.authService.isAdmin()) {
+      this.hasBooking = true; // Admins can always review
+      return;
+    }
+
+    this.bookingService.getMyBookings().subscribe({
+      next: (res: any) => {
+        const bookings = res.data || res || [];
+        // Check if any booking for this property is confirmed/completed
+        const validBooking = bookings.find((b: any) =>
+          b.propertyId === propertyId &&
+          (b.status.toLowerCase() === 'confirmed' || b.status.toLowerCase() === 'completed')
+        );
+        this.hasBooking = !!validBooking;
+        console.log('📝 Can review property?', this.hasBooking);
+      },
+      error: () => this.hasBooking = false
     });
   }
 
@@ -66,12 +123,9 @@ export class PropertyDetailsComponent implements OnInit {
 
   // Helper method to format dates for API
   private formatDateForApi(dateString: string): string {
-    // Parse the date string (YYYY-MM-DD) and create a date at midnight local time
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day, 0, 0, 0, 0);
-
-    // Convert to ISO string format that the backend expects
-    return date.toISOString();
+    // The input is already YYYY-MM-DD from the date picker
+    // Sending it directly works best with backend DateOnly
+    return dateString;
   }
 
   reserveProperty() {
@@ -133,5 +187,27 @@ export class PropertyDetailsComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/']);
+  }
+
+  // Review Logic
+  canReviewProperty(): boolean {
+    return true; // Simplified for now
+  }
+
+  /* 
+   * Review Modal State 
+   */
+  showReviewModal = false;
+
+  openReviewModal() {
+    this.showReviewModal = true;
+  }
+
+  closeReviewModal() {
+    this.showReviewModal = false;
+  }
+
+  onReviewSubmitted() {
+    this.closeReviewModal();
   }
 }

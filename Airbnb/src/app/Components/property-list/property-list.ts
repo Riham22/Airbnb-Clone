@@ -62,6 +62,13 @@ export class PropertyList implements OnInit, OnChanges {
       subtitle: 'Escape the ordinary',
       icon: '🌾',
       properties: [] as any[]
+    },
+    {
+      id: 'other',
+      title: 'More Stays',
+      subtitle: 'Discover more properties',
+      icon: '🏠',
+      properties: [] as any[]
     }
   ];
 
@@ -101,6 +108,13 @@ export class PropertyList implements OnInit, OnChanges {
       subtitle: 'Rejuvenating activities',
       icon: '🧘',
       properties: [] as any[]
+    },
+    {
+      id: 'other',
+      title: 'More Experiences',
+      subtitle: 'Discover even more',
+      icon: '✨',
+      properties: [] as any[]
     }
   ];
 
@@ -139,6 +153,13 @@ export class PropertyList implements OnInit, OnChanges {
       title: 'Transportation',
       subtitle: 'Get around easily',
       icon: '🚗',
+      properties: [] as any[]
+    },
+    {
+      id: 'other',
+      title: 'More Services',
+      subtitle: 'Professional assistance',
+      icon: '🛠️',
       properties: [] as any[]
     }
   ];
@@ -248,19 +269,46 @@ export class PropertyList implements OnInit, OnChanges {
     });
 
     // Update property categories
-    this.categories.forEach(category => {
+    const assignedPropertyIds = new Set<string>();
+    this.categories.filter(c => c.id !== 'other').forEach(category => {
       category.properties = this.filterPropertiesByType(filteredProperties, category.id);
+      category.properties.forEach(p => assignedPropertyIds.add(p.id));
     });
+    // Catch-all for properties
+    const otherProp = this.categories.find(c => c.id === 'other');
+    if (otherProp) {
+      otherProp.properties = filteredProperties.filter(p =>
+        p.type === 'property' && !assignedPropertyIds.has(p.id)
+      );
+    }
 
     // Update experiences
-    this.experiences.forEach(exp => {
+    const assignedExperienceIds = new Set<string>();
+    this.experiences.filter(e => e.id !== 'other').forEach(exp => {
       exp.properties = this.filterExperiencesByCategory(filteredProperties, exp.id);
+      exp.properties.forEach(p => assignedExperienceIds.add(p.id));
     });
+    // Catch-all for experiences
+    const otherExp = this.experiences.find(e => e.id === 'other');
+    if (otherExp) {
+      otherExp.properties = filteredProperties.filter(p =>
+        p.type === 'experience' && !assignedExperienceIds.has(p.id)
+      );
+    }
 
     // Update services
-    this.services.forEach(service => {
+    const assignedServiceIds = new Set<string>();
+    this.services.filter(s => s.id !== 'other').forEach(service => {
       service.properties = this.filterServicesByCategory(filteredProperties, service.id);
+      service.properties.forEach(p => assignedServiceIds.add(p.id));
     });
+    // Catch-all for services
+    const otherService = this.services.find(s => s.id === 'other');
+    if (otherService) {
+      otherService.properties = filteredProperties.filter(p =>
+        p.type === 'service' && !assignedServiceIds.has(p.id)
+      );
+    }
   }
 
   // Enhanced filtering with Airbnb-like options

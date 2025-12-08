@@ -8,9 +8,6 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-      (activeFiltersChange)="onActiveFiltersChange($event)">
-    </app-search-bar>
 
     <app-category-bar (openFilters)="openFilters()">
     </app-category-bar>
@@ -18,9 +15,9 @@
     <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">
     </app-filter-modal>
 
-    <!-- Property List - Pass properties from home component -->
-    <app-property-list [properties]="properties" [filters]="activeFilters" (propertyClick)="onPropertyClick($event)"
-      (wishlistChange)="onWishlistChange($event)">
+    <!-- Property List - Pass filtered properties to support search and mixed types -->
+    <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
+      (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)">
     </app-property-list>
   </main>
 </div>

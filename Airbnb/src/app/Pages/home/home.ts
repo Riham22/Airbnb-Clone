@@ -17,8 +17,8 @@ import { FilterModalComponent } from '../../Components/filter-modal/filter-modal
   styleUrl: './home.css'
 })
 export class HomeComponent implements OnInit {
-  properties: RentalProperty[] = [];
-  filteredProperties: RentalProperty[] = [];
+  properties: any[] = [];
+  filteredProperties: any[] = [];
   activeFilters: any = {};
   isFilterModalOpen = false;
   selectedCategory: string = 'Icons';
@@ -28,19 +28,15 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     console.log('🏠 HomeComponent initialized');
 
-    // Subscribe to properties with detailed logging
-    this.dataService.properties$.subscribe(props => {
-      console.log('📊 Properties received in HomeComponent:', props.length);
-      console.log('Properties data:', props);
+    // Force refresh data from API to ensure we have the latest updates (e.g. newly added items)
+    this.dataService.loadProperties();
+    this.dataService.loadExperiences();
+    this.dataService.loadServices();
 
+    // Subscribe to properties
+    this.dataService.properties$.subscribe(props => {
       this.properties = props;
       this.filteredProperties = props;
-
-      if (props.length === 0) {
-        console.warn('⚠️ No properties available to display');
-      } else {
-        console.log('✅ Displaying', props.length, 'properties');
-      }
     });
 
     // Also try to get properties directly

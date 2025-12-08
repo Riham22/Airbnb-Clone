@@ -3,7 +3,7 @@ import { Component, Output, EventEmitter, OnInit, HostListener } from '@angular/
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Data } from '../../Services/data';
 import { AuthService } from '../../Services/auth';
 import { GuestCounts } from '../../Models/guest-counts';
@@ -21,7 +21,7 @@ export type MenuItem =
 @Component({
   selector: 'app-search-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './search.html',
   styleUrls: ['./search.css']
 })
@@ -326,25 +326,31 @@ export class SearchComponent implements OnInit {
 
   // Load all data types
   private loadAllData(): void {
+    // Subscribe to properties
     this.dataService.properties$.subscribe(props => {
       this.properties = props;
-      // Update listings when properties load
-      this.filteredPropertiesChange.emit(this.getAllListings());
+      this.updateAndEmitListings();
     });
 
-    // Check if experiences and services methods exist
-    if ((this.dataService as any).getExperiences) {
-      this.experiences = (this.dataService as any).getExperiences();
-    } else {
-      console.warn('getExperiences method not found in DataService');
-      this.experiences = [];
-    }
+    // Subscribe to experiences
+    this.dataService.experiences$.subscribe(exps => {
+      this.experiences = exps;
+      this.updateAndEmitListings();
+    });
 
-    if ((this.dataService as any).getServices) {
-      this.services = (this.dataService as any).getServices();
-    } else {
-      console.warn('getServices method not found in DataService');
-      this.services = [];
+    // Subscribe to services
+    this.dataService.services$.subscribe(svcs => {
+      this.services = svcs;
+      this.updateAndEmitListings();
+    });
+  }
+
+  // Helper to emit updates
+  private updateAndEmitListings(): void {
+    this.filteredPropertiesChange.emit(this.getAllListings());
+    // Also update suggestions if search is active
+    if (this.searchQuery) {
+      this.updateSearchSuggestions();
     }
   }
 

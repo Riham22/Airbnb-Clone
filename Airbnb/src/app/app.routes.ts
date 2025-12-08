@@ -34,7 +34,18 @@ export const routes: Routes = [
       },
       {
         path: 'property/:id',
-        component: PropertyDetailsComponent
+        component: PropertyDetailsComponent,
+        data: { type: 'property' }
+      },
+      {
+        path: 'experience/:id',
+        component: PropertyDetailsComponent,
+        data: { type: 'experience' }
+      },
+      {
+        path: 'service/:id',
+        component: PropertyDetailsComponent,
+        data: { type: 'service' }
       },
       {
         path: 'host',
@@ -50,6 +61,11 @@ export const routes: Routes = [
       {
         path: 'trips',
         loadComponent: () => import('./Components/booking/booking').then(m => m.Booking),
+        canActivate: [AuthGuard]
+      },
+      {
+        path: 'payment/:id',
+        loadComponent: () => import('./Pages/payment/payment').then(m => m.PaymentComponent),
         canActivate: [AuthGuard]
       },
       {

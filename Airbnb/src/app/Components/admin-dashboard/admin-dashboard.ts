@@ -23,7 +23,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   services: any[] = [];
   experiences: any[] = [];
   loading = false;
-  activeTab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'analytics' = 'users';
+  activeTab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'analytics' = 'users';
 
   // Category Data
   propertyTypes: any[] = [];
@@ -72,8 +72,25 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     maxParticipants: 10,
     expCatograyId: null,
     expSubCatograyId: null,
-    imageUrl: ''
+    imageUrl: '',
+    expActivities: []
   };
+
+  newActivity: any = {
+    name: '',
+    describe: '', // Backend expects 'Describe'
+    timeMinute: 60
+  };
+
+  // Category Management (using existing experienceCategories from line 32)
+  showCategoryModal = false;
+  showSubcategoryModal = false;
+  categoryModalMode: 'create' | 'edit' = 'create';
+  subcategoryModalMode: 'create' | 'edit' = 'create';
+  selectedCategory: any = null;
+  selectedSubcategory: any = null;
+  newCategory: any = { name: '', description: '' };
+  newSubcategory: any = { name: '', description: '', expCatograyId: null };
 
   selectedFile: File | null = null;
 
@@ -84,6 +101,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadDashboardData();
     this.loadCategories();
+    this.loadCategoryData(); // Load category management data
 
     // Subscribe to loading state
     this.subscriptions.add(
@@ -230,7 +248,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  setActiveTab(tab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'analytics'): void {
+  setActiveTab(tab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'analytics'): void {
     this.activeTab = tab;
   }
 
@@ -289,6 +307,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       propertyCategoryId: null
     };
     this.selectedFile = null;
+    this.selectedFiles = [];
   }
 
   openAddServiceModal() { this.showAddServiceModal = true; }
@@ -302,6 +321,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       serviceCategoryId: null
     };
     this.selectedFile = null;
+    this.selectedFiles = [];
   }
 
   openAddExperienceModal() { this.showAddExperienceModal = true; }
@@ -314,16 +334,35 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       maxParticipants: 10,
       expCatograyId: null,
       expSubCatograyId: null,
-      imageUrl: ''
+      imageUrl: '',
+      expActivities: []
     };
+    this.newActivity = { name: '', describe: '', timeMinute: 60 };
     this.selectedFile = null;
+    this.selectedFiles = [];
+  }
+
+  addActivity() {
+    if (!this.newActivity.name || !this.newActivity.describe) {
+      alert('Please fill in Activity Name and Description');
+      return;
+    }
+    this.newExperience.expActivities.push({ ...this.newActivity });
+    this.newActivity = { name: '', describe: '', timeMinute: 60 };
+  }
+
+  removeActivity(index: number) {
+    this.newExperience.expActivities.splice(index, 1);
   }
 
   // File Selection
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
+  selectedFiles: File[] = [];
+
+  onFileSelected(event: any, type?: string): void {
+    if (event.target.files && event.target.files.length > 0) {
+      this.selectedFiles = Array.from(event.target.files);
+      // Keep selectedFile for compatibility
+      this.selectedFile = event.target.files[0];
     }
   }
 
@@ -399,7 +438,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     console.log('Creating listing with payload:', listingPayload);
 
-    this.adminService.createListing(listingPayload).subscribe({
+    this.adminService.createListing(listingPayload, this.selectedFiles).subscribe({
       next: (response: any) => {
         alert('Listing created successfully');
         this.closeAddListingModal();
@@ -436,7 +475,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     console.log('Creating service with payload:', servicePayload);
 
-    this.adminService.createService(servicePayload).subscribe({
+    this.adminService.createService(servicePayload, this.selectedFiles).subscribe({
       next: (response: any) => {
         alert('Service created successfully');
         this.closeAddServiceModal();
@@ -494,14 +533,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       expSubCatograyId: Number(this.newExperience.expSubCatograyId),
       postedBy: null,
       images: [],
-      expActivities: []
+      expActivities: this.newExperience.expActivities || []
     };
 
-    console.log('Creating experience with payload:', experiencePayload);
     console.log('Category ID:', this.newExperience.expCatograyId);
     console.log('Subcategory ID:', this.newExperience.expSubCatograyId);
 
-    this.adminService.createExperience(experiencePayload).subscribe({
+    this.adminService.createExperience(experiencePayload, this.selectedFiles).subscribe({
       next: (response: any) => {
         console.log('Experience created successfully:', response);
         alert('Experience created successfully');
@@ -595,6 +633,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Listing (Property) actions
+  approveListing(listingId: string): void {
+    this.subscriptions.add(
+      this.adminService.updateListingStatus(listingId, 'active').subscribe({
+        next: (updatedListing) => {
+          console.log('Listing approved:', updatedListing);
+          this.listings = this.listings.map(listing =>
+            listing.id === listingId ? updatedListing : listing
+          );
+        },
+        error: (error) => {
+          console.error('Error approving listing:', error);
+          alert(`Failed to approve listing. Status: ${error.status}, Message: ${error.error?.message || error.message}`);
+        }
+      })
+    );
+  }
+
   suspendListing(listingId: string): void {
     this.subscriptions.add(
       this.adminService.updateListingStatus(listingId, 'suspended').subscribe({
@@ -607,23 +663,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error suspending listing:', error);
           alert('Failed to suspend listing. Please try again.');
-        }
-      })
-    );
-  }
-
-  approveListing(listingId: string): void {
-    this.subscriptions.add(
-      this.adminService.updateListingStatus(listingId, 'active').subscribe({
-        next: (updatedListing) => {
-          console.log('Listing approved:', updatedListing);
-          this.listings = this.listings.map(listing =>
-            listing.id === listingId ? updatedListing : listing
-          );
-        },
-        error: (error) => {
-          console.error('Error approving listing:', error);
-          alert('Failed to approve listing. Please try again.');
         }
       })
     );
@@ -649,6 +688,37 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Service actions
+  approveService(serviceId: string): void {
+    this.subscriptions.add(
+      this.adminService.updateServiceStatus(serviceId, 'active').subscribe({
+        next: () => {
+          alert('Service published successfully!');
+          this.loadDashboardData(); // Reload to refresh list
+        },
+        error: (error) => {
+          console.error('Error approving service:', error);
+          alert(`Failed to publish service. Status: ${error.status}, Message: ${error.error?.message || error.message}`);
+        }
+      })
+    );
+  }
+
+  suspendService(serviceId: string): void {
+    this.subscriptions.add(
+      this.adminService.updateServiceStatus(serviceId, 'suspended').subscribe({
+        next: () => {
+          alert('Service unpublished successfully!');
+          this.loadDashboardData();
+        },
+        error: (error) => {
+          console.error('Error suspending service:', error);
+          alert(`Failed to unpublish service. Status: ${error.status}, Message: ${error.error?.message || error.message}`);
+        }
+      })
+    );
+  }
+
   deleteService(serviceId: string): void {
     if (confirm('Are you sure you want to delete this service?')) {
       this.subscriptions.add(
@@ -664,6 +734,37 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         })
       );
     }
+  }
+
+  // Experience actions
+  approveExperience(experienceId: string): void {
+    this.subscriptions.add(
+      this.adminService.updateExperienceStatus(experienceId, 'active').subscribe({
+        next: () => {
+          alert('Experience published successfully!');
+          this.loadDashboardData();
+        },
+        error: (error) => {
+          console.error('Error approving experience:', error);
+          alert(`Failed to publish experience. Status: ${error.status}, Message: ${error.error?.message || error.message}`);
+        }
+      })
+    );
+  }
+
+  suspendExperience(experienceId: string): void {
+    this.subscriptions.add(
+      this.adminService.updateExperienceStatus(experienceId, 'suspended').subscribe({
+        next: () => {
+          alert('Experience unpublished successfully!');
+          this.loadDashboardData();
+        },
+        error: (error) => {
+          console.error('Error suspending experience:', error);
+          alert('Failed to unpublish experience.');
+        }
+      })
+    );
   }
 
   deleteExperience(experienceId: string): void {
@@ -709,5 +810,180 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       case 'admin': return 'badge-admin';
       default: return 'badge-unknown';
     }
+  }
+
+  // ============================================
+  // CATEGORY MANAGEMENT METHODS
+  // ============================================
+
+  loadCategoryData(): void {
+    this.subscriptions.add(
+      this.adminService.getExperienceCategories().subscribe({
+        next: (categories) => {
+          this.experienceCategories = categories;
+        },
+        error: (error) => console.error('Error loading categories:', error)
+      })
+    );
+
+    this.subscriptions.add(
+      this.adminService.getExperienceSubcategories().subscribe({
+        next: (subcategories) => {
+          this.experienceSubCategories = subcategories; // Fixed: capital C to match line 33
+        },
+        error: (error) => console.error('Error loading subcategories:', error)
+      })
+    );
+  }
+
+  // Experience Category Methods
+  openAddCategoryModal(): void {
+    this.categoryModalMode = 'create';
+    this.newCategory = { name: '', description: '' };
+    this.showCategoryModal = true;
+  }
+
+  openEditCategoryModal(category: any): void {
+    this.categoryModalMode = 'edit';
+    this.selectedCategory = category;
+    this.newCategory = { ...category };
+    this.showCategoryModal = true;
+  }
+
+  closeAddCategoryModal(): void {
+    this.showCategoryModal = false;
+    this.newCategory = { name: '', description: '' };
+    this.selectedCategory = null;
+  }
+
+  saveCategory(): void {
+    if (this.categoryModalMode === 'create') {
+      this.subscriptions.add(
+        this.adminService.createExperienceCategory(this.newCategory).subscribe({
+          next: () => {
+            alert('Category created successfully');
+            this.closeAddCategoryModal();
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error creating category:', error);
+            alert(`Failed to create category: ${error.error?.message || error.message}`);
+          }
+        })
+      );
+    } else {
+      this.subscriptions.add(
+        this.adminService.updateExperienceCategory(this.selectedCategory.id, this.newCategory).subscribe({
+          next: () => {
+            alert('Category updated successfully');
+            this.closeAddCategoryModal();
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error updating category:', error);
+            alert(`Failed to update category: ${error.error?.message || error.message}`);
+          }
+        })
+      );
+    }
+  }
+
+  deleteCategory(categoryId: number): void {
+    if (confirm('Are you sure you want to delete this category? This may affect related subcategories.')) {
+      this.subscriptions.add(
+        this.adminService.deleteExperienceCategory(categoryId).subscribe({
+          next: () => {
+            alert('Category deleted successfully');
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error deleting category:', error);
+            if (error.status === 403) {
+              alert('Cannot delete this category - you do not have permission.');
+            } else {
+              alert(`Failed to delete category: ${error.error?.message || error.message}`);
+            }
+          }
+        })
+      );
+    }
+  }
+
+  // Experience Subcategory Methods
+  openAddSubcategoryModal(): void {
+    this.subcategoryModalMode = 'create';
+    this.newSubcategory = { name: '', description: '', expCatograyId: null };
+    this.showSubcategoryModal = true;
+  }
+
+  openEditSubcategoryModal(subcategory: any): void {
+    this.subcategoryModalMode = 'edit';
+    this.selectedSubcategory = subcategory;
+    this.newSubcategory = { ...subcategory };
+    this.showSubcategoryModal = true;
+  }
+
+  closeAddSubcategoryModal(): void {
+    this.showSubcategoryModal = false;
+    this.newSubcategory = { name: '', description: '', expCatograyId: null };
+    this.selectedSubcategory = null;
+  }
+
+  saveSubcategory(): void {
+    if (this.subcategoryModalMode === 'create') {
+      this.subscriptions.add(
+        this.adminService.createExperienceSubcategory(this.newSubcategory).subscribe({
+          next: () => {
+            alert('Subcategory created successfully');
+            this.closeAddSubcategoryModal();
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error creating subcategory:', error);
+            alert(`Failed to create subcategory: ${error.error?.message || error.message}`);
+          }
+        })
+      );
+    } else {
+      this.subscriptions.add(
+        this.adminService.updateExperienceSubcategory(this.selectedSubcategory.id, this.newSubcategory).subscribe({
+          next: () => {
+            alert('Subcategory updated successfully');
+            this.closeAddSubcategoryModal();
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error updating subcategory:', error);
+            alert(`Failed to update subcategory: ${error.error?.message || error.message}`);
+          }
+        })
+      );
+    }
+  }
+
+  deleteSubcategory(subcategoryId: number): void {
+    if (confirm('Are you sure you want to delete this subcategory?')) {
+      this.subscriptions.add(
+        this.adminService.deleteExperienceSubcategory(subcategoryId).subscribe({
+          next: () => {
+            alert('Subcategory deleted successfully');
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error deleting subcategory:', error);
+            if (error.status === 403) {
+              alert('Cannot delete this subcategory - you do not have permission.');
+            } else {
+              alert(`Failed to delete subcategory: ${error.error?.message || error.message}`);
+            }
+          }
+        })
+      );
+    }
+  }
+
+  getCategoryName(categoryId: number): string {
+    const category = this.experienceCategories.find(c => c.id === categoryId);
+    return category ? category.name : 'Unknown';
   }
 }

@@ -1,10 +1,24 @@
-</button>
-<button class="tab-btn" [class.active]="activeTab === 'past'" (click)="setActiveTab('past')">
-    Past
-</button>
-<button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="setActiveTab('cancelled')">
-    Cancelled
-</button>
+<div class="booking-header">
+    <div class="header-left">
+        <a routerLink="/" class="home-btn" title="Go Home">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+            Home
+        </a>
+        <h1>Trips</h1>
+    </div>
+    <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="setActiveTab('upcoming')">
+            Upcoming
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'past'" (click)="setActiveTab('past')">
+            Past
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="setActiveTab('cancelled')">
+            Cancelled
+        </button>
+    </div>
 </div>
 
 <!-- Loading State -->
@@ -39,7 +53,7 @@
 
     <div *ngFor="let booking of getFilteredBookings()" class="booking-card">
         <div class="booking-image">
-            <img [src]="booking.propertyImage" [alt]="booking.propertyTitle" loading="lazy">
+            <img [src]="booking.propertyCoverImage" [alt]="booking.propertyTitle" loading="lazy">
             <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
                 {{ booking.status }}
             </span>
@@ -80,3 +94,47 @@
                     <span class="price-amount">{{ booking.currency }} {{ booking.totalPrice }}</span>
                 </div>
             </div>
+        </div>
+
+        <div class="booking-actions">
+            <a [routerLink]="['/payment', booking.id]" class="action-btn view-btn" *ngIf="activeTab === 'upcoming'">
+                View & Pay
+            </a>
+
+            <button class="action-btn review-btn" *ngIf="canReview(booking)" (click)="openReviewModal(booking)">
+                Write Review
+            </button>
+
+            <button class="action-btn cancel-btn" *ngIf="canCancelBooking(booking)" (click)="cancelBooking(booking.id)">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" *ngIf="showReviewModal" (click)="closeReviewModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3>Write a Review</h3>
+
+        <div class="rating-input">
+            <label>Rating:</label>
+            <div class="stars">
+                <span *ngFor="let star of [1,2,3,4,5]" (click)="reviewData.rating = star"
+                    [class.filled]="star <= reviewData.rating">★</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Comment:</label>
+            <textarea [(ngModel)]="reviewData.comment" placeholder="Share your experience..." rows="4"></textarea>
+        </div>
+
+        <div class="modal-actions">
+            <button class="cancel-modal-btn" (click)="closeReviewModal()">Cancel</button>
+            <button class="submit-modal-btn" (click)="submitReview()" [disabled]="submittingReview">
+                {{ submittingReview ? 'Submitting...' : 'Submit Review' }}
+            </button>
+        </div>
+    </div>
+</div>

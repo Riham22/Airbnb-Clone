@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, AfterViewInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { RentalProperty } from '../../Models/rental-property';
 import { Router } from '@angular/router';
 import { Data } from '../../Services/data';
@@ -13,7 +13,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './property-card.html',
   styleUrl: './property-card.css'
 })
-export class PropertyCardComponent implements AfterViewInit {
+export class PropertyCardComponent implements OnInit, OnChanges {
   @Input() property!: RentalProperty;
 
   @Output() cardClick = new EventEmitter<RentalProperty>();
@@ -28,20 +28,40 @@ export class PropertyCardComponent implements AfterViewInit {
 
   constructor(
     private router: Router,
-    private dataService: Data
+    private dataService: Data,
+    private cdr: ChangeDetectorRef
   ) { }
 
-  ngAfterViewInit() {
-    // Initialize from property data in next tick to avoid change detection errors
-    setTimeout(() => {
-      if (this.property && this.property.id) {
-        this.isWishlisted = this.property.isWishlisted ?? false;
-      }
-    }, 0);
+  ngOnInit() {
+    // Initialize wishlist state from property
+    this.updateWishlistState();
+    this.initializeRandomValues();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Update wishlist state whenever the property input changes
+    if (changes['property']) {
+      this.updateWishlistState();
+    }
+  }
+
+  private updateWishlistState() {
+    if (this.property && this.property.id) {
+      this.isWishlisted = this.property.isWishlisted ?? false;
+      // Manually trigger change detection to avoid NG0100 error
+      this.cdr.detectChanges();
+    }
   }
 
   onCardClick() {
-    this.router.navigate(['/property', this.property.id]);
+    const type = this.property['type'] || 'property';
+    if (type === 'experience') {
+      this.router.navigate(['/experience', this.property.id]);
+    } else if (type === 'service') {
+      this.router.navigate(['/service', this.property.id]);
+    } else {
+      this.router.navigate(['/property', this.property.id]);
+    }
   }
 
   toggleWishlist(event: MouseEvent) {
@@ -58,6 +78,10 @@ export class PropertyCardComponent implements AfterViewInit {
       next: (response: any) => {
         // Update to actual state from server (in case it differs)
         this.isWishlisted = response.wishlisted;
+
+        // IMPORTANT: Also update the property's isWishlisted field
+        this.property.isWishlisted = response.wishlisted;
+
         console.log('✅ Wishlist updated:', response);
 
         this.wishlistChange.emit({
@@ -74,7 +98,7 @@ export class PropertyCardComponent implements AfterViewInit {
   }
 
   handleImageError() {
-    this.property.imageUrl = 'assets/fallback.jpg';
+    this.property.imageUrl = 'https://via.placeholder.com/400x300?text=Fallback+Image';
   }
 
   getSuperhostStatus(): boolean {
@@ -82,15 +106,23 @@ export class PropertyCardComponent implements AfterViewInit {
     return this.property.rating >= 4.8 && this.property.reviewCount > 50;
   }
 
-  getDistance(): string {
-    // Mock distance - in real app this would be calculated
+  // Stable properties for random values
+  randomDistance: string = '';
+  instantBookStatus: boolean = false;
+
+  private initializeRandomValues() {
+    // Calculate these once to avoid NG0100 errors
     const distances = ['2 miles away', '5 miles away', '10 miles away', '15 miles away'];
-    return distances[Math.floor(Math.random() * distances.length)];
+    this.randomDistance = distances[Math.floor(Math.random() * distances.length)];
+    this.instantBookStatus = Math.random() > 0.3;
+  }
+
+  getDistance(): string {
+    return this.randomDistance;
   }
 
   isInstantBook(): boolean {
-    // Mock instant book status
-    return Math.random() > 0.3;
+    return this.instantBookStatus;
   }
 
   showImageIndicators = true;
