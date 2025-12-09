@@ -129,7 +129,7 @@ export class Data {
           console.log('===================');
 
           // PascalCase fallbacks
-          const id = p.id || p.Id;
+          const id = Number(p.id || p.Id);
           const title = p.title || p.Title;
           const city = p.city || p.City;
           const country = p.country || p.Country;
@@ -259,6 +259,9 @@ export class Data {
     this.http.get<any[]>('https://localhost:7020/api/Experience').subscribe({
       next: (data) => {
         console.log('✅ Experiences API Response:', data?.length);
+        if (data && data.length > 0) {
+          console.log('📦 First Experience JSON:', JSON.stringify(data[0]));
+        }
 
         if (!data || data.length === 0) {
           console.warn('⚠️ No experiences returned from API');
@@ -267,18 +270,25 @@ export class Data {
         }
 
         const mappedExperiences: Experience[] = data.map(exp => {
-          const id = exp.id || exp.Id;
+          console.log('🔍 Raw Experience Data:', exp.id, exp.name || exp.title, exp.ExpActivity, exp.expActivity);
+
+          const id = Number(exp.id || exp.Id);
           const title = exp.expTitle || exp.ExpTitle || exp.title || exp.Title || exp.name || exp.Name || 'Experience';
           const city = exp.city || exp.City;
           const country = exp.country || exp.Country;
           const price = exp.guestPrice || exp.GuestPrice || exp.price || exp.Price;
-          const images = exp.images || exp.Images;
+          const images = exp.expImages || exp.ExpImages || exp.images || exp.Images;
           const desc = exp.expDescribe || exp.ExpDescribe || exp.expSummary || exp.ExpSummary || exp.description || exp.Description;
           const catName = exp.expCatograyName || exp.ExpCatograyName || exp.categoryName || exp.CategoryName;
           const maxGuest = exp.maximumGuest || exp.MaximumGuest || exp.maxParticipants || exp.MaxParticipants;
           const postedDate = exp.postedDate || exp.PostedDate;
           const locationName = exp.locationName || exp.LocationName;
           const language = exp.usingLanguage || exp.UsingLanguage;
+
+          const processedImages = images?.map((img: any) => this.processImageUrl(img.imageURL || img.ImageUrl || img.imageUrl)) || [];
+          if (processedImages.length === 0) {
+            processedImages.push('assets/images/placeholder.jpg'); // Fallback to avoid empty array
+          }
 
           return {
             id: id,
@@ -288,11 +298,12 @@ export class Data {
             price: price || 0,
             rating: 4.5,
             reviewCount: 0,
-            imageUrl: this.processImageUrl(images?.[0]?.imageURL || images?.[0]?.ImageUrl || images?.[0]?.imageUrl),
-            images: images?.map((img: any) => this.processImageUrl(img.imageURL || img.ImageUrl || img.imageUrl)) || [],
+            imageUrl: processedImages[0],
+            images: processedImages,
             category: catName || 'general',
             duration: '3 hours',
             maxParticipants: maxGuest || 10,
+            maxGuests: maxGuest || 10,
             host: {
               name: 'Host',
               joinedDate: new Date(postedDate || Date.now()).getFullYear().toString(),
@@ -303,10 +314,17 @@ export class Data {
             highlights: [],
             includes: [],
             requirements: [],
+            amenities: [], // Added fallback for UI compatibility
             meetingPoint: locationName || '',
             languages: language ? [language] : ['English'],
             reviews: [],
-            isWishlisted: this.isWishlistedSync('Experience', id)
+            isWishlisted: this.isWishlistedSync('Experience', id),
+            activities: (exp.activities || exp.Activities || []).map((act: any) => ({
+              id: act.id || act.Id,
+              name: act.name || act.Name,
+              description: act.describe || act.Describe || act.description || act.Description,
+              durationMinutes: act.timeMinute || act.TimeMinute || 0
+            }))
           };
         });
 
@@ -339,7 +357,7 @@ export class Data {
 
         try {
           const mappedServices: Service[] = data.map(svc => {
-            const id = svc.id || svc.Id;
+            const id = Number(svc.id || svc.Id);
             const title = svc.title || svc.Title || svc.name || svc.Name || 'Service';
             const city = svc.city || svc.City;
             const country = svc.country || svc.Country;
@@ -363,10 +381,11 @@ export class Data {
               images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [this.processImageUrl(coverImage)],
               category: catName || 'general',
               duration: '3 hours',
-              provider: {
+              maxGuests: 4, // Default for services as it's not in API yet
+              host: {
                 name: 'Provider',
                 joinedDate: '2024',
-                isVerified: true,
+                isSuperhost: true,
                 avatar: ''
               },
               description: description || '',

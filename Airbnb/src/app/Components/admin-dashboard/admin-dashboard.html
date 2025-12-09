@@ -91,41 +91,27 @@
           <p>Active Hosts</p>
         </div>
       </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="recent-activity">
-      <h2>Recent Activity</h2>
-      <div class="activity-grid">
-        <div class="recent-users">
-          <h3>Latest Users</h3>
-          <div *ngFor="let user of users.slice(0, 5)" class="activity-item">
-            <div class="user-avatar">
-              <img alt="" [src]="user.avatar || '/assets/default-avatar.png'" [alt]="user.firstName">
-            </div>
-            <div class="activity-info">
-              <strong>{{ user.firstName }} {{ user.lastName }}</strong>
-              <span class="user-role" [class]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
-            </div>
-            <span class="activity-date">{{ user.joinedDate | date:'MMM d' }}</span>
-          </div>
+      <div class="stat-card">
+        <div class="stat-icon">🛠️</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalServices | number }}</h3>
+          <p>Total Services</p>
         </div>
-
-        <div class="recent-listings">
-          <h3>Latest Listings</h3>
-          <div *ngFor="let listing of listings.slice(0, 5)" class="activity-item">
-            <div class="listing-image">
-              <img alt="" [src]="listing.images[0] || '/assets/default-listing.jpg'" [alt]="listing.title">
-            </div>
-            <div class="activity-info">
-              <strong>{{ listing.title }}</strong>
-              <span class="listing-location">{{ listing.location }}</span>
-            </div>
-            <span class="activity-date">{{ listing.createdAt | date:'MMM d' }}</span>
-          </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏄</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalExperiences | number }}</h3>
+          <p>Total Experiences</p>
         </div>
       </div>
     </div>
+
+    <!-- Recent Activity Section Removed -->
+    <div class="recent-activity" style="display: none;"></div>
+
+
+
   </section>
 
   <!-- Users Tab -->
@@ -134,8 +120,9 @@
       <h2>User Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddUserModal()">+ Add User</button>
-        <input type="text" placeholder="Search users..." class="search-input">
-        <select title="l" class="filter-select">
+        <input type="text" placeholder="Search users..." class="search-input" [(ngModel)]="userSearchTerm"
+          (input)="filterUsers()">
+        <select title="l" class="filter-select" [(ngModel)]="userRoleFilter" (change)="filterUsers()">
           <option>All Roles</option>
           <option>Hosts</option>
           <option>Guests</option>
@@ -157,7 +144,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of users">
+          <tr *ngFor="let user of filteredUsers">
             <td class="user-cell">
               <div class="user-avatar">
                 <img alt="" [src]="user.avatar || '/assets/default-avatar.png'" [alt]="user.firstName">
@@ -182,6 +169,9 @@
             </td>
             <td>
               <div class="action-buttons">
+                <button (click)="openEditUserModal(user)" class="btn-secondary" title="Edit User">
+                  Edit
+                </button>
                 <button (click)="openChangeRoleModal(user)" class="btn-secondary" title="Change Role">
                   Role
                 </button>
@@ -217,8 +207,9 @@
       <h2>Listing Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddListingModal()">+ Add Listing</button>
-        <input type="text" placeholder="Search listings..." class="search-input">
-        <select title="k" class="filter-select">
+        <input type="text" placeholder="Search listings..." class="search-input" [(ngModel)]="listingSearchTerm"
+          (input)="filterListings()">
+        <select title="k" class="filter-select" [(ngModel)]="listingStatusFilter" (change)="filterListings()">
           <option>All Status</option>
           <option>Active</option>
           <option>Suspended</option>
@@ -241,7 +232,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let listing of listings">
+          <tr *ngFor="let listing of filteredListings">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
@@ -262,6 +253,9 @@
             </td>
             <td>
               <div class="action-buttons">
+                <button (click)="openEditListingModal(listing)" class="btn-secondary" title="Edit Listing">
+                  Edit
+                </button>
                 <button *ngIf="listing.status === 'active'" (click)="suspendListing(listing.id)" class="btn-warning"
                   title="Suspend Listing">
                   Suspend
@@ -289,7 +283,8 @@
       <h2>Service Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
-        <input type="text" placeholder="Search services..." class="search-input">
+        <input type="text" placeholder="Search services..." class="search-input" [(ngModel)]="serviceSearchTerm"
+          (input)="filterServices()">
       </div>
     </div>
 
@@ -307,7 +302,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let service of services">
+          <tr *ngFor="let service of filteredServices">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="service.imageUrl || service.images?.[0] || '/assets/default-service.jpg'" alt="">
@@ -328,6 +323,9 @@
             </td>
             <td>
               <div class="action-buttons">
+                <button (click)="openEditServiceModal(service)" class="btn-secondary" title="Edit Service">
+                  Edit
+                </button>
                 <button *ngIf="service.status === 'active'" (click)="suspendService(service.id)" class="btn-warning"
                   title="Suspend Service">
                   Suspend
@@ -355,7 +353,8 @@
       <h2>Experiences Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
-        <input type="text" placeholder="Search experiences..." class="search-input">
+        <input type="text" placeholder="Search experiences..." class="search-input" [(ngModel)]="experienceSearchTerm"
+          (input)="filterExperiences()">
       </div>
     </div>
 
@@ -373,7 +372,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let experience of experiences">
+          <tr *ngFor="let experience of filteredExperiences">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="experience.imageUrl || experience.images?.[0] || '/assets/default-experience.jpg'" alt="">
@@ -394,6 +393,9 @@
             </td>
             <td>
               <div class="action-buttons">
+                <button (click)="openEditExperienceModal(experience)" class="btn-secondary" title="Edit Experience">
+                  Edit
+                </button>
                 <button *ngIf="experience.status === 'active'" (click)="suspendExperience(experience.id)"
                   class="btn-warning" title="Suspend Experience">
                   Suspend
@@ -422,11 +424,46 @@
       <p>Manage experience categories and subcategories</p>
     </div>
 
+    <!-- Service Categories -->
+    <div class="management-section">
+      <div class="section-title">
+        <h3>Service Categories</h3>
+        <button class="btn-primary" (click)="openAddCategoryModal('service')">+ Add Service Category</button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let category of serviceCategories">
+            <td>{{ category.id }}</td>
+            <td>{{ category.name }}</td>
+            <td>{{ category.description || '-' }}</td>
+            <td class="actions">
+              <button class="btn-edit" (click)="openEditCategoryModal(category, 'service')">Edit</button>
+              <button class="btn-delete" (click)="deleteServiceCategory(category.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="serviceCategories.length === 0" class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No service categories found</h3>
+      </div>
+    </div>
+
     <!-- Experience Categories -->
     <div class="management-section">
       <div class="section-title">
         <h3>Experience Categories</h3>
-        <button class="btn-primary" (click)="openAddCategoryModal()">+ Add Category</button>
+        <button class="btn-primary" (click)="openAddCategoryModal('experience')">+ Add Category</button>
       </div>
 
       <table class="data-table">
@@ -444,7 +481,7 @@
             <td>{{ category.name }}</td>
             <td>{{ category.vat }}%</td>
             <td class="actions">
-              <button class="btn-edit" (click)="openEditCategoryModal(category)">Edit</button>
+              <button class="btn-edit" (click)="openEditCategoryModal(category, 'experience')">Edit</button>
               <button class="btn-delete" (click)="deleteCategory(category.id)">Delete</button>
             </td>
           </tr>
@@ -508,7 +545,7 @@
   <!-- Add User Modal -->
   <div class="modal-overlay" *ngIf="showAddUserModal">
     <div class="modal-content">
-      <h3>Add New User</h3>
+      <h3>{{ isEditMode ? 'Edit User' : 'Add New User' }}</h3>
       <form (ngSubmit)="addUser()">
         <div class="form-group">
           <label>First Name</label>
@@ -522,11 +559,11 @@
           <label>Email</label>
           <input type="email" [(ngModel)]="newUser.email" name="email" required>
         </div>
-        <div class="form-group">
+        <div class="form-group" *ngIf="!isEditMode">
           <label>Password</label>
-          <input type="password" [(ngModel)]="newUser.password" name="password" required>
+          <input type="password" [(ngModel)]="newUser.password" name="password" [required]="!isEditMode">
         </div>
-        <div class="form-group">
+        <div class="form-group" *ngIf="!isEditMode">
           <label>Role</label>
           <select [(ngModel)]="newUser.role" name="role">
             <option value="guest">Guest</option>
@@ -536,7 +573,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddUserModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Create User</button>
+          <button type="submit" class="btn-primary">{{ isEditMode ? 'Update User' : 'Create User' }}</button>
         </div>
       </form>
     </div>
@@ -566,7 +603,7 @@
   <!-- Add Listing Modal -->
   <div class="modal-overlay" *ngIf="showAddListingModal">
     <div class="modal-content">
-      <h3>Add New Listing</h3>
+      <h3>{{ isEditMode ? 'Edit Listing' : 'Add New Listing' }}</h3>
       <form (ngSubmit)="addListing()">
         <div class="form-group">
           <label>Name</label>
@@ -621,7 +658,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Create Listing</button>
+          <button type="submit" class="btn-primary">{{ isEditMode ? 'Update Listing' : 'Create Listing' }}</button>
         </div>
       </form>
     </div>
@@ -630,7 +667,7 @@
   <!-- Add Service Modal -->
   <div class="modal-overlay" *ngIf="showAddServiceModal">
     <div class="modal-content">
-      <h3>Add New Service</h3>
+      <h3>{{ isEditMode ? 'Edit Service' : 'Add New Service' }}</h3>
       <form (ngSubmit)="addService()">
         <div class="form-group">
           <label>Service Name</label>
@@ -666,7 +703,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
-          <button type="submit" class="btn-primary">Create Service</button>
+          <button type="submit" class="btn-primary">{{ isEditMode ? 'Update Service' : 'Create Service' }}</button>
         </div>
       </form>
     </div>
@@ -675,7 +712,7 @@
   <!-- Add Experience Modal -->
   <div class="modal-overlay" *ngIf="showAddExperienceModal">
     <div class="modal-content">
-      <h3>Add New Experience</h3>
+      <h3>{{ isEditMode ? 'Edit Experience' : 'Add New Experience' }}</h3>
       <form (ngSubmit)="addExperience()">
         <div class="form-group">
           <label>Experience Name *</label>
@@ -772,7 +809,7 @@
           <button type="submit" class="btn-primary" [disabled]="!newExperience.name || !newExperience.description || 
                             !newExperience.expCatograyId || !newExperience.expSubCatograyId || 
                             !newExperience.price || !newExperience.location">
-            Create Experience
+            {{ isEditMode ? 'Update Experience' : 'Create Experience' }}
           </button>
         </div>
       </form>
@@ -783,7 +820,8 @@
   <div *ngIf="showCategoryModal" class="modal-overlay" (click)="closeAddCategoryModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2>{{ categoryModalMode === 'edit' ? 'Edit Category' : 'Add New Category' }}</h2>
+        <h2>{{ categoryModalMode === 'edit' ? 'Edit' : 'Add New' }} {{ categoryType === 'service' ? 'Service' :
+          'Experience' }} Category</h2>
         <button class="close-button" (click)="closeAddCategoryModal()">&times;</button>
       </div>
       <div class="form-group">

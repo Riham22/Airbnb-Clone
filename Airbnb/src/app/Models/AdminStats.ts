@@ -9,4 +9,6 @@ export interface AdminStats {
   monthlyGrowth: number;
   weeklyRevenue?: number;
   activeBookings?: number;
+  totalServices?: number;
+  totalExperiences?: number;
 }

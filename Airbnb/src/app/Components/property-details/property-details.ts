@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RentalProperty } from '../../Models/rental-property';
@@ -13,12 +13,12 @@ import { ReviewFormComponent } from '../reviews/review-form/review-form.componen
 @Component({
   selector: 'app-property-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReviewListComponent, ReviewFormComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ReviewListComponent, ReviewFormComponent],
   templateUrl: './property-details.html',
   styleUrls: ['./property-details.css']
 })
 export class PropertyDetailsComponent implements OnInit {
-  property!: RentalProperty;
+  property: RentalProperty | null = null;
   selectedImageIndex = 0;
   showAllAmenities = false;
   checkInDate: string = '';
@@ -26,6 +26,21 @@ export class PropertyDetailsComponent implements OnInit {
   guests = 1;
   creatingBooking = false;
   hasBooking = false;
+
+  getGuestOptions(): number[] {
+    if (!this.property) return [];
+    const max = (this.property as any).maxGuests || (this.property as any).maxParticipants || 10;
+    return Array.from({ length: max }, (_, i) => i + 1);
+  }
+
+  get displayedAmenities(): string[] {
+    if (!this.property) return [];
+    const amenities = this.property.amenities || [];
+    if (this.showAllAmenities) {
+      return amenities;
+    }
+    return amenities.slice(0, 6);
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -35,6 +50,8 @@ export class PropertyDetailsComponent implements OnInit {
     private authService: AuthService,
     private reviewService: ReviewService
   ) { }
+
+  suggestions: any[] = [];
 
   ngOnInit() {
     const propertyId = Number(this.route.snapshot.paramMap.get('id'));
@@ -52,16 +69,21 @@ export class PropertyDetailsComponent implements OnInit {
       this.dataService.experiences$.subscribe(exps => {
         const found = exps.find(e => e.id === propertyId);
         if (found) {
-          this.property = found as any; // Cast to satisfy RentalProperty interface roughly
-          console.log('✨ Found Experience:', this.property.name);
+          this.property = found as any;
+          this.loadSuggestions(exps, propertyId);
+          console.log('✨ Found Experience:', this.property?.name);
         }
       });
     } else if (routeType === 'service') {
       this.dataService.services$.subscribe(svcs => {
+        console.log(`🔍 Checking ${svcs.length} services for ID ${propertyId}`);
         const found = svcs.find(s => s.id === propertyId);
         if (found) {
           this.property = found as any;
-          console.log('✨ Found Service:', this.property.name);
+          this.loadSuggestions(svcs, propertyId);
+          console.log('✨ Found Service:', this.property?.name);
+        } else {
+          if (svcs.length > 0) console.warn(`❌ Service ${propertyId} not found. IDs available:`, svcs.map(s => s.id));
         }
       });
     } else {
@@ -71,13 +93,15 @@ export class PropertyDetailsComponent implements OnInit {
         if (foundProperty) {
           this.property = foundProperty;
           this.checkBookingStatus(propertyId);
-        } else if (props.length > 0 && props[0].id === propertyId) { // Only fallback if ID matches (unlikely) or strict mode disabled?
-          // Don't fallback randomly! Only if we are desperate or debugging.
-          // For now, let's keep it strict to avoid showing wrong images.
-          console.warn(`❌ Property ${propertyId} not found in loaded properties.`);
+          this.loadSuggestions(props, propertyId);
         }
       });
     }
+  }
+
+  loadSuggestions(items: any[], currentId: number) {
+    // Simple suggestion logic: take up to 3 other items
+    this.suggestions = items.filter(i => i.id !== currentId).slice(0, 3);
   }
 
   checkBookingStatus(propertyId: number) {
@@ -110,8 +134,8 @@ export class PropertyDetailsComponent implements OnInit {
   }
 
   calculateTotalPrice(): number {
-    if (!this.checkInDate || !this.checkOutDate) {
-      return this.property.price;
+    if (!this.property || !this.checkInDate || !this.checkOutDate) {
+      return this.property ? this.property.price : 0;
     }
 
     const start = new Date(this.checkInDate);
@@ -129,6 +153,9 @@ export class PropertyDetailsComponent implements OnInit {
   }
 
   reserveProperty() {
+    // Check if property is loaded
+    if (!this.property) return;
+
     // Check if user is logged in
     if (!this.authService.isLoggedIn()) {
       alert('Please log in to make a reservation');

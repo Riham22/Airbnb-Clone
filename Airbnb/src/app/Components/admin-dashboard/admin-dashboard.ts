@@ -19,11 +19,23 @@ import { AdminStats } from '../../Models/AdminStats';
 export class AdminDashboardComponent implements OnInit, OnDestroy {
   stats: AdminStats | null = null;
   users: AdminUser[] = [];
+  filteredUsers: AdminUser[] = [];
   listings: AdminListing[] = [];
+  filteredListings: AdminListing[] = [];
   services: any[] = [];
+  filteredServices: any[] = [];
   experiences: any[] = [];
+  filteredExperiences: any[] = [];
+
+  // Filter States
+  userSearchTerm: string = '';
+  userRoleFilter: string = 'All Roles';
+  listingSearchTerm: string = '';
+  listingStatusFilter: string = 'All Status';
+  serviceSearchTerm: string = '';
+  experienceSearchTerm: string = '';
   loading = false;
-  activeTab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'analytics' = 'users';
+  activeTab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'analytics' = 'overview';
 
   // Category Data
   propertyTypes: any[] = [];
@@ -41,6 +53,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   selectedUserForRole: AdminUser | null = null;
   newRoleForUser: string = '';
+
+  // Edit Mode State
+  isEditMode = false;
+  currentEditId: string | null = null;
 
   // Form Data
   newUser: any = { firstName: '', lastName: '', email: '', password: '' };
@@ -133,6 +149,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.adminService.getUsers().subscribe({
         next: (users) => {
           this.users = users;
+          this.filterUsers(); // Initialize filtered list
         },
         error: (error) => {
           console.error('Error loading users:', error);
@@ -145,6 +162,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.adminService.getListings().subscribe({
         next: (listings) => {
           this.listings = listings;
+          this.filterListings(); // Initialize filtered list
         },
         error: (error) => {
           console.error('Error loading listings:', error);
@@ -157,6 +175,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.adminService.getServices().subscribe({
         next: (services) => {
           this.services = services;
+          this.filterServices(); // Initialize filtered list
         },
         error: (error) => {
           console.error('Error loading services:', error);
@@ -169,6 +188,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.adminService.getExperiences().subscribe({
         next: (experiences) => {
           this.experiences = experiences;
+          this.filterExperiences(); // Initialize filtered list
         },
         error: (error) => {
           console.error('Error loading experiences:', error);
@@ -252,13 +272,255 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
+  // Filter Methods
+  filterUsers() {
+    if (!this.users) {
+      this.filteredUsers = []; // Handle case where users might be undefined
+      return;
+    }
+    this.filteredUsers = this.users.filter(user => {
+      const matchesSearch = (user.firstName + ' ' + user.lastName + ' ' + user.email).toLowerCase().includes(this.userSearchTerm.toLowerCase());
+      const matchesRole = this.userRoleFilter === 'All Roles' || user.role.toLowerCase() === this.userRoleFilter.toLowerCase().slice(0, -1);
+      return matchesSearch && matchesRole;
+    });
+  }
+
+  filterListings() {
+    if (!this.listings) {
+      this.filteredListings = [];
+      return;
+    }
+    this.filteredListings = this.listings.filter(listing => {
+      const matchesSearch = (listing.title + ' ' + listing.location).toLowerCase().includes(this.listingSearchTerm.toLowerCase());
+      const matchesStatus = this.listingStatusFilter === 'All Status' || listing.status.toLowerCase() === this.listingStatusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  filterServices() {
+    if (!this.services) {
+      this.filteredServices = [];
+      return;
+    }
+    this.filteredServices = this.services.filter(service => {
+      return (service.name + ' ' + service.location).toLowerCase().includes(this.serviceSearchTerm.toLowerCase());
+    });
+  }
+
+  filterExperiences() {
+    if (!this.experiences) {
+      this.filteredExperiences = [];
+      return;
+    }
+    this.filteredExperiences = this.experiences.filter(exp => {
+      return (exp.name + ' ' + exp.location).toLowerCase().includes(this.experienceSearchTerm.toLowerCase());
+    });
+  }
+
   // Modal Methods
-  openAddUserModal() { this.showAddUserModal = true; }
-  closeAddUserModal() {
-    this.showAddUserModal = false;
+  openAddUserModal() {
+    this.isEditMode = false;
+    this.currentEditId = null;
+    this.showAddUserModal = true;
     this.newUser = { firstName: '', lastName: '', email: '', password: '' };
   }
 
+  openEditUserModal(user: AdminUser) {
+    this.isEditMode = true;
+    this.currentEditId = user.id;
+    this.newUser = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: '' // Don't populate password
+    };
+    this.showAddUserModal = true;
+  }
+
+  closeAddUserModal() {
+    this.showAddUserModal = false;
+    this.newUser = { firstName: '', lastName: '', email: '', password: '' };
+    this.isEditMode = false;
+    this.currentEditId = null;
+  }
+
+  // ... (Role modal methods remain same)
+
+  // CREATE / UPDATE Methods
+  addUser() {
+    if (this.isEditMode && this.currentEditId) {
+      // Update Logic
+      const updatePayload = {
+        firstName: this.newUser.firstName,
+        lastName: this.newUser.lastName,
+        email: this.newUser.email
+        // Password only if provided? Backend specific.
+      };
+
+      this.adminService.updateUser(this.currentEditId, updatePayload).subscribe({
+        next: () => {
+          alert('User updated successfully');
+          this.closeAddUserModal();
+        },
+        error: (err) => alert(`Failed to update user: ${err.message}`)
+      });
+      return;
+    }
+
+    // Create Logic
+    const userPayload = {
+      Username: this.newUser.email,
+      Email: this.newUser.email,
+      Password: this.newUser.password,
+      FirstName: this.newUser.firstName,
+      LastName: this.newUser.lastName,
+      DateOfBirth: '2000-01-01'
+    };
+
+    console.log('Creating user with payload:', userPayload);
+
+    this.adminService.createUser(userPayload).subscribe({
+      next: () => {
+        alert('User created successfully');
+        this.closeAddUserModal();
+        this.loadDashboardData();
+      },
+      error: (err) => {
+        console.error('Create User Error:', err);
+        alert(`Failed to create user: ${err.error?.message || err.message || 'Unknown error'}`);
+        if (err.error?.errors) {
+          console.error('Validation Errors:', err.error.errors);
+        }
+      }
+    });
+  }
+
+  openAddListingModal() {
+    this.isEditMode = false;
+    this.currentEditId = null;
+    this.showAddListingModal = true;
+    this.newListing = {
+      name: '', description: '', price: 0, location: '', maxGuests: 2,
+      bedrooms: 1, beds: 1, bathrooms: 1, propertyTypeId: null, propertyCategoryId: null
+    };
+    this.selectedFiles = [];
+  }
+
+  openEditListingModal(listing: any) {
+    this.isEditMode = true;
+    this.currentEditId = listing.id;
+    this.showAddListingModal = true;
+    this.newListing = {
+      name: listing.title,
+      description: listing.description,
+      price: listing.price,
+      location: listing.location,
+      maxGuests: listing.maxGuests,
+      bedrooms: listing.bedrooms,
+      beds: listing.beds,
+      bathrooms: listing.bathrooms,
+      propertyTypeId: listing.propertyTypeId,
+      propertyCategoryId: listing.propertyCategoryId,
+      imageUrl: listing.imageUrl
+    };
+    this.selectedFiles = [];
+  }
+
+  closeAddListingModal() {
+    this.showAddListingModal = false;
+    this.isEditMode = false;
+    this.currentEditId = null;
+  }
+
+  openAddServiceModal() {
+    this.isEditMode = false;
+    this.currentEditId = null;
+    this.showAddServiceModal = true;
+    this.newService = {
+      name: '', description: '', price: 0, location: '', serviceCategoryId: null
+    };
+    this.selectedFiles = [];
+  }
+
+  openEditServiceModal(service: any) {
+    this.isEditMode = true;
+    this.currentEditId = service.id;
+    this.showAddServiceModal = true;
+    this.newService = {
+      name: service.name,
+      description: service.description,
+      price: service.price,
+      location: service.location,
+      serviceCategoryId: service.serviceCategoryId,
+      imageUrl: service.imageUrl
+    };
+    this.selectedFiles = [];
+  }
+
+  closeAddServiceModal() {
+    this.showAddServiceModal = false;
+    this.isEditMode = false;
+    this.currentEditId = null;
+  }
+
+  openAddExperienceModal() {
+    this.isEditMode = false;
+    this.currentEditId = null;
+    this.showAddExperienceModal = true;
+    this.newExperience = {
+      name: '', description: '', price: 0, maxParticipants: 10,
+      expCatograyId: null, expSubCatograyId: null, imageUrl: '', expActivities: []
+    };
+    this.newActivity = { name: '', describe: '', timeMinute: 60 };
+    this.selectedFiles = [];
+  }
+
+  openEditExperienceModal(exp: any) {
+    this.isEditMode = true;
+    this.currentEditId = exp.id;
+    this.showAddExperienceModal = true;
+    this.newExperience = {
+      name: exp.name,
+      description: exp.description,
+      price: exp.price,
+      location: exp.location,
+      maxParticipants: exp.maxParticipants,
+      expCatograyId: exp.expCatograyId,
+      expSubCatograyId: exp.expSubCatograyId,
+      imageUrl: exp.imageUrl,
+      expActivities: exp.expActivities ? [...exp.expActivities] : []
+    };
+    this.newActivity = { name: '', describe: '', timeMinute: 60 };
+    this.selectedFiles = [];
+
+    // Trigger subcategory load
+    if (exp.expCatograyId) {
+      this.adminService.getExperienceSubCategories(exp.expCatograyId).subscribe(subs => {
+        this.experienceSubCategories = subs;
+      });
+    }
+  }
+
+  closeAddExperienceModal() {
+    this.showAddExperienceModal = false;
+    this.isEditMode = false;
+    this.currentEditId = null;
+  }
+
+  addActivity() {
+    if (!this.newActivity.name || !this.newActivity.describe) {
+      alert('Please fill in Activity Name and Description');
+      return;
+    }
+    this.newExperience.expActivities.push({ ...this.newActivity });
+    this.newActivity = { name: '', describe: '', timeMinute: 60 };
+  }
+
+  removeActivity(index: number) {
+    this.newExperience.expActivities.splice(index, 1);
+  }
+
+  // Re-adding ChangeRoleModal methods
   openChangeRoleModal(user: AdminUser) {
     this.selectedUserForRole = user;
     this.newRoleForUser = user.role;
@@ -292,69 +554,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  openAddListingModal() { this.showAddListingModal = true; }
-  closeAddListingModal() {
-    this.showAddListingModal = false;
-    this.newListing = {
-      name: '',
-      description: '',
-      price: 0,
-      location: '',
-      maxGuests: 2,
-      bedrooms: 1,
-      bathrooms: 1,
-      propertyTypeId: null,
-      propertyCategoryId: null
-    };
-    this.selectedFile = null;
-    this.selectedFiles = [];
-  }
-
-  openAddServiceModal() { this.showAddServiceModal = true; }
-  closeAddServiceModal() {
-    this.showAddServiceModal = false;
-    this.newService = {
-      name: '',
-      description: '',
-      price: 0,
-      location: '',
-      serviceCategoryId: null
-    };
-    this.selectedFile = null;
-    this.selectedFiles = [];
-  }
-
-  openAddExperienceModal() { this.showAddExperienceModal = true; }
-  closeAddExperienceModal() {
-    this.showAddExperienceModal = false;
-    this.newExperience = {
-      name: '',
-      description: '',
-      price: 0,
-      maxParticipants: 10,
-      expCatograyId: null,
-      expSubCatograyId: null,
-      imageUrl: '',
-      expActivities: []
-    };
-    this.newActivity = { name: '', describe: '', timeMinute: 60 };
-    this.selectedFile = null;
-    this.selectedFiles = [];
-  }
-
-  addActivity() {
-    if (!this.newActivity.name || !this.newActivity.describe) {
-      alert('Please fill in Activity Name and Description');
-      return;
-    }
-    this.newExperience.expActivities.push({ ...this.newActivity });
-    this.newActivity = { name: '', describe: '', timeMinute: 60 };
-  }
-
-  removeActivity(index: number) {
-    this.newExperience.expActivities.splice(index, 1);
-  }
-
   // File Selection
   selectedFiles: File[] = [];
 
@@ -376,41 +575,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return 'assets/default-listing.jpg';
   }
 
-  // CREATE METHODS
-  addUser() {
-    const userPayload = {
-      Username: this.newUser.email,
-      Email: this.newUser.email,
-      Password: this.newUser.password,
-      FirstName: this.newUser.firstName,
-      LastName: this.newUser.lastName,
-      DateOfBirth: '2000-01-01'
-    };
-
-    console.log('Creating user with payload:', userPayload);
-
-    this.adminService.createUser(userPayload).subscribe({
-      next: () => {
-        alert('User created successfully');
-        this.closeAddUserModal();
-        this.loadDashboardData();
-      },
-      error: (err) => {
-        console.error('Create User Error:', err);
-        alert(`Failed to create user: ${err.error?.message || err.message || 'Unknown error'}`);
-        if (err.error?.errors) {
-          console.error('Validation Errors:', err.error.errors);
-        }
-      }
-    });
-  }
 
   addListing() {
-    if (!this.newListing.propertyTypeId || !this.newListing.propertyCategoryId) {
-      alert('Please select both Property Type and Property Category');
-      return;
-    }
-
     const listingPayload = {
       title: this.newListing.name,
       description: this.newListing.description,
@@ -436,6 +602,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       imageUrl: this.newListing.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image'
     };
 
+    if (this.isEditMode && this.currentEditId) {
+      this.adminService.updateListing(this.currentEditId.toString(), listingPayload, this.selectedFiles).subscribe({
+        next: () => {
+          alert('Listing updated successfully');
+          this.closeAddListingModal();
+        },
+        error: (err) => alert(`Failed to update listing: ${err.message}`)
+      });
+      return;
+    }
+
+    if (!this.newListing.propertyTypeId || !this.newListing.propertyCategoryId) {
+      alert('Please select both Property Type and Property Category');
+      return;
+    }
+
     console.log('Creating listing with payload:', listingPayload);
 
     this.adminService.createListing(listingPayload, this.selectedFiles).subscribe({
@@ -455,11 +637,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   addService() {
-    if (!this.newService.serviceCategoryId) {
-      alert('Please select a Service Category');
-      return;
-    }
-
     const servicePayload = {
       title: this.newService.name,
       description: this.newService.description,
@@ -472,6 +649,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       serviceCategoryId: Number(this.newService.serviceCategoryId),
       imageUrl: this.newService.imageUrl
     };
+
+    if (this.isEditMode && this.currentEditId) {
+      this.adminService.updateService(this.currentEditId.toString(), servicePayload, this.selectedFiles).subscribe({
+        next: () => {
+          alert('Service updated successfully');
+          this.closeAddServiceModal();
+        },
+        error: (err) => alert(`Failed to update service: ${err.message}`)
+      });
+      return;
+    }
+
+    if (!this.newService.serviceCategoryId) {
+      alert('Please select a Service Category');
+      return;
+    }
 
     console.log('Creating service with payload:', servicePayload);
 
@@ -491,16 +684,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Replace your addExperience() method in admin-dashboard.component.ts with this:
-
   addExperience() {
-    // Validation
-    if (!this.newExperience.expCatograyId || !this.newExperience.expSubCatograyId) {
-      alert('Please select both Experience Category and Subcategory');
-      return;
-    }
-
-    // Create the payload - NOT wrapped, send directly
+    // Create the payload
     const experiencePayload = {
       name: this.newExperience.name || '',
       location: this.newExperience.location || '',
@@ -535,6 +720,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       images: [],
       expActivities: this.newExperience.expActivities || []
     };
+
+    if (this.isEditMode && this.currentEditId) {
+      this.adminService.updateExperience(this.currentEditId.toString(), experiencePayload, this.selectedFiles).subscribe({
+        next: () => {
+          alert('Experience updated successfully');
+          this.closeAddExperienceModal();
+        },
+        error: (err) => alert('Failed to update experience')
+      });
+      return;
+    }
+
+
+    // Validation
+    if (!this.newExperience.expCatograyId || !this.newExperience.expSubCatograyId) {
+      alert('Please select both Experience Category and Subcategory');
+      return;
+    }
 
     console.log('Category ID:', this.newExperience.expCatograyId);
     console.log('Subcategory ID:', this.newExperience.expSubCatograyId);
@@ -816,13 +1019,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // CATEGORY MANAGEMENT METHODS
   // ============================================
 
+  categoryType: 'experience' | 'service' = 'experience';
+
   loadCategoryData(): void {
     this.subscriptions.add(
       this.adminService.getExperienceCategories().subscribe({
         next: (categories) => {
           this.experienceCategories = categories;
         },
-        error: (error) => console.error('Error loading categories:', error)
+        error: (error) => console.error('Error loading experience categories:', error)
+      })
+    );
+
+    this.subscriptions.add(
+      this.adminService.getServiceCategories().subscribe({
+        next: (categories) => {
+          this.serviceCategories = categories;
+        },
+        error: (error) => console.error('Error loading service categories:', error)
       })
     );
 
@@ -836,14 +1050,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Experience Category Methods
-  openAddCategoryModal(): void {
+  // Category Methods
+  openAddCategoryModal(type: 'experience' | 'service' = 'experience'): void {
+    this.categoryType = type;
     this.categoryModalMode = 'create';
     this.newCategory = { name: '', description: '' };
     this.showCategoryModal = true;
   }
 
-  openEditCategoryModal(category: any): void {
+  openEditCategoryModal(category: any, type: 'experience' | 'service' = 'experience'): void {
+    this.categoryType = type;
     this.categoryModalMode = 'edit';
     this.selectedCategory = category;
     this.newCategory = { ...category };
@@ -857,34 +1073,67 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   saveCategory(): void {
-    if (this.categoryModalMode === 'create') {
-      this.subscriptions.add(
-        this.adminService.createExperienceCategory(this.newCategory).subscribe({
-          next: () => {
-            alert('Category created successfully');
-            this.closeAddCategoryModal();
-            this.loadCategoryData();
-          },
-          error: (error) => {
-            console.error('Error creating category:', error);
-            alert(`Failed to create category: ${error.error?.message || error.message}`);
-          }
-        })
-      );
+    if (this.categoryType === 'experience') {
+      if (this.categoryModalMode === 'create') {
+        this.subscriptions.add(
+          this.adminService.createExperienceCategory(this.newCategory).subscribe({
+            next: () => {
+              alert('Experience Category created successfully');
+              this.closeAddCategoryModal();
+              this.loadCategoryData();
+            },
+            error: (error) => {
+              console.error('Error creating category:', error);
+              alert(`Failed to create category: ${error.error?.message || error.message}`);
+            }
+          })
+        );
+      } else {
+        this.subscriptions.add(
+          this.adminService.updateExperienceCategory(this.selectedCategory.id, this.newCategory).subscribe({
+            next: () => {
+              alert('Experience Category updated successfully');
+              this.closeAddCategoryModal();
+              this.loadCategoryData();
+            },
+            error: (error) => {
+              console.error('Error updating category:', error);
+              alert(`Failed to update category: ${error.error?.message || error.message}`);
+            }
+          })
+        );
+      }
     } else {
-      this.subscriptions.add(
-        this.adminService.updateExperienceCategory(this.selectedCategory.id, this.newCategory).subscribe({
-          next: () => {
-            alert('Category updated successfully');
-            this.closeAddCategoryModal();
-            this.loadCategoryData();
-          },
-          error: (error) => {
-            console.error('Error updating category:', error);
-            alert(`Failed to update category: ${error.error?.message || error.message}`);
-          }
-        })
-      );
+      // Service Category Logic
+      if (this.categoryModalMode === 'create') {
+        this.subscriptions.add(
+          this.adminService.createServiceCategory(this.newCategory).subscribe({
+            next: () => {
+              alert('Service Category created successfully');
+              this.closeAddCategoryModal();
+              this.loadCategoryData();
+            },
+            error: (error) => {
+              console.error('Error creating service category:', error);
+              alert(`Failed to create category: ${error.error?.message || error.message}`);
+            }
+          })
+        );
+      } else {
+        this.subscriptions.add(
+          this.adminService.updateServiceCategory(this.selectedCategory.id, this.newCategory).subscribe({
+            next: () => {
+              alert('Service Category updated successfully');
+              this.closeAddCategoryModal();
+              this.loadCategoryData();
+            },
+            error: (error) => {
+              console.error('Error updating service category:', error);
+              alert(`Failed to update category: ${error.error?.message || error.message}`);
+            }
+          })
+        );
+      }
     }
   }
 
@@ -900,6 +1149,27 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             console.error('Error deleting category:', error);
             if (error.status === 403) {
               alert('Cannot delete this category - you do not have permission.');
+            } else {
+              alert(`Failed to delete category: ${error.error?.message || error.message}`);
+            }
+          }
+        })
+      );
+    }
+  }
+
+  deleteServiceCategory(categoryId: number): void {
+    if (confirm('Are you sure you want to delete this service category?')) {
+      this.subscriptions.add(
+        this.adminService.deleteServiceCategory(categoryId).subscribe({
+          next: () => {
+            alert('Service Category deleted successfully');
+            this.loadCategoryData();
+          },
+          error: (error) => {
+            console.error('Error deleting service category:', error);
+            if (error.status === 403) {
+              alert('Cannot delete this category because it is being used by existing services.');
             } else {
               alert(`Failed to delete category: ${error.error?.message || error.message}`);
             }

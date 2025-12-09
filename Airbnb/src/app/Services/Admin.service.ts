@@ -22,12 +22,30 @@ export class AdminService {
   constructor(private http: HttpClient) { }
 
   // Stats Management - Calculated from data
+  private getInitialStats(): AdminStats {
+    return {
+      totalUsers: 0,
+      totalListings: 0,
+      totalBookings: 0,
+      totalRevenue: 0,
+      pendingVerifications: 0,
+      activeHosts: 0,
+      monthlyGrowth: 0,
+      weeklyRevenue: 0,
+      activeBookings: 0,
+      totalServices: 0,
+      totalExperiences: 0
+    };
+  }
+
   getStats(): Observable<AdminStats> {
     this.setLoading(true);
 
     // 1. Create Observables for all necessary data sources
     const users$ = this.http.get<any[]>(`${this.apiUrl}/User`).pipe(catchError(() => of([])));
     const properties$ = this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(catchError(() => of([])));
+    const services$ = this.http.get<any[]>(`${this.apiUrl}/Services`).pipe(catchError(() => of([])));
+    const experiences$ = this.http.get<any[]>(`${this.apiUrl}/Experience`).pipe(catchError(() => of([])));
     const bookings$ = this.http.get<any>(`${this.apiUrl}/Booking`).pipe(
       map(res => res.data || res || []),
       catchError(() => of([]))
@@ -37,9 +55,18 @@ export class AdminService {
     return forkJoin({
       users: users$,
       props: properties$,
+      svcs: services$,
+      exps: experiences$,
       bookings: bookings$
     }).pipe(
-      map(({ users, props, bookings }) => {
+      map(({ users, props, svcs, exps, bookings }) => {
+        console.log('Stats Debug - Services:', svcs);
+        console.log('Stats Debug - Experiences:', exps);
+
+        // Handle potential wrapper objects if API returns { data: [...] }
+        const servicesList = Array.isArray(svcs) ? svcs : (svcs as any)?.data || [];
+        const experiencesList = Array.isArray(exps) ? exps : (exps as any)?.data || [];
+
         const totalUsers = users.length;
         const totalListings = props.length;
         const totalBookings = bookings.length;
@@ -48,12 +75,14 @@ export class AdminService {
           totalUsers,
           totalListings,
           totalBookings,
-          totalRevenue: totalBookings * 150, // Your existing calculation
+          totalRevenue: totalBookings * 150,
           pendingVerifications: 0,
           activeHosts: Math.floor(totalUsers * 0.3),
           monthlyGrowth: 0,
           weeklyRevenue: 0,
-          activeBookings: totalBookings
+          activeBookings: totalBookings,
+          totalServices: servicesList.length,
+          totalExperiences: experiencesList.length
         };
 
         this.statsSubject.next(stats);
@@ -172,7 +201,12 @@ export class AdminService {
             bathrooms: p.bathrooms || p.Bathrooms || 0,
             maxGuests: p.maxGuests || p.MaxGuests || 0,
             images: images?.length ? images.map((i: any) => i.imageUrl || i.ImageUrl || i.imageURL) : [p.coverImageUrl || p.CoverImageUrl || p.imageUrl || p.ImageUrl],
-            amenities: p.amenities || p.Amenities || []
+            amenities: p.amenities || p.Amenities || [],
+            description: p.description || p.Description,
+            propertyTypeId: p.propertyTypeId || p.PropertyTypeId,
+            propertyCategoryId: p.propertyCategoryId || p.PropertyCategoryId,
+            beds: p.beds || p.Beds,
+            imageUrl: p.imageUrl || p.ImageUrl
           };
         });
         this.listingsSubject.next(adminListings);
@@ -301,7 +335,9 @@ export class AdminService {
             reviewCount: s.reviews?.length || s.Reviews?.length || 0,
             status: (s.isPublished || s.IsPublished) ? 'active' : 'pending',
             imageUrl: images?.[0]?.imageUrl || images?.[0]?.ImageUrl || s.imageUrl || s.ImageUrl || 'assets/default-service.jpg',
-            images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || []
+            images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || [],
+            serviceCategoryId: s.serviceCategoryId || s.ServiceCategoryId,
+            duration: s.duration || s.Duration
           };
         });
         this.servicesSubject.next(mappedServices);
@@ -364,7 +400,11 @@ export class AdminService {
             reviewCount: e.reviews?.length || e.Reviews?.length || 0,
             status: isActive ? 'active' : 'pending',
             imageUrl: images?.[0]?.imageUrl || images?.[0]?.ImageUrl || e.imageUrl || e.ImageUrl || 'assets/default-experience.jpg',
-            images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || []
+            images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || [],
+            expCatograyId: e.expCatograyId || e.ExpCatograyId,
+            expSubCatograyId: e.expSubCatograyId || e.ExpSubCatograyId,
+            maxParticipants: e.maximumGuest || e.MaximumGuest || 10,
+            expActivities: e.expActivities || e.ExpActivities || []
           };
         });
         this.experiencesSubject.next(mappedExperiences);
@@ -402,19 +442,7 @@ export class AdminService {
     this.loadingSubject.next(loading);
   }
 
-  private getInitialStats(): AdminStats {
-    return {
-      totalUsers: 0,
-      totalListings: 0,
-      totalBookings: 0,
-      totalRevenue: 0,
-      pendingVerifications: 0,
-      activeHosts: 0,
-      monthlyGrowth: 0,
-      weeklyRevenue: 0,
-      activeBookings: 0
-    };
-  }
+
 
   // TEST METHODS - Check if endpoints work
   testPropertiesEndpoint(): void {
@@ -634,12 +662,127 @@ export class AdminService {
     });
   }
 
+  // UPDATE Methods for Entities
+  updateUser(id: string, userData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/User/${id}`, userData).pipe(
+      tap(() => {
+        this.getUsers().subscribe(); // Refresh data
+      }),
+      catchError(err => {
+        console.error('updateUser error', err);
+        throw err;
+      })
+    );
+  }
+
+  updateListing(id: string, listingData: any, files: File[] = []): Observable<any> {
+    const payload = { ...listingData, id: id };
+
+    // Logic similar to create but using PUT
+    return this.http.put<any>(`${this.apiUrl}/Properties/${id}`, payload).pipe(
+      switchMap((updated: any) => {
+        if (files.length > 0) {
+          return this.uploadPropertyImages(Number(id), files).pipe(
+            map(results => ({ updated, uploads: results })),
+            catchError(err => {
+              console.error('Failed to upload images during update', err);
+              return of({ updated, imageError: err });
+            })
+          );
+        }
+        return of({ updated });
+      }),
+      tap(() => this.getListings().subscribe()), // Refresh local state
+      catchError(err => {
+        console.error('updateListing error', err);
+        throw err;
+      })
+    );
+  }
+
+  updateService(id: string, serviceData: any, files: File[] = []): Observable<any> {
+    const payload = { ...serviceData, id: id };
+
+    return this.http.put<any>(`${this.apiUrl}/Services/${id}`, payload).pipe(
+      switchMap((updated: any) => {
+        if (files.length > 0) {
+          return this.uploadServiceImages(Number(id), files).pipe(
+            map(results => ({ updated, uploads: results })),
+            catchError(err => {
+              console.error('Failed to upload images during update', err);
+              return of({ updated, imageError: err });
+            })
+          );
+        }
+        return of({ updated });
+      }),
+      tap(() => this.getServices().subscribe()),
+      catchError(err => {
+        console.error('updateService error', err);
+        throw err;
+      })
+    );
+  }
+
+  updateExperience(id: string, experienceData: any, files: File[] = []): Observable<any> {
+    const payload = { ...experienceData, id: id };
+
+    return this.http.put<any>(`${this.apiUrl}/Experience/${id}`, payload).pipe(
+      switchMap((updated: any) => {
+        if (files.length > 0) {
+          return this.uploadExperienceImages(Number(id), files).pipe(
+            map(results => ({ updated, uploads: results })),
+            catchError(err => {
+              console.error('Failed to upload images during update', err);
+              return of({ updated, imageError: err });
+            })
+          );
+        }
+        return of({ updated });
+      }),
+      tap(() => this.getExperiences().subscribe()),
+      catchError(err => {
+        console.error('updateExperience error', err);
+        throw err;
+      })
+    );
+  }
+
   // Category Management Methods - try backend first, fallback to hardcoded
   getServiceCategories(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/Services/categories`).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/ServiceCategory`).pipe(
       catchError(err => {
         console.warn('ServiceCategory endpoint failed, returning empty array as fallback.', err);
         return of([]);
+      })
+    );
+  }
+
+  createServiceCategory(data: any): Observable<any> {
+    const payload = { Name: data.name, Description: data.description };
+    return this.http.post<any>(`${this.apiUrl}/ServiceCategory`, payload).pipe(
+      catchError(err => {
+        console.error('createServiceCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  updateServiceCategory(id: number, data: any): Observable<any> {
+    const payload = { Id: id, Name: data.name, Description: data.description };
+    return this.http.put<any>(`${this.apiUrl}/ServiceCategory/${id}`, payload).pipe(
+      catchError(err => {
+        console.error('updateServiceCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  deleteServiceCategory(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/ServiceCategory/${id}`).pipe(
+      catchError(err => {
+        console.error('deleteServiceCategory error', err);
+        throw err;
       })
     );
   }
