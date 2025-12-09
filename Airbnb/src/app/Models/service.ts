@@ -2,6 +2,7 @@ import { Review } from "./review";
 
 // models/service.ts
 export interface Service {
+  isWishlisted: boolean;
   id: number;
   type: 'service';
   name: string;

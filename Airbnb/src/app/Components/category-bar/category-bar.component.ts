@@ -14,4 +14,5 @@ export class CategoryBarComponent {
     onOpenFilters() {
         this.openFilters.emit();
     }
+
 }

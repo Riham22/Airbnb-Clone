@@ -8,7 +8,6 @@ import { authInterceptor } from './Services/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
 
 

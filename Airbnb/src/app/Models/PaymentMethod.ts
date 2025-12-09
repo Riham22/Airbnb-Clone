@@ -5,4 +5,5 @@ export interface PaymentMethod {
   lastFour?: string;
   expiryDate?: string;
   isDefault: boolean;
+  cardHolderName?: string;
 }

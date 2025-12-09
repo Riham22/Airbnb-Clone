@@ -1,4 +1,4 @@
-// models/admin-stats.model.ts
+
 export interface AdminStats {
   totalUsers: number;
   totalListings: number;

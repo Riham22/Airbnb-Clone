@@ -159,7 +159,7 @@
                 {{ user.role }}
               </span>
             </td>
-            <td>{{ user.joinedDate | date:'MMM d, yyyy' }}</td>
+            <td>{{ user.joinedDate| date:'MMM d, yyyy' }}</td>
             <td>{{ user.listingsCount }}</td>
             <td>{{ user.bookingsCount }}</td>
             <td>
@@ -235,7 +235,7 @@
           <tr *ngFor="let listing of filteredListings">
             <td class="listing-cell">
               <div class="listing-image">
-                <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
+                <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
               </div>
               <div class="listing-info">
                 <strong>{{ listing.title }}</strong>
@@ -565,7 +565,7 @@
         </div>
         <div class="form-group" *ngIf="!isEditMode">
           <label>Role</label>
-          <select [(ngModel)]="newUser.role" name="role">
+          <select [(ngModel)]="newUser.role"  title="role" name="role">
             <option value="guest">Guest</option>
             <option value="host">Host</option>
             <option value="admin">Admin</option>
@@ -586,7 +586,7 @@
       <form (ngSubmit)="changeRole()">
         <div class="form-group">
           <label>Select New Role</label>
-          <select [(ngModel)]="newRoleForUser" name="newRole">
+          <select [(ngModel)]="newRoleForUser" title="newRole" name="newRole">
             <option value="guest">Guest</option>
             <option value="host">Host</option>
             <option value="admin">Admin</option>
@@ -623,14 +623,14 @@
         </div>
         <div class="form-group">
           <label>Property Type</label>
-          <select [(ngModel)]="newListing.propertyTypeId" name="propertyTypeId" required>
+          <select [(ngModel)]="newListing.propertyTypeId" title="propertyTypeId" name="propertyTypeId" required>
             <option [ngValue]="null" disabled>Select Property Type</option>
             <option *ngFor="let type of propertyTypes" [value]="type.id">{{ type.name }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>Property Category</label>
-          <select [(ngModel)]="newListing.propertyCategoryId" name="propertyCategoryId" required>
+          <select [(ngModel)]="newListing.propertyCategoryId"  title="propertyCategoryId" name="propertyCategoryId" required>
             <option [ngValue]="null" disabled>Select Property Category</option>
             <option *ngFor="let category of propertyCategories" [value]="category.id">{{ category.name }}</option>
           </select>
@@ -679,7 +679,7 @@
         </div>
         <div class="form-group">
           <label>Category</label>
-          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId" required>
+          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId"  title="serviceCategoryId"  required>
             <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
           </select>
@@ -727,16 +727,12 @@
 
         <div class="form-group">
           <label>Category *</label>
-          <select [(ngModel)]="newExperience.expCatograyId" name="expCatograyId"
-            (ngModelChange)="onExperienceCategoryChange()" required>
-            <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of experienceCategories" [ngValue]="cat.id">{{ cat.name }}</option>
-          </select>
+          <!-- </select> -->
         </div>
-
         <div class="form-group">
           <label>Subcategory *</label>
-          <select [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required
+          <select title="k" [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required
             [disabled]="!newExperience.expCatograyId">
             <option [ngValue]="null" disabled>
               {{ newExperience.expCatograyId ? 'Select Subcategory' : 'First select a category' }}
@@ -806,8 +802,8 @@
 
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
-          <button type="submit" class="btn-primary" [disabled]="!newExperience.name || !newExperience.description || 
-                            !newExperience.expCatograyId || !newExperience.expSubCatograyId || 
+          <button type="submit" class="btn-primary" [disabled]="!newExperience.name || !newExperience.description ||
+                            !newExperience.expCatograyId || !newExperience.expSubCatograyId ||
                             !newExperience.price || !newExperience.location">
             {{ isEditMode ? 'Update Experience' : 'Create Experience' }}
           </button>
@@ -815,6 +811,8 @@
       </form>
     </div>
   </div>
+
+
 
   <!-- Category Modal -->
   <div *ngIf="showCategoryModal" class="modal-overlay" (click)="closeAddCategoryModal()">
