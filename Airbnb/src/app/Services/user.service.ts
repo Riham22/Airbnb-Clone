@@ -1,4 +1,3 @@
-// user.service.ts - Updated to consume /api/User endpoints
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
@@ -32,8 +31,6 @@ export interface UserProfile extends UserProfileUpdate {
   username?: string;
   createdAt?: string;
   updatedAt?: string;
-  languages?: any[];
-  interests?: any[];
   isVerified?: boolean;
   isActive?: boolean;
 }
@@ -51,280 +48,267 @@ export class UserService {
   constructor(
     private http: HttpClient,
     private authService: AuthService
-  ) {
-    this.loadUserProfileFromStorage();
-  }
+  ) {}
 
-  // ============ Get Auth Headers ============
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
+    if (!token) {
+      console.error('No authentication token found');
+      throw new Error('User not authenticated');
+    }
+
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     });
   }
 
-  private getUserId(): string | null {
-    const currentUser = this.authService.getCurrentUser();
+  private getUserId(): string {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('No authentication token');
+    }
 
-    // Try all possible user ID locations
-    const possibleIds = [
-      currentUser?.id,
-      currentUser?.Id,
-      currentUser?.userId,
-      currentUser?.UserId,
-      currentUser?.sub,
-      currentUser?.nameid,
-      currentUser?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'],
-      currentUser?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/primarysid']
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      const possibleClaims = [
+        'sub',
+        'nameid',
+        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
+        'UserId',
+        'userId',
+        'id'
+      ];
+
+      for (const claim of possibleClaims) {
+        if (payload[claim]) {
+          return payload[claim].toString();
+        }
+      }
+
+      throw new Error('User ID not found in token');
+    } catch (e) {
+      console.error('Could not parse JWT token:', e);
+      throw new Error('Invalid authentication token');
+    }
+  }
+
+  getMyProfile(): Observable<UserProfile> {
+    console.log('getMyProfile called');
+
+    const userId = this.getUserId();
+    console.log('User ID:', userId);
+
+    const endpointsToTry = [
+      `${this.accountApiUrl}/${userId}`,
+      `${this.userApiUrl}/me`,
+      `${this.userApiUrl}/current`,
+      `${this.userApiUrl}`,
+      `${this.userApiUrl}/${userId}`
     ];
 
-    return possibleIds.find(id => id != null && id !== '') || null;
+    const tryEndpoint = (index: number): Observable<UserProfile> => {
+      if (index >= endpointsToTry.length) {
+        return throwError(() => new Error('No valid endpoint found for user profile'));
+      }
+
+      const endpoint = endpointsToTry[index];
+      console.log(`Trying endpoint ${index}: ${endpoint}`);
+
+      return this.http.get<UserProfile>(endpoint, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        tap(profile => {
+          console.log(`Success with endpoint ${endpoint}:`, profile);
+          this.userProfileSubject.next(profile);
+        }),
+        catchError(error => {
+          console.warn(`Endpoint ${endpoint} failed:`, error.status);
+          if (error.status === 404 || error.status === 401 || error.status === 403) {
+            return tryEndpoint(index + 1);
+          }
+          return throwError(() => new Error(`Failed to load profile: ${error.message}`));
+        })
+      );
+    };
+
+    return tryEndpoint(0);
   }
 
-  // ============ Get User Profile ============
-  getMyProfile(): Observable<UserProfile> {
-    // Check cache first
-    const cachedProfile = this.userProfileSubject.value;
-    if (cachedProfile) {
-      return of(cachedProfile);
-    }
-
-    const userId = this.getUserId();
-    if (!userId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
-
-    return this.http.get<UserProfile>(`${this.userApiUrl}/${userId}`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      tap(profile => {
-        this.userProfileSubject.next(profile);
-        localStorage.setItem('userProfile', JSON.stringify(profile));
-      }),
-      catchError(error => {
-        console.error('Error fetching user profile:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ============ Update User Profile ============
   updateCurrentUser(userData: UserProfileUpdate): Observable<UserProfile> {
+    console.log('updateCurrentUser called with data:', userData);
+
     const userId = this.getUserId();
-    if (!userId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
 
-    return this.http.put<UserProfile>(`${this.userApiUrl}/${userId}`, userData, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      tap(updatedProfile => {
-        // Update local storage
-        this.userProfileSubject.next(updatedProfile);
-        localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    const apiData: UserProfileUpdate = {
+      ...userData,
+      languageIds: userData.languageIds || [],
+      interestIds: userData.interestIds || []
+    };
 
-        // Also update auth service user data with basic info
-        const currentAuthUser = this.authService.getCurrentUser();
-        if (currentAuthUser) {
-          const updatedAuthUser = {
-            ...currentAuthUser,
-            firstName: userData.firstName || currentAuthUser.firstName,
-            lastName: userData.lastName || currentAuthUser.lastName,
-            email: updatedProfile.email || currentAuthUser.email
-          };
-          this.authService.updateCurrentUser(updatedAuthUser);
-        }
-      }),
-      catchError(error => {
-        console.error('Error updating user profile:', error);
-        return throwError(() => error);
-      })
-    );
+    const endpointsToTry = [
+      `${this.accountApiUrl}/${userId}`,
+      `${this.userApiUrl}/${userId}`,
+      `${this.userApiUrl}/me`,
+      `${this.userApiUrl}/current`
+    ];
+
+    const tryEndpoint = (index: number): Observable<UserProfile> => {
+      if (index >= endpointsToTry.length) {
+        return throwError(() => new Error('No valid update endpoint found'));
+      }
+
+      const endpoint = endpointsToTry[index];
+      console.log(`Trying update endpoint ${index}: ${endpoint}`, apiData);
+
+      return this.http.put<UserProfile>(endpoint, apiData, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        tap(updatedProfile => {
+          console.log(`Update successful with endpoint ${endpoint}:`, updatedProfile);
+
+          this.userProfileSubject.next(updatedProfile);
+
+          const currentAuthUser = this.authService.getCurrentUser();
+          if (currentAuthUser) {
+            const updatedAuthUser = {
+              ...currentAuthUser,
+              firstName: userData.firstName || currentAuthUser.firstName,
+              lastName: userData.lastName || currentAuthUser.lastName,
+              email: updatedProfile.email || currentAuthUser.email
+            };
+            this.authService.updateCurrentUser(updatedAuthUser);
+          }
+        }),
+        catchError(error => {
+          console.warn(`Update endpoint ${endpoint} failed:`, error.status, error.error);
+
+          if (error.error) {
+            console.log('API error response:', error.error);
+          }
+
+          if (error.status === 404 || error.status === 405 || error.status === 400) {
+            return tryEndpoint(index + 1);
+          }
+          return throwError(() => new Error(`Failed to update profile: ${error.message}`));
+        })
+      );
+    };
+
+    return tryEndpoint(0);
   }
 
-  // ============ Update Specific Field ============
+  uploadProfilePhoto(file: File): Observable<any> {
+    console.log('uploadProfilePhoto called with file:', file.name);
+
+    const userId = this.getUserId();
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const endpointsToTry = [
+      `${this.accountApiUrl}/${userId}/upload-photo`,
+      `${this.userApiUrl}/${userId}/upload-photo`,
+      `${this.userApiUrl}/upload-photo`,
+      `${this.userApiUrl}/${userId}/photo`,
+      `${this.userApiUrl}/photo`
+    ];
+
+    const tryEndpoint = (index: number): Observable<any> => {
+      if (index >= endpointsToTry.length) {
+        return throwError(() => new Error('No upload endpoint available'));
+      }
+
+      const endpoint = endpointsToTry[index];
+      console.log(`Trying upload endpoint ${index}: ${endpoint}`);
+
+      return this.http.post(endpoint, formData, {
+        headers: new HttpHeaders({
+          'Authorization': `Bearer ${this.authService.getToken()}`
+        })
+      }).pipe(
+        tap((response: any) => {
+          console.log(`Upload successful with endpoint ${endpoint}:`, response);
+
+          if (response.photoURL) {
+            this.updateUserField('photoURL', response.photoURL).subscribe({
+              next: () => console.log('Photo URL updated in profile'),
+              error: (err) => console.warn('Could not update photo URL in profile:', err)
+            });
+          }
+        }),
+        catchError(error => {
+          console.warn(`Upload endpoint ${endpoint} failed:`, error.status);
+          if (error.status === 404 || error.status === 405) {
+            return tryEndpoint(index + 1);
+          }
+          return throwError(() => new Error(`Failed to upload photo: ${error.message}`));
+        })
+      );
+    };
+
+    return tryEndpoint(0);
+  }
+
   updateUserField(field: keyof UserProfileUpdate, value: any): Observable<UserProfile> {
     const updateData = { [field]: value } as UserProfileUpdate;
     return this.updateCurrentUser(updateData);
   }
 
-  // ============ Upload Profile Photo ============
-  uploadProfilePhoto(file: File): Observable<any> {
-    const userId = this.getUserId();
-    if (!userId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http.post(`${this.userApiUrl}/${userId}/upload-photo`, formData, {
-      headers: new HttpHeaders({
-        'Authorization': `Bearer ${this.authService.getToken()}`
-      })
-    }).pipe(
-      tap((response: any) => {
-        if (response.photoURL) {
-          this.updateUserField('photoURL', response.photoURL).subscribe();
-        }
-      }),
-      catchError(error => {
-        console.error('Error uploading photo:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ============ Delete User Account ============
   deleteUser(): Observable<any> {
     const userId = this.getUserId();
-    if (!userId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
 
     return this.http.delete(`${this.accountApiUrl}/${userId}`, {
       headers: this.getAuthHeaders()
     }).pipe(
       tap(() => {
         this.userProfileSubject.next(null);
-        localStorage.removeItem('userProfile');
         this.authService.logout();
       }),
       catchError(error => {
         console.error('Error deleting account:', error);
-        return throwError(() => error);
+        return throwError(() => new Error(`Failed to delete account: ${error.message}`));
       })
     );
   }
 
-  // ============ Change Password ============
   changePassword(passwordData: { currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.post(`${this.accountApiUrl}/ChangePassword`, passwordData, {
       headers: this.getAuthHeaders()
     }).pipe(
       catchError(error => {
         console.error('Error changing password:', error);
-        return throwError(() => error);
+        return throwError(() => new Error(`Failed to change password: ${error.message}`));
       })
     );
   }
 
-  // ============ Get All Languages ============
-  getLanguages(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.userApiUrl}/languages`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(error => {
-        console.error('Error fetching languages:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ============ Get All Interests ============
-  getInterests(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.userApiUrl}/interests`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(error => {
-        console.error('Error fetching interests:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ============ Search Users ============
-  searchUsers(query: string): Observable<UserProfile[]> {
-    return this.http.get<UserProfile[]>(`${this.userApiUrl}/search`, {
-      headers: this.getAuthHeaders(),
-      params: { query }
-    }).pipe(
-      catchError(error => {
-        console.error('Error searching users:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ============ Get User Stats ============
-  getUserStats(userId?: string): Observable<any> {
-    const targetUserId = userId || this.getUserId();
-    if (!targetUserId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
-
-    return this.http.get(`${this.userApiUrl}/${targetUserId}/stats`, {
-      headers: this.getAuthHeaders()
-    }).pipe(
-      catchError(error => {
-        console.error('Error fetching user stats:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // ============ Follow/Unfollow User ============
-  followUser(targetUserId: string): Observable<any> {
-    const currentUserId = this.getUserId();
-    if (!currentUserId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
-
-    return this.http.post(`${this.userApiUrl}/follow`, {
-      followerId: currentUserId,
-      followingId: targetUserId
-    }, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
-  unfollowUser(targetUserId: string): Observable<any> {
-    const currentUserId = this.getUserId();
-    if (!currentUserId) {
-      return throwError(() => new Error('User not authenticated'));
-    }
-
-    return this.http.post(`${this.userApiUrl}/unfollow`, {
-      followerId: currentUserId,
-      followingId: targetUserId
-    }, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
-  // ============ Helper Methods ============
   getCurrentUserProfile(): UserProfile | null {
     return this.userProfileSubject.value;
   }
 
   refreshUserProfile(): Observable<UserProfile> {
-    localStorage.removeItem('userProfile');
+    console.log('Refreshing user profile...');
     this.userProfileSubject.next(null);
     return this.getMyProfile();
   }
 
-  private loadUserProfileFromStorage(): void {
+  debugAuthInfo(): void {
+    console.log('=== DEBUG AUTH INFO ===');
+    console.log('Token:', this.authService.getToken());
+    console.log('Current User:', this.authService.getCurrentUser());
     try {
-      const storedProfile = localStorage.getItem('userProfile');
-      if (storedProfile) {
-        const profile = JSON.parse(storedProfile);
-        this.userProfileSubject.next(profile);
-      }
-    } catch (error) {
-      console.error('Error loading user profile from storage:', error);
-      localStorage.removeItem('userProfile');
+      console.log('User ID from method:', this.getUserId());
+    } catch (e) {
+      console.log('Cannot get user ID:', e);
     }
+    console.log('Cached Profile:', this.userProfileSubject.value);
+    console.log('=== END DEBUG ===');
   }
 
-  clearUserProfile(): void {
-    this.userProfileSubject.next(null);
-    localStorage.removeItem('userProfile');
-  }
-
-  // ============ Format Date for API ============
   formatDateForApi(date: Date | string): string {
     const dateObj = new Date(date);
-    return dateObj.toISOString().split('T')[0]; // YYYY-MM-DD format
+    return dateObj.toISOString().split('T')[0];
   }
 }

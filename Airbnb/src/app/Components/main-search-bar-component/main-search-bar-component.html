@@ -35,7 +35,7 @@
 <!-- Only render panels when activePanel is set -->
 
 <!-- Location Panel -->
-<div *ngIf="activePanel === 'location'" class="filter-panel" [class.active]="activePanel === 'location'">
+<div *ngIf="activePanel === 'location'" class="filter-panel" [class.active]="activePanel === 'location'" style="z-index: 3000;">
   <div class="filter-header">
     <h2 class="filter-title">Where to?</h2>
     <button class="close-filter" (click)="closePanel()">×</button>
@@ -54,13 +54,13 @@
 </div>
 
 <!-- Dates Panel -->
-<div *ngIf="activePanel === 'dates'" class="filter-panel" [class.active]="activePanel === 'dates'">
+<div *ngIf="activePanel === 'dates'" class="filter-panel" [class.active]="activePanel === 'dates'" style="z-index: 3000;">
   <div class="filter-header">
     <h2 class="filter-title">When's your trip?</h2>
     <button class="close-filter" (click)="closePanel()">×</button>
   </div>
 
-  <div class="dates-content">
+  <div class="dates-content " >
     <!-- Selected dates display -->
     <div class="selected-dates" *ngIf="dateSelection.start || dateSelection.end">
       <div class="date-range">
@@ -171,7 +171,7 @@
 </div>
 
 <!-- Guests Panel -->
-<div *ngIf="activePanel === 'guests'" class="filter-panel" [class.active]="activePanel === 'guests'">
+<div *ngIf="activePanel === 'guests'" class="filter-panel" [class.active]="activePanel === 'guests'"  style="z-index: 3000;">
   <div class="filter-header">
     <h2 class="filter-title">Who's coming?</h2>
     <button class="close-filter" (click)="closePanel()">×</button>

@@ -4,7 +4,18 @@
   background: white;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
-
+.overlay{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  
+  background-color: rgba(246, 118, 118, 0.273);
+  z-index: 1000;
+}
 .main-content {
   padding-top: 0;
   /* max-width: 1400px; */
@@ -31,10 +42,20 @@
 /* Hero Section */
 .hero-text{
 
-  position:static;
+  position:absolute;
+  color: #111;
+  font-weight: 700;
+  font-size:x-large;
   top: 60%;
   right: 0;
   left: 0;
+  z-index: 1500;
+}
+.hero-text span{
+ font-weight: 800;
+
+ color: #ca2c49;
+
 }
 
 /* Category Bar Enhancement */

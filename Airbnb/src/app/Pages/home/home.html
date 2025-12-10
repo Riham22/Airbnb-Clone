@@ -1,6 +1,6 @@
-<div class="home-container bg-transparent">
+<div class="home-container   ">
   <!-- NavBar (Only property type filtering) -->
-  <app-nav-bar
+  <app-nav-bar style="z-index: 3000;"
     (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
 
     (openFilters)="onOpenFilters()">
@@ -10,19 +10,19 @@
   <!-- Main Search Bar (Where/When/Who filtering) -->
   
   <!-- Main Content -->
-  <main class="main-content bg-white">
+  <main class="main-content bg-white ">
     <!-- Results Header -->
-    
-    <div class="main-hero h-lvh w-full text-center mb-8">
-      <img src="Home/Hero.avif" style="object-fit: cover;"  alt="Home Hero Image" class="hero-image h-full w-full mb-4" />
-      <app-main-search-bar class="absolute top-1/3 m-auto left-0 right-0 " 
+    <div class="overlay"></div>
+    <div class="main-hero h-lvh w-full text-center mb-8 ">
+      <img src="Home/Hero.avif" style="object-fit: cover;"  alt="Home Hero Image" class="hero-image h-full w-full mb-4 " />
+      <app-main-search-bar class="absolute top-1/3 m-auto left-0 right-0  " style="z-index: 2000;" 
     [locationOptions]="locationOptions"
     (openFilters)="onOpenFilters()"
     (filtersChanged)="onSearchFiltersChanged($event)">
     <!-- REMOVE panelOpened since we don't need it -->
   </app-main-search-bar>
-<div class="hero-text ">
-        <h1>Not sure where to go? Perfect.</h1>
+<div class="hero-text">
+        <h1>Not sure where to go? <span>Perfect!</span></h1>
         <p>We'll help you find the perfect place to stay.</p>
         </div>
 

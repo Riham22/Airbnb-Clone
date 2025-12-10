@@ -120,7 +120,7 @@ export const routes: Routes = [
       },
       {
         path: 'search',
-        loadComponent: () => import('./Components/search/search').then(m => m.SearchComponent)
+        loadComponent: () => import('./Pages/search/search').then(m => m.SearchComponent)
       },
       {
         path: 'auth',
@@ -183,7 +183,7 @@ export const routes: Routes = [
       },
       {
         path: 'account',
-        loadComponent: () => import('./Components/user-profile/user-profile').then(m => m.UserProfileComponent),
+        loadComponent: () => import('./Components/personal-account/personal-account.component').then(m => m.PersonalAccountComponent),
         canActivate: [AuthGuard]
       },
       {
@@ -217,7 +217,7 @@ export const routes: Routes = [
       {
         path: 'payment',
         loadComponent: () => import('./Components/payment/payment').then(m => m.PaymentComponent),
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard]
 
       },
       {
