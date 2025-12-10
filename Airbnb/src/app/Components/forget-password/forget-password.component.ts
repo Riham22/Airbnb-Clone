@@ -36,8 +36,8 @@ export class ForgetPasswordComponent {
 
   // Submit forget password request
   onSubmitForget() {
-    if (!this.email || !this.validateEmail(this.email)) {
-      this.errorMessage = 'Please enter a valid email address';
+    if (!this.email || this.email.trim() === '') {
+      this.errorMessage = 'Please enter your email or username';
       return;
     }
 
@@ -82,22 +82,22 @@ export class ForgetPasswordComponent {
       newPassword: this.resetData.newPassword
     };
 
-    // this.authService.resetPassword(resetData).subscribe({
-    //   next: (res: any) => {
-    //     this.isLoading = false;
-    //     this.successMessage = res.message || 'Password reset successful! You can now login.';
+    this.authService.resetPassword(resetData).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        this.successMessage = res.message || 'Password reset successful! You can now login.';
 
-    //     // Redirect to login after delay
-    //     setTimeout(() => {
-    //       this.router.navigate(['/auth']);
-    //     }, 3000);
-    //   },
-    //   error: (err:HttpErrorResponse) => {
-    //     this.isLoading = false;
-    //     this.errorMessage = err.error?.message || 'Failed to reset password. Please try again.';
-    //     console.error('Reset password error:', err);
-    //   }
-    // });
+        // Redirect to login after delay
+        setTimeout(() => {
+          this.router.navigate(['/auth']);
+        }, 3000);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.isLoading = false;
+        this.errorMessage = err.error?.message || 'Failed to reset password. Please try again.';
+        console.error('Reset password error:', err);
+      }
+    });
   }
 
   // Toggle between forget and reset modes
