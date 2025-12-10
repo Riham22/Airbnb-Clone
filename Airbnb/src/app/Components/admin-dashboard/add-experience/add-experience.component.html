@@ -1,0 +1,99 @@
+<div class="page-container">
+    <div class="page-header">
+        <button class="btn-back" (click)="goBack()">← Back to Dashboard</button>
+        <h1>Add New Experience</h1>
+    </div>
+
+    <div class="form-card">
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label>Experience Title</label>
+                <input type="text" [(ngModel)]="newExperience.name" name="name" required
+                    placeholder="Cooking Class in Rome">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="newExperience.description" name="description" rows="4"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" [(ngModel)]="newExperience.price" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label>Max Participants</label>
+                    <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select [(ngModel)]="newExperience.expCatograyId" name="category" required
+                        (change)="onCategoryChange()">
+                        <option [ngValue]="null">Select Category</option>
+                        <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sub-Category</label>
+                    <select [(ngModel)]="newExperience.expSubCatograyId" name="subcategory">
+                        <option [ngValue]="null">Select Sub-Category</option>
+                        <option *ngFor="let sub of subCategories" [value]="sub.id">{{ sub.name }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Cover Image</label>
+                <div class="file-upload">
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*">
+                    <p>Drag and drop or click to upload</p>
+                </div>
+                <div *ngIf="selectedFiles.length > 0" class="file-list">
+                    <span>{{ selectedFiles[0].name }}</span>
+                </div>
+            </div>
+
+            <!-- Activities Section -->
+            <div class="activities-section">
+                <h3>Activities Timeline</h3>
+
+                <div class="activity-inputs">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <input type="text" [(ngModel)]="newActivity.name" name="actName"
+                                placeholder="Activity Name">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <input type="number" [(ngModel)]="newActivity.timeMinute" name="actTime" placeholder="Mins">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <textarea [(ngModel)]="newActivity.describe" name="actDesc" rows="2"
+                            placeholder="Activity Description"></textarea>
+                    </div>
+                    <button type="button" class="btn-secondary" (click)="addActivity()">+ Add Activity step</button>
+                </div>
+
+                <div class="activities-list" *ngIf="newExperience.expActivities.length > 0">
+                    <div class="activity-item" *ngFor="let act of newExperience.expActivities; let i = index">
+                        <div class="activity-content">
+                            <strong>{{ act.name }}</strong> ({{ act.timeMinute }} mins)
+                            <p>{{ act.describe }}</p>
+                        </div>
+                        <button type="button" class="btn-remove" (click)="removeActivity(i)">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" [disabled]="isLoading">
+                    {{ isLoading ? 'Creating Experience...' : 'Create Experience' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

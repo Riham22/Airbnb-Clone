@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { SearchComponent } from '../../Pages/search/search';
 
 
 
@@ -8,7 +9,7 @@ import { RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, SearchComponent],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css'
 })

@@ -8,12 +8,12 @@ import { AuthService } from './auth';
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = "https://localhost:7020/api/Acount";
+  private apiUrl = "https://localhost:7020/api/Account";
 
   constructor(
     private http: HttpClient,
     private authService: AuthService
-  ) {}
+  ) { }
 
   // ============ Get User Profile ============
   getMyProfile(): Observable<any> {
@@ -71,6 +71,29 @@ export class UserService {
   updateUserField(field: string, value: any): Observable<any> {
     const updateData = { [field]: value };
     return this.updateCurrentUser(updateData);
+  }
+
+  // ============ Upload Profile Photo ============
+  uploadPhoto(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post(`${this.apiUrl}/upload-photo`, formData).pipe(
+      catchError(error => {
+        console.error('Error uploading photo:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  // ============ Get User Stats ============
+  getUserStats(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/stats`).pipe(
+      catchError(error => {
+        console.error('Error fetching user stats:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // ============ Helper Methods ============

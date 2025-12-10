@@ -10,7 +10,7 @@ import { DatePipe } from '@angular/common';
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],  
+  imports: [CommonModule, FormsModule],
   templateUrl: './user-profile.html',
   styleUrl: './user-profile.css'
 })
@@ -21,6 +21,7 @@ export class UserProfile implements OnInit {
   error: string = '';
   isEditMode = false;
   isSaving = false;
+  isUploadingPhoto = false; // New state for photo upload
   isDeleting = false;
   showDeleteModal = false;
 
@@ -37,7 +38,7 @@ export class UserProfile implements OnInit {
     private authService: AuthService,
     private userService: UserService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadUserData();
@@ -45,6 +46,21 @@ export class UserProfile implements OnInit {
     // Subscribe to user updates
     this.authService.currentUser$.subscribe(user => {
       this.user = user;
+    });
+
+    this.loadUserStats();
+  }
+
+  userStats: any = { tripsCount: 0, wishlistsCount: 0, reviewsCount: 0 };
+
+  loadUserStats(): void {
+    this.userService.getUserStats().subscribe({
+      next: (stats) => {
+        this.userStats = stats;
+      },
+      error: (err) => {
+        console.error('Failed to load user stats', err);
+      }
     });
   }
 
@@ -115,12 +131,58 @@ export class UserProfile implements OnInit {
     this.resetEditUser();
   }
 
+  triggerUpload(): void {
+    const fileInput = document.getElementById('photoInput') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.isUploadingPhoto = true;
+      this.userService.uploadPhoto(file).subscribe({
+        next: (res: any) => {
+          console.log('Photo uploaded:', res);
+          this.isUploadingPhoto = false;
+
+          // Initial path depends on backend return. 
+          // If returns partial path "images/profiles/...", we need to prepend base URL or handle static serving
+          // Assuming base URL is 'https://localhost:7020/'
+
+          // Update user photo locally
+          const photoUrl = `https://localhost:7020/${res.photoUrl}`;
+
+          // Update both main user and edit buffer (if relevant)
+          if (this.user) this.user.photoURL = photoUrl;
+
+          // Also update AuthService local storage
+          // this.authService.updateCurrentUser(this.user);
+
+          alert('Photo updated successfully!');
+        },
+        error: (err) => {
+          console.error('Photo upload failed:', err);
+          this.isUploadingPhoto = false;
+
+          let msg = 'Failed to upload photo.';
+          if (err.status) msg += ` Status: ${err.status} ${err.statusText}`;
+          if (err.error && typeof err.error === 'string') msg += ` - ${err.error}`;
+          else if (err.error && err.error.message) msg += ` - ${err.error.message}`;
+
+          alert(msg);
+        }
+      });
+    }
+  }
+
   saveChanges(): void {
     // Get user ID from multiple possible locations
     const userId = this.getUserProperty('id', 'userId') ||
-                  this.user?.Id ||
-                  this.user?.user_id ||
-                  this.user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+      this.user?.Id ||
+      this.user?.user_id ||
+      this.user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
 
     if (!userId) {
       alert('Cannot save: No user ID found');
@@ -135,27 +197,28 @@ export class UserProfile implements OnInit {
         this.isSaving = false;
         this.isEditMode = false;
 
-        if (res) {
-          // Update was successful via API
-          this.user = { ...this.user, ...this.editUser };
-          // this.authService.updateCurrentUser(this.user);
-          alert('Profile updated successfully!');
-        } else {
-          // API endpoint might not exist, update locally only
-          this.user = { ...this.user, ...this.editUser };
-          // this.authService.updateCurrentUser(this.user);
-          alert('Profile updated locally (API endpoint might not be available).');
-        }
+        // Success - update local state
+        this.user = { ...this.user, ...this.editUser };
+        alert('Profile updated successfully!');
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error updating profile:', error);
         this.isSaving = false;
 
-        // Even if API fails, update locally
-        this.user = { ...this.user, ...this.editUser };
-        // this.authService.updateCurrentUser(this.user);
+        // Improve error message
+        let errorMessage = 'Failed to update profile via API.';
+        if (error.error && typeof error.error === 'string') {
+          errorMessage += ` ${error.error}`;
+        } else if (error.message) {
+          errorMessage += ` ${error.message}`;
+        }
 
-        alert('Profile updated locally (API error occurred).');
+        // Do NOT update locally if API fails, to avoid confusion
+        // Show clear error to user
+        alert(errorMessage);
+
+        // Optional: if user wants to 'force' local update, we could offer that, 
+        // but for now let's strict to "Server Validated" updates.
       }
     });
   }
@@ -165,28 +228,28 @@ export class UserProfile implements OnInit {
   }
 
   // In UserProfile component, update the deleteAccount method:
-deleteAccount(): void {
+  deleteAccount(): void {
     this.isDeleting = true;
 
     this.userService.deleteUser().subscribe({
-        next: () => {
-            this.isDeleting = false;
-            this.showDeleteModal = false;
-            // Redirect after successful deletion
-            this.router.navigate(['/']);
-        },
-        error: (error: HttpErrorResponse) => {
-            console.error('Error deleting account:', error);
-            this.isDeleting = false;
+      next: () => {
+        this.isDeleting = false;
+        this.showDeleteModal = false;
+        // Redirect after successful deletion
+        this.router.navigate(['/']);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error deleting account:', error);
+        this.isDeleting = false;
 
-            if (error.status === 404) {
-                alert('Delete account endpoint might not be available.');
-            } else {
-                alert('Failed to delete account. Please try again.');
-            }
+        if (error.status === 404) {
+          alert('Delete account endpoint might not be available.');
+        } else {
+          alert('Failed to delete account. Please try again.');
         }
+      }
     });
-}
+  }
 
 
   changePassword(): void {

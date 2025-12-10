@@ -1,5 +1,5 @@
 // components/admin-dashboard/admin-dashboard.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -112,9 +112,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription = new Subscription();
 
-  constructor(private adminService: AdminService) { }
+
+
+  constructor(
+    private adminService: AdminService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
+    console.log('🏁 Admin Dashboard Initialized');
     this.loadDashboardData();
     this.loadCategories();
     this.loadCategoryData(); // Load category management data
@@ -122,7 +128,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     // Subscribe to loading state
     this.subscriptions.add(
       this.adminService.getLoadingState().subscribe(loading => {
+        console.warn(`🔄 Dashboard Loading State Changed: ${loading}`); // DEBUG
         this.loading = loading;
+        this.cdr.detectChanges(); // FORCE UI UPDATE
       })
     );
   }
@@ -132,66 +140,44 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadDashboardData(): void {
-    // Load stats
-    this.subscriptions.add(
-      this.adminService.getStats().subscribe({
-        next: (stats) => {
-          this.stats = stats;
-        },
-        error: (error) => {
-          console.error('Error loading stats:', error);
-        }
-      })
-    );
+    console.log('🚀 loadDashboardData called (Optimized)');
 
-    // Load users
     this.subscriptions.add(
-      this.adminService.getUsers().subscribe({
-        next: (users) => {
-          this.users = users;
-          this.filterUsers(); // Initialize filtered list
-        },
-        error: (error) => {
-          console.error('Error loading users:', error);
-        }
-      })
-    );
+      this.adminService.getDashboardData().subscribe({
+        next: (data) => {
+          console.log('✅ Dashboard Data Loaded Full:', data);
 
-    // Load listings
-    this.subscriptions.add(
-      this.adminService.getListings().subscribe({
-        next: (listings) => {
-          this.listings = listings;
-          this.filterListings(); // Initialize filtered list
-        },
-        error: (error) => {
-          console.error('Error loading listings:', error);
-        }
-      })
-    );
+          if (data.stats) {
+            this.stats = data.stats;
+            console.log('✅ Stats Updated');
+          }
 
-    // Load services
-    this.subscriptions.add(
-      this.adminService.getServices().subscribe({
-        next: (services) => {
-          this.services = services;
-          this.filterServices(); // Initialize filtered list
-        },
-        error: (error) => {
-          console.error('Error loading services:', error);
-        }
-      })
-    );
+          if (data.users) {
+            this.users = data.users;
+            this.filterUsers();
+            console.log(`✅ Users Updated: ${this.users.length}`);
+          }
 
-    // Load experiences
-    this.subscriptions.add(
-      this.adminService.getExperiences().subscribe({
-        next: (experiences) => {
-          this.experiences = experiences;
-          this.filterExperiences(); // Initialize filtered list
+          if (data.listings) {
+            this.listings = data.listings;
+            this.filterListings();
+            console.log(`✅ Listings Updated: ${this.listings.length}`);
+          }
+
+          if (data.services) {
+            this.services = data.services;
+            this.filterServices();
+            console.log(`✅ Services Updated: ${this.services.length}`);
+          }
+
+          if (data.experiences) {
+            this.experiences = data.experiences;
+            this.filterExperiences();
+            console.log(`✅ Experiences Updated: ${this.experiences.length}`);
+          }
         },
         error: (error) => {
-          console.error('Error loading experiences:', error);
+          console.error('❌ Error loading dashboard data:', error);
         }
       })
     );
@@ -1073,12 +1059,35 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   saveCategory(): void {
+    // Shared Validation: Uniqueness Check
+    // We only enforce uniqueness for the current type being added
+    let isUnique = true;
+    if (this.categoryType === 'service') {
+      const existing = this.serviceCategories.find(c =>
+        c.name.toLowerCase() === this.newCategory.name.toLowerCase() &&
+        (this.categoryModalMode === 'create' || c.id !== this.selectedCategory?.id)
+      );
+      if (existing) isUnique = false;
+    } else {
+      // Experience Category Uniqueness (optional, but good practice)
+      const existing = this.experienceCategories.find(c =>
+        c.name.toLowerCase() === this.newCategory.name.toLowerCase() &&
+        (this.categoryModalMode === 'create' || c.id !== this.selectedCategory?.id)
+      );
+      if (existing) isUnique = false;
+    }
+
+    if (!isUnique) {
+      alert(`Category name "${this.newCategory.name}" already exists. Please choose a unique name.`);
+      return;
+    }
+
     if (this.categoryType === 'experience') {
       if (this.categoryModalMode === 'create') {
         this.subscriptions.add(
           this.adminService.createExperienceCategory(this.newCategory).subscribe({
             next: () => {
-              alert('Experience Category created successfully');
+              // alert('Experience Category created successfully');
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1092,7 +1101,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.add(
           this.adminService.updateExperienceCategory(this.selectedCategory.id, this.newCategory).subscribe({
             next: () => {
-              alert('Experience Category updated successfully');
+              // alert('Experience Category updated successfully'); // Removed for auto-close
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1109,7 +1118,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.add(
           this.adminService.createServiceCategory(this.newCategory).subscribe({
             next: () => {
-              alert('Service Category created successfully');
+              // alert('Service Category created successfully'); // Removed for auto-close
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1123,7 +1132,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.add(
           this.adminService.updateServiceCategory(this.selectedCategory.id, this.newCategory).subscribe({
             next: () => {
-              alert('Service Category updated successfully');
+              // alert('Service Category updated successfully'); // Removed for auto-close
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },

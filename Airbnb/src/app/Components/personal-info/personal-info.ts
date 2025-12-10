@@ -14,6 +14,7 @@ import { AuthService } from '../../Services/auth';
 })
 export class PersonalInfoComponent implements OnInit {
     user: any = {};
+    tempUser: any = {}; // Buffer for editing
     loading = true;
     error: string | null = null;
 
@@ -71,22 +72,22 @@ export class PersonalInfoComponent implements OnInit {
 
         const userId = this.user.id || this.user.Id || this.user.userId;
 
-        // Prepare update data - only update the field being edited
+        // Prepare update data - use tempUser values
         const updateData: any = {};
 
-        switch(field) {
+        switch (field) {
             case 'name':
-                updateData.firstName = this.user.firstName || this.user.given_name;
-                updateData.lastName = this.user.lastName || this.user.family_name;
+                updateData.firstName = this.tempUser.firstName;
+                updateData.lastName = this.tempUser.lastName;
                 break;
             case 'email':
-                updateData.email = this.user.email || this.user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
+                updateData.email = this.tempUser.email;
                 break;
             case 'phone':
-                updateData.phone = this.user.phone;
+                updateData.phone = this.tempUser.phoneNumber; // Careful with mapping
                 break;
             case 'address':
-                updateData.address = this.user.address;
+                updateData.address = this.tempUser.address;
                 break;
         }
 
@@ -94,27 +95,42 @@ export class PersonalInfoComponent implements OnInit {
         this.userService.updateCurrentUser(updateData).subscribe({
             next: (res) => {
                 console.log('Field updated successfully:', field, res);
+
+                // Update main user object with confirmed changes
+                if (field === 'name') {
+                    this.user.firstName = this.tempUser.firstName;
+                    this.user.lastName = this.tempUser.lastName;
+                } else if (field === 'email') {
+                    this.user.email = this.tempUser.email;
+                } else if (field === 'phone') {
+                    this.user.phoneNumber = this.tempUser.phoneNumber;
+                } else if (field === 'address') {
+                    this.user.address = this.tempUser.address;
+                }
+
                 this.stopEditing(field);
 
                 // Update local auth state
-                if (res) {
-                    this.user = { ...this.user, ...updateData };
-                    // this.authService.updateCurrentUser(this.user);
-                }
+                // this.authService.updateCurrentUser(this.user);
+                alert('Profile updated successfully'); // Feedback for user
             },
             error: (err) => {
                 console.error('Error updating field', field, err);
-                alert('Note: Profile update feature might not be available on this server. Changes saved locally only.');
-                this.stopEditing(field);
+                // alert('Note: Profile update feature might not be available on this server. Changes saved locally only.');
+                alert(`Failed to update profile: ${err.message || 'Unknown error'}`);
 
-                // Still update locally even if API fails
-                this.user = { ...this.user, ...updateData };
-                // this.authService.updateCurrentUser(this.user);
+                // OPTIONAL: If we want to support local-only updates when backend fails (as requested before?)
+                // For now, let's treat error as error to be safe, but keep old behavior if user insists
+                // this.stopEditing(field);
+                // this.user = { ...this.user, ...updateData };
             }
         });
     }
 
     startEditing(field: string) {
+        // Initialize tempUser with current values
+        this.tempUser = { ...this.user };
+
         if (field === 'name') this.editingName = true;
         if (field === 'email') this.editingEmail = true;
         if (field === 'phone') this.editingPhone = true;
@@ -126,6 +142,9 @@ export class PersonalInfoComponent implements OnInit {
         if (field === 'email') this.editingEmail = false;
         if (field === 'phone') this.editingPhone = false;
         if (field === 'address') this.editingAddress = false;
+
+        // Clear temp user (optional, but clean)
+        this.tempUser = {};
     }
 
     // Helper methods to get user properties safely
@@ -137,8 +156,8 @@ export class PersonalInfoComponent implements OnInit {
 
     getEmail(): string {
         return this.user.email ||
-               this.user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
-               'Not set';
+            this.user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ||
+            'Not set';
     }
 
     getPhone(): string {

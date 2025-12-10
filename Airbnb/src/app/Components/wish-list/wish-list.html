@@ -55,7 +55,8 @@
     </div>
 
     <div class="listings-grid">
-      <div *ngFor="let item of selectedWishlist.listings" class="listing-card">
+      <div *ngFor="let item of selectedWishlist.listings" class="listing-card"
+        [routerLink]="['/' + (item.itemType || 'property'), item.itemId]">
         <div class="listing-image">
           <img [src]="item.itemImageUrl" [alt]="item.itemTitle">
           <button class="remove-btn" (click)="removeFromWishlist(item.itemId, $event)">

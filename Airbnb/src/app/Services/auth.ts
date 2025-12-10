@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = "https://localhost:7020/api/Acount";
+  private apiUrl = "https://localhost:7020/api/Account";
 
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   private currentUser = new BehaviorSubject<any>(null);

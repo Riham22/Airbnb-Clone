@@ -9,11 +9,11 @@
         <h1>Trips</h1>
     </div>
     <div class="tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="setActiveTab('upcoming')">
-            Upcoming
+        <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="setActiveTab('pending')">
+            Pending
         </button>
-        <button class="tab-btn" [class.active]="activeTab === 'past'" (click)="setActiveTab('past')">
-            Past
+        <button class="tab-btn" [class.active]="activeTab === 'paid'" (click)="setActiveTab('paid')">
+            Paid
         </button>
         <button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="setActiveTab('cancelled')">
             Cancelled
@@ -45,8 +45,8 @@
                 d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
         </svg>
         <h3>No bookings found</h3>
-        <p *ngIf="activeTab === 'upcoming'">You don't have any upcoming reservations.</p>
-        <p *ngIf="activeTab === 'past'">You don't have any past reservations.</p>
+        <p *ngIf="activeTab === 'pending'">You don't have any pending payments.</p>
+        <p *ngIf="activeTab === 'paid'">You don't have any paid trips yet.</p>
         <p *ngIf="activeTab === 'cancelled'">You don't have any cancelled reservations.</p>
         <a routerLink="/home" class="browse-btn">Browse Properties</a>
     </div>
@@ -97,9 +97,20 @@
         </div>
 
         <div class="booking-actions">
-            <a [routerLink]="['/payment', booking.id]" class="action-btn view-btn" *ngIf="activeTab === 'upcoming'">
-                View & Pay
+            <!-- PENDING: Pay Now -->
+            <a [routerLink]="['/payment', booking.id]" class="action-btn btn-pending" *ngIf="activeTab === 'pending'">
+                Pay Now
             </a>
+
+            <!-- PAID: Paid -->
+            <button class="action-btn btn-paid" *ngIf="activeTab === 'paid'">
+                Paid
+            </button>
+
+            <!-- CANCELLED: Cancelled Info -->
+            <button class="action-btn btn-cancelled" *ngIf="activeTab === 'cancelled'">
+                Cancelled
+            </button>
 
             <button class="action-btn review-btn" *ngIf="canReview(booking)" (click)="openReviewModal(booking)">
                 Write Review

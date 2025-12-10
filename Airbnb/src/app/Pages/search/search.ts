@@ -119,6 +119,11 @@ export class SearchComponent implements OnInit {
   // Mobile responsiveness
   isMobileView = false;
 
+  // Admin Page State
+  isAdminPage = false;
+  isTripsPage = false;
+  isAccountPage = false;
+
   // Years and decades arrays
   availableYears: number[] = [];
   availableDecades: number[] = [];
@@ -127,9 +132,19 @@ export class SearchComponent implements OnInit {
     private dataService: Data,
     private router: Router,
     private authService: AuthService
-  ) { }
+  ) {
+    // Listen for route changes to verify if it is Admin or Trips or Account Page
+    this.router.events.subscribe(() => {
+      this.isAdminPage = this.router.url.includes('/admin');
+      this.isTripsPage = this.router.url.includes('/trips');
+      this.isAccountPage = this.router.url.includes('/account');
+    });
+  }
 
   ngOnInit(): void {
+    this.isAdminPage = this.router.url.includes('/admin'); // Initial check
+    this.isTripsPage = this.router.url.includes('/trips'); // Initial check
+    this.isAccountPage = this.router.url.includes('/account'); // Initial check
     this.loadAllData();
     this.generateAvailableYears();
     this.generateAvailableDecades();
@@ -354,6 +369,7 @@ export class SearchComponent implements OnInit {
     this.activePanel = null;
     this.showLanguagePanel = false;
     this.showMenuPanel = false;
+    this.calendarView = 'month';
   }
 
   onMenuItemClick(item: any): void {
@@ -477,7 +493,7 @@ export class SearchComponent implements OnInit {
 
   isDateSelected(date: Date): boolean {
     return date.getTime() === this.dateSelection.start?.getTime() ||
-           date.getTime() === this.dateSelection.end?.getTime();
+      date.getTime() === this.dateSelection.end?.getTime();
   }
 
   isDateStart(date: Date): boolean {
@@ -491,8 +507,8 @@ export class SearchComponent implements OnInit {
   isToday(date: Date): boolean {
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   }
 
   canNavigatePrev(): boolean {
@@ -690,7 +706,14 @@ export class SearchComponent implements OnInit {
         { label: 'Notifications', icon: '🔔', route: '/notifications' },
         { label: 'Trips', icon: '✈️', route: '/trips' },
         { label: 'Wishlists', icon: '❤️', route: '/wishlists' },
-        { label: 'Account', icon: '👤', route: '/account' },
+        { label: 'Account', icon: '👤', route: '/account' }];
+
+      // Add Admin Dashboard if user is admin
+      if (this.authService.isAdmin()) {
+        items.push({ label: 'Admin Dashboard', icon: '⚡', route: '/admin' });
+      }
+
+      items.push(
         { separator: true },
         { label: 'Become a Host', icon: '🏠', route: '/become-host' },
         { label: 'Host an experience', icon: '🌟', route: '/host-experience' },
@@ -698,7 +721,7 @@ export class SearchComponent implements OnInit {
         { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
         { separator: true },
         { label: 'Log out', icon: '🚪', action: 'logout' }
-      ];
+      );
 
       return items;
     } else {

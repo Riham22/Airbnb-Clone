@@ -18,7 +18,7 @@ export class Booking implements OnInit, OnDestroy {
   bookings: BookingListDto[] = [];
   loading = false;
   error: string | null = null;
-  activeTab: 'upcoming' | 'past' | 'cancelled' = 'upcoming';
+  activeTab: 'pending' | 'paid' | 'cancelled' = 'pending';
 
   // Review Modal State
   showReviewModal = false;
@@ -85,7 +85,7 @@ export class Booking implements OnInit, OnDestroy {
     );
   }
 
-  setActiveTab(tab: 'upcoming' | 'past' | 'cancelled') {
+  setActiveTab(tab: 'pending' | 'paid' | 'cancelled') {
     this.activeTab = tab;
     this.cdr.detectChanges();
   }
@@ -106,10 +106,11 @@ export class Booking implements OnInit, OnDestroy {
       const status = (booking.status || '').toLowerCase();
 
       switch (this.activeTab) {
-        case 'upcoming':
-          return checkInDate >= now && status !== 'cancelled' && status !== 'completed';
-        case 'past':
-          return (checkInDate < now && status !== 'cancelled') || status === 'completed';
+        case 'pending':
+          return status === 'pending';
+        case 'paid':
+          // Include both Confirmed and Completed as "Paid"
+          return status === 'confirmed' || status === 'completed';
         case 'cancelled':
           return status === 'cancelled';
         default:

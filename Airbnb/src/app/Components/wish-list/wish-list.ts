@@ -75,7 +75,7 @@ export class WishlistComponent implements OnInit, OnDestroy {
           // Map backend fields to frontend interface
           const items: WishlistItem[] = Array.isArray(rawItems) ? rawItems.map((item: any) => ({
             id: item.id || item.Id,
-            itemType: item.itemType || item.ItemType,
+            itemType: (item.itemType || item.ItemType || 'property').toLowerCase(),
             itemId: item.itemId || item.ItemId,
             itemTitle: item.itemTitle || item.title || item.Title || 'Untitled',
             itemLocation: item.itemLocation || item.location || item.Location || '',
@@ -85,6 +85,8 @@ export class WishlistComponent implements OnInit, OnDestroy {
             itemImageUrl: item.itemImageUrl || item.coverImage || item.CoverImage || '',
             addedAt: item.addedAt || item.CreatedAt || new Date().toISOString()
           })) : [];
+
+          console.log('🐞 Debug Wishlist Items:', items);
 
           // Group items into a "My Favorites" wishlist for now
           // In a real app, you'd fetch multiple wishlists

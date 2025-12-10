@@ -153,10 +153,10 @@ export class Data {
             price: price || 0,
             rating: rating || 0,
             reviewCount: reviewCount || 0,
-            imageUrl: this.processImageUrl(coverImage),
+            imageUrl: (coverImage && coverImage !== '') ? this.processImageUrl(coverImage) : (images?.length > 0 ? this.processImageUrl(images[0].imageUrl || images[0].ImageUrl || images[0].imageURL) : 'assets/default-listing.jpg'),
             images: images?.length > 0
               ? images.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl || img.imageURL)).filter((url: string) => url)
-              : [this.processImageUrl(coverImage)],
+              : [],
             type: 'property',
             propertyType: categoryForUI,
             maxGuests: maxGuests || 2,
@@ -298,7 +298,7 @@ export class Data {
             price: price || 0,
             rating: 4.5,
             reviewCount: 0,
-            imageUrl: processedImages[0],
+            imageUrl: (processedImages.length > 0) ? processedImages[0] : 'assets/default-experience.jpg',
             images: processedImages,
             category: catName || 'general',
             duration: '3 hours',
@@ -377,8 +377,8 @@ export class Data {
               price: price || 0,
               rating: rating || 0,
               reviewCount: reviewCount || 0,
-              imageUrl: this.processImageUrl(coverImage),
-              images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [this.processImageUrl(coverImage)],
+              imageUrl: (coverImage && coverImage !== '') ? this.processImageUrl(coverImage) : (images?.length > 0 ? this.processImageUrl(images[0].imageUrl || images[0].ImageUrl) : 'assets/default-listing.jpg'),
+              images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [],
               category: catName || 'general',
               duration: '3 hours',
               maxGuests: 4, // Default for services as it's not in API yet
@@ -488,6 +488,23 @@ export class Data {
 
   getPropertyById(id: number): RentalProperty | undefined {
     return this.getProperties().find(property => property.id === id);
+  }
+
+  getPropertyDetails(id: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Properties/${id}`).pipe(
+      tap(p => console.log('📦 GetPropertyDetails API:', p)),
+      // We map it here or in the component. Let's map it here to be consistent
+      // But for simplicity, let's return the raw Observable and map in component or use a helper
+      // actually, reusing the mapping logic is better.
+    );
+  }
+
+  getServiceDetails(id: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Services/${id}`);
+  }
+
+  getExperienceDetails(id: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Experience/GetById/${id}`);
   }
 
   searchProperties(filters: SearchFilters): RentalProperty[] {
@@ -697,24 +714,40 @@ export class Data {
   private isPropertyAvailable(propertyId: number, checkIn: Date, checkOut: Date): boolean {
     return Math.random() > 0.2;
   }
-  private processImageUrl(url: string | null | undefined): string {
-    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-    if (url.startsWith('http') || url.startsWith('assets')) return url;
 
-    // Normalize path separators (Windows backslashes to forward slashes)
-    let normalizedUrl = url.replace(/\\/g, '/');
+  public processImageUrl(url: string | null | undefined): string {
+    if (!url) return 'assets/default-listing.jpg';
 
-    // Remove leading slash if present to avoid double slashes with base URL
-    if (normalizedUrl.startsWith('/')) {
-      normalizedUrl = normalizedUrl.substring(1);
+    // Handle legacy seed data paths that point to non-existent /images/ folder
+    if (url.startsWith('/images/') || url.startsWith('images/')) {
+      return 'assets/default-listing.jpg';
     }
 
-    // Assuming backend is running on localhost:7020
-    return `https://localhost:7020/${normalizedUrl}`;
-  }
-  // Add this method to your Data service class
-updateWishlist(propertyId: number, isWishlisted: boolean) {
-  return this.toggleWishlist('Property', propertyId);
+    // Handle standard absolute URLs (http/https)
+    if (url.startsWith('http')) {
+      // Fix for stale localhost:5000/7187 URLs in database if they occur
+      if (url.includes('localhost') && !url.includes('7020')) {
+        // Extract the path after 'uploads/'
+        const match = url.match(/\/uploads\/(.*)/);
+        if (match) {
+          return `https://localhost:7020/uploads/${match[1]}`;
+        }
+      }
+      return url;
+    }
 
-}
+    // Handle bare filenames (e.g. "101.jpg") -> Assume properties upload folder as fallback
+    if (!url.includes('/') && !url.includes('\\')) {
+      return `https://localhost:7020/uploads/properties/${url}`;
+    }
+
+    // Handle API-relative paths (e.g. "uploads/...")
+    // Ensure we don't double-slash
+    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+    return `https://localhost:7020/${cleanPath}`;
+  }
+
+  updateWishlist(propertyId: number, isWishlisted: boolean) {
+    return this.toggleWishlist('Property', propertyId);
+  }
 }

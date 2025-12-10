@@ -11,7 +11,9 @@
   <!-- Image Gallery -->
   <div class="image-gallery">
     <div class="main-image">
-      <img alt="" [src]="property.images?.[selectedImageIndex] || ''" [alt]="property.name">
+      <img alt=""
+        [src]="(property.images && property.images.length > 0 ? property.images[selectedImageIndex] : property.imageUrl) || 'assets/default-listing.jpg'"
+        [alt]="property.name">
     </div>
     <div class="thumbnail-grid">
       <div *ngFor="let image of property.images; let i = index" class="thumbnail"

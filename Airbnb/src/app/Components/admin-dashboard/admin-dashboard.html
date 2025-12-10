@@ -11,10 +11,7 @@
       <!-- <button class="btn-secondary" (click)="testAPIs()" [disabled]="loading">
         🧪 Test APIs
       </button> -->
-      <a routerLink="/" class="btn-secondary"
-        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-        🏠 Home
-      </a>
+
       <button class="btn-primary" (click)="loadDashboardData()" [disabled]="loading">
         Refresh Data
       </button>
@@ -119,7 +116,7 @@
     <div class="section-header">
       <h2>User Management</h2>
       <div class="table-actions">
-        <button class="btn-primary" (click)="openAddUserModal()">+ Add User</button>
+        <button class="btn-primary" [routerLink]="['/admin/add-user']">+ Add User</button>
         <input type="text" placeholder="Search users..." class="search-input" [(ngModel)]="userSearchTerm"
           (input)="filterUsers()">
         <select title="l" class="filter-select" [(ngModel)]="userRoleFilter" (change)="filterUsers()">
@@ -206,7 +203,7 @@
     <div class="section-header">
       <h2>Listing Management</h2>
       <div class="table-actions">
-        <button class="btn-primary" (click)="openAddListingModal()">+ Add Listing</button>
+        <button class="btn-primary" [routerLink]="['/admin/add-listing']">+ Add Listing</button>
         <input type="text" placeholder="Search listings..." class="search-input" [(ngModel)]="listingSearchTerm"
           (input)="filterListings()">
         <select title="k" class="filter-select" [(ngModel)]="listingStatusFilter" (change)="filterListings()">
@@ -260,7 +257,10 @@
                   title="Suspend Listing">
                   Suspend
                 </button>
-                <!-- Approve button removed as per request -->
+                <button *ngIf="listing.status !== 'active'" (click)="approveListing(listing.id)" class="btn-success"
+                  title="Approve Listing">
+                  Approve
+                </button>
                 <button (click)="deleteListing(listing.id)" class="btn-danger" title="Delete Listing">
                   Delete
                 </button>
@@ -282,7 +282,7 @@
     <div class="section-header">
       <h2>Service Management</h2>
       <div class="table-actions">
-        <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
+        <button class="btn-primary" [routerLink]="['/admin/add-service']">+ Add Service</button>
         <input type="text" placeholder="Search services..." class="search-input" [(ngModel)]="serviceSearchTerm"
           (input)="filterServices()">
       </div>
@@ -330,7 +330,10 @@
                   title="Suspend Service">
                   Suspend
                 </button>
-                <!-- Approve button removed as per request -->
+                <button *ngIf="service.status !== 'active'" (click)="approveService(service.id)" class="btn-success"
+                  title="Approve Service">
+                  Approve
+                </button>
                 <button (click)="deleteService(service.id)" class="btn-danger" title="Delete Service">
                   Delete
                 </button>
@@ -352,7 +355,7 @@
     <div class="section-header">
       <h2>Experiences Management</h2>
       <div class="table-actions">
-        <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
+        <button class="btn-primary" [routerLink]="['/admin/add-experience']">+ Add Experience</button>
         <input type="text" placeholder="Search experiences..." class="search-input" [(ngModel)]="experienceSearchTerm"
           (input)="filterExperiences()">
       </div>
@@ -400,7 +403,10 @@
                   class="btn-warning" title="Suspend Experience">
                   Suspend
                 </button>
-                <!-- Approve button removed as per request -->
+                <button *ngIf="experience.status !== 'active'" (click)="approveExperience(experience.id)"
+                  class="btn-success" title="Approve Experience">
+                  Approve
+                </button>
                 <button (click)="deleteExperience(experience.id)" class="btn-danger" title="Delete Experience">
                   Delete
                 </button>
@@ -565,7 +571,7 @@
         </div>
         <div class="form-group" *ngIf="!isEditMode">
           <label>Role</label>
-          <select [(ngModel)]="newUser.role"  title="role" name="role">
+          <select [(ngModel)]="newUser.role" title="role" name="role">
             <option value="guest">Guest</option>
             <option value="host">Host</option>
             <option value="admin">Admin</option>
@@ -630,7 +636,8 @@
         </div>
         <div class="form-group">
           <label>Property Category</label>
-          <select [(ngModel)]="newListing.propertyCategoryId"  title="propertyCategoryId" name="propertyCategoryId" required>
+          <select [(ngModel)]="newListing.propertyCategoryId" title="propertyCategoryId" name="propertyCategoryId"
+            required>
             <option [ngValue]="null" disabled>Select Property Category</option>
             <option *ngFor="let category of propertyCategories" [value]="category.id">{{ category.name }}</option>
           </select>
@@ -679,7 +686,8 @@
         </div>
         <div class="form-group">
           <label>Category</label>
-          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId"  title="serviceCategoryId"  required>
+          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId" title="serviceCategoryId"
+            required>
             <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
           </select>
@@ -727,7 +735,7 @@
 
         <div class="form-group">
           <label>Category *</label>
-            <option *ngFor="let cat of experienceCategories" [ngValue]="cat.id">{{ cat.name }}</option>
+          <option *ngFor="let cat of experienceCategories" [ngValue]="cat.id">{{ cat.name }}</option>
           <!-- </select> -->
         </div>
         <div class="form-group">
@@ -826,6 +834,11 @@
         <label for="categoryName">Category Name *</label>
         <input type="text" id="categoryName" [(ngModel)]="newCategory.name" placeholder="Enter category name"
           required />
+      </div>
+      <div class="form-group">
+        <label for="categoryDescription">Description</label>
+        <textarea id="categoryDescription" [(ngModel)]="newCategory.description"
+          placeholder="Enter category description" rows="3"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn-secondary" (click)="closeAddCategoryModal()">Cancel</button>

@@ -1,0 +1,57 @@
+<div class="page-container">
+    <div class="page-header">
+        <button class="btn-back" (click)="goBack()">← Back to Dashboard</button>
+        <h1>Add New Service</h1>
+    </div>
+
+    <div class="form-card">
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label>Service Name</label>
+                <input type="text" [(ngModel)]="newService.name" name="name" required placeholder="House Cleaning">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="newService.description" name="description" rows="4"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" [(ngModel)]="newService.price" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" [(ngModel)]="newService.location" name="location" required
+                        placeholder="Service Area">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+                <select [(ngModel)]="newService.serviceCategoryId" name="category" required>
+                    <option [ngValue]="null">Select Category</option>
+                    <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Image</label>
+                <div class="file-upload">
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*">
+                    <p>Drag and drop or click to upload</p>
+                </div>
+                <div *ngIf="selectedFiles.length > 0" class="file-list">
+                    <span>{{ selectedFiles[0].name }}</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" [disabled]="isLoading">
+                    {{ isLoading ? 'Creating Service...' : 'Create Service' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -263,6 +263,94 @@
     background: black;
 }
 
+.action-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+}
+
+.view-btn {
+    background-color: #222222;
+    color: white;
+}
+
+.view-btn:hover {
+    background-color: #000000;
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.review-btn {
+    background-color: white;
+    color: #222222;
+    border: 1px solid #222222;
+}
+
+.review-btn:hover {
+    background-color: #f7f7f7;
+    transform: scale(1.02);
+}
+
+.cancel-btn {
+    background-color: white;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+    margin-left: 8px;
+}
+
+.cancel-btn:hover {
+    background-color: #fff5f5;
+    transform: scale(1.02);
+}
+
+.paid-btn,
+.btn-paid {
+    background-color: #4CAF50;
+    /* Green */
+    color: white;
+    cursor: default;
+    opacity: 1;
+    border: 1px solid #4CAF50;
+}
+
+.paid-btn:hover,
+.btn-paid:hover {
+    background-color: #43A047;
+    transform: none;
+}
+
+.btn-pending {
+    background-color: #FF5A5F;
+    /* Airbnb Red-ish */
+    color: white;
+    border: 1px solid #FF5A5F;
+}
+
+.btn-pending:hover {
+    background-color: #ff4046;
+    transform: scale(1.02);
+}
+
+.btn-cancelled {
+    background-color: #f7f7f7;
+    color: #717171;
+    border: 1px solid #dddddd;
+    cursor: default;
+}
+
+.btn-cancelled:hover {
+    background-color: #f7f7f7;
+    transform: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .booking-card {
