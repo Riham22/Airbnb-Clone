@@ -1,22 +1,38 @@
-<!-- home.html -->
-<div class="home-container">
-  <!-- Search Bar with Filter Button -->
-  <app-search-bar
+<div class="home-container bg-transparent">
+  <!-- NavBar (Only property type filtering) -->
+  <app-nav-bar
     (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-    (activeFiltersChange)="onActiveFiltersChange($event)"
-    (openFilters)="onOpenFilters()"> <!-- Add this event binding -->
-  </app-search-bar>
 
+    (openFilters)="onOpenFilters()">
+
+  </app-nav-bar>
+
+  <!-- Main Search Bar (Where/When/Who filtering) -->
+  
   <!-- Main Content -->
-  <main class="main-content">
+  <main class="main-content bg-white">
     <!-- Results Header -->
-    <div class="results-header" id="property-list">
+    
+    <div class="main-hero h-lvh w-full">
+      <img src="Home/Hero.avif" style="object-fit: cover;"  alt="Home Hero Image" class="hero-image h-full w-full mb-4" />
+      <app-main-search-bar
+    [locationOptions]="locationOptions"
+    (openFilters)="onOpenFilters()"
+    (filtersChanged)="onSearchFiltersChanged($event)">
+    <!-- REMOVE panelOpened since we don't need it -->
+  </app-main-search-bar>
+<div class="hero-text ">
+        <h1>Not sure where to go? Perfect.</h1>
+        <p>We'll help you find the perfect place to stay.</p>
+        </div>
+
+    </div>
+<div class="results-header" id="property-list">
       <h2 class="results-title">{{ getResultsTitle() }}</h2>
       <div class="results-count">{{ filteredProperties.length }} properties</div>
     </div>
-
     <!-- Property List -->
-    <app-property-list
+    <app-property-list class="bg-transparent"
       [properties]="filteredProperties"
       [filters]="activeFilters"
       (propertyClick)="onPropertyClick($event)"

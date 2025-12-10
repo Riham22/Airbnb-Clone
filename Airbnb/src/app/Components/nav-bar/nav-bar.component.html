@@ -1,0 +1,118 @@
+<!-- Navbar Container -->
+<nav class="navbar ">
+  <!-- Top Row: Logo, Property Filters, Icons -->
+  <div class="navbar-top bg-transparent">
+    <div class="navbar-brand">airbnb</div>
+
+    <!-- Property Type Filter Bar -->
+    <div class="property-type-bar">
+      <div class="property-type-filters">
+        <div *ngFor="let type of propertyTypes" class="property-type-option"
+          [class.active]="selectedPropertyType === type.value" (click)="selectPropertyType(type.value)">
+          <span class="type-icon" [ngSwitch]="type.value">
+            <!-- SVG icons remain the same -->
+          </span>
+          {{ type.label }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side Icons -->
+    <div class="navbar-actions">
+      <!-- My Trips Direct Link -->
+      <div class="nav-icon" routerLink="/trips" title="My Trips" *ngIf="isAuthenticated">
+        <span style="font-size: 18px;">✈️</span>
+      </div>
+
+      <!-- User Menu -->
+      <div class="user-menu-wrapper">
+        <div class="user-menu" (click)="toggleMenuPanel()">
+          <button class="user-menu-btn">
+            <!-- Enhanced user display -->
+            <div class="user-display" *ngIf="isAuthenticated && currentUser; else loginDisplay">
+              <div class="user-avatar">
+                {{ getUserInitials() }}
+              </div>
+              <div class="user-info">
+                <span class="user-name">{{ getUserDisplayName() }}</span>
+              </div>
+              <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+                focusable="false" class="chevron">
+                <path
+                  d="M4.47 5.72a.75.75 0 0 1 1.06 0L8 8.19l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06z">
+                </path>
+              </svg>
+            </div>
+            <ng-template #loginDisplay>
+              <div class="user-display">
+                <div class="user-avatar guest">
+                  <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+                    focusable="false">
+                    <path
+                      d="M16 .7C7.56.7.7 7.56.7 16S7.56 31.3 16 31.3 31.3 24.44 31.3 16 24.44.7 16 .7zm0 28c-4.02 0-7.6-1.88-9.93-4.81a12.43 12.43 0 0 1 6.45-4.4A6.5 6.5 0 0 1 9.5 14a6.5 6.5 0 0 1 13 0 6.51 6.51 0 0 1-3.02 5.5 12.42 12.42 0 0 1 6.45 4.4A12.67 12.67 0 0 1 16 28.7z">
+                    </path>
+                  </svg>
+                </div>
+                <div class="user-info">
+                  <span class="user-name">{{ getUserDisplayName() }}</span>
+                </div>
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+                  focusable="false" class="chevron">
+                  <path
+                    d="M4.47 5.72a.75.75 0 0 1 1.06 0L8 8.19l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06z">
+                  </path>
+                </svg>
+              </div>
+            </ng-template>
+          </button>
+        </div>
+      </div>
+    <!-- </div> -->
+  </div>
+
+  
+
+
+
+
+<!-- Menu Panel (Only shown when showMenuPanel is true) -->
+<div *ngIf="showMenuPanel" class="menu-panel scrollable" [class.active]="showMenuPanel">
+  <div class="panel-header">
+    <h3 class="panel-title">Menu</h3>
+    <button class="close-panel" (click)="toggleMenuPanel()">×</button>
+  </div>
+
+  <div class="menu-list">
+    <!-- User info section -->
+    <div class="user-section" *ngIf="isAuthenticated && currentUser">
+      <div class="user-avatar-large">
+        {{ getUserInitials() }}
+      </div>
+      <div class="user-details">
+        <h3 class="user-fullname">{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
+        <p class="user-email">{{ currentUser.email }}</p>
+      </div>
+    </div>
+
+    <!-- Menu items -->
+    <div *ngFor="let item of menuItems" class="menu-section">
+      <div *ngIf="item.separator" class="menu-separator"></div>
+
+      <div *ngIf="!item.separator && item.action !== 'logout'" class="menu-option" (click)="onMenuItemClick(item)">
+        <span class="menu-icon">{{ item.icon }}</span>
+        <div class="menu-content">
+          <span class="menu-label">{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout section -->
+    <div class="logout-section" *ngIf="isAuthenticated">
+      <div class="menu-separator"></div>
+      <button class="logout-btn styled" (click)="logout()">
+        <span class="logout-icon">🚪</span>
+        <span class="logout-label">Log out</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { HostDashboardComponent } from './host-dashboard';
+import { MainSearchBarComponent } from './main-search-bar-component';
 
-describe('HostDashboard', () => {
-  let component: HostDashboardComponent;
-  let fixture: ComponentFixture<HostDashboardComponent>;
+describe('MainSearchBarComponent', () => {
+  let component: MainSearchBarComponent;
+  let fixture: ComponentFixture<MainSearchBarComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HostDashboardComponent]
+      imports: [MainSearchBarComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(HostDashboardComponent);
+    fixture = TestBed.createComponent(MainSearchBarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,0 +1,244 @@
+<!-- Main search bar container -->
+<div class="main-search-container">
+ 
+  <div class="search-bar">
+    <!-- Where -->
+    <div class="search-section" [class.active]="activePanel === 'location'" (click)="openPanel('location')">
+      <div class="search-label">Where</div>
+      <div class="search-value">{{ getLocationDisplay() }}</div>
+    </div>
+
+    <!-- When -->
+    <div class="search-section" [class.active]="activePanel === 'dates'" (click)="openPanel('dates')">
+      <div class="search-label">When</div>
+      <div class="search-value">{{ getDatesDisplay() }}</div>
+    </div>
+
+    <!-- Who -->
+    <div class="search-section" [class.active]="activePanel === 'guests'" (click)="openPanel('guests')">
+      <div class="search-label">Who</div>
+      <div class="search-value">{{ getGuestsDisplay() }}</div>
+    </div>
+  </div>
+   <!-- Filter Button -->
+  <div class="filter-button-container">
+    <button class="filter-button" (click)="onOpenFilters()">
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
+        <path d="M5 8a3 3 0 0 1 2.83 2H14v2H7.83A3 3 0 1 1 5 8zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm6-8a3 3 0 1 1-2.83 4H2V4h6.17A3 3 0 0 1 11 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path>
+      </svg>
+      <span>F</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- Only render panels when activePanel is set -->
+
+<!-- Location Panel -->
+<div *ngIf="activePanel === 'location'" class="filter-panel" [class.active]="activePanel === 'location'">
+  <div class="filter-header">
+    <h2 class="filter-title">Where to?</h2>
+    <button class="close-filter" (click)="closePanel()">×</button>
+  </div>
+
+  <div class="location-grid">
+    <div *ngFor="let location of locationOptions" class="location-option"
+      [class.selected]="currentFilters.location === location.value" (click)="selectLocation(location.value)">
+      <div class="location-icon">{{ location.icon }}</div>
+      <div class="location-info">
+        <h3>{{ location.label }}</h3>
+        <p>{{ location.description }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dates Panel -->
+<div *ngIf="activePanel === 'dates'" class="filter-panel" [class.active]="activePanel === 'dates'">
+  <div class="filter-header">
+    <h2 class="filter-title">When's your trip?</h2>
+    <button class="close-filter" (click)="closePanel()">×</button>
+  </div>
+
+  <div class="dates-content">
+    <!-- Selected dates display -->
+    <div class="selected-dates" *ngIf="dateSelection.start || dateSelection.end">
+      <div class="date-range">
+        <span *ngIf="dateSelection.start">{{ formatDate(dateSelection.start) }}</span>
+        <span *ngIf="dateSelection.start && dateSelection.end"> – </span>
+        <span *ngIf="dateSelection.end">{{ formatDate(dateSelection.end) }}</span>
+      </div>
+      <button class="clear-dates" (click)="clearDates()">Clear dates</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="quick-action-btn" (click)="goToCurrentMonth()">
+         Today
+      </button>
+      <button class="quick-action-btn" (click)="selectNextWeekend()">
+         Next weekend
+      </button>
+      <button class="quick-action-btn" (click)="selectNextWeek()">
+         Next week
+      </button>
+      <button class="quick-action-btn" (click)="selectNextMonth()">
+         Next month
+      </button>
+    </div>
+
+    <div class="calendar">
+      <!-- Calendar navigation -->
+      <div class="calendar-header">
+        <div class="nav-controls">
+          <button class="nav-button nav-year" [class.disabled]="!canNavigatePrev()"
+            (click)="canNavigatePrev() && navigateYear(-1)" title="Previous year">
+            ‹‹
+          </button>
+          <button class="nav-button nav-month" [class.disabled]="!canNavigatePrev()"
+            (click)="canNavigatePrev() && navigateMonth(-1)" title="Previous month">
+            ‹
+          </button>
+        </div>
+
+        <div class="view-controls">
+          <button class="view-button" [class.active]="calendarView === 'month'" (click)="switchToMonthView()">
+            📅 {{ getMonthYearDisplay() }}
+          </button>
+          <button class="view-button" [class.active]="calendarView === 'year'" (click)="switchToYearView()">
+            🗓️ {{ currentMonth.getFullYear() }}
+          </button>
+          <button class="view-button" [class.active]="calendarView === 'decade'" (click)="switchToDecadeView()">
+            📊 {{ getCurrentDecade() }}s
+          </button>
+        </div>
+
+        <div class="nav-controls">
+          <button class="nav-button nav-month" [class.disabled]="!canNavigateNext()"
+            (click)="canNavigateNext() && navigateMonth(1)" title="Next month">
+            ›
+          </button>
+          <button class="nav-button nav-year" [class.disabled]="!canNavigateNext()"
+            (click)="canNavigateNext() && navigateYear(1)" title="Next year">
+            ››
+          </button>
+        </div>
+      </div>
+
+      <!-- Month View -->
+      <div class="calendar-view month-view" *ngIf="calendarView === 'month'">
+        <div class="calendar-grid">
+          <div class="weekday" *ngFor="let day of ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']">
+            {{ day }}
+          </div>
+
+          <div *ngFor="let date of getCalendarDays()" class="calendar-day" [class.in-range]="isDateInRange(date)"
+            [class.selected]="isDateSelected(date)" [class.start-date]="isDateStart(date)"
+            [class.end-date]="isDateEnd(date)" [class.disabled]="isDateDisabled(date)"
+            [class.other-month]="date.getMonth() !== currentMonth.getMonth()" [class.today]="isToday(date)"
+            (click)="selectDate(date)">
+            {{ date.getDate() }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Year View -->
+      <div class="calendar-view year-view" *ngIf="calendarView === 'year'">
+        <div class="year-grid">
+          <div *ngFor="let month of getMonthsForYear()" class="month-option"
+            [class.current]="month.number === currentMonth.getMonth()" (click)="selectMonth(month.number)">
+            {{ month.name }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Decade View -->
+      <div class="calendar-view decade-view" *ngIf="calendarView === 'decade'">
+        <div class="decade-grid">
+          <div *ngFor="let decade of availableDecades" class="decade-option" [class.current]="isCurrentDecade(decade)"
+            (click)="selectDecade(decade)">
+            {{ decade }} - {{ decade + 9 }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date range info -->
+    <div class="date-info" *ngIf="dateSelection.start && !dateSelection.end">
+      <p>🎯 Now select your checkout date to complete your trip</p>
+    </div>
+  </div>
+</div>
+
+<!-- Guests Panel -->
+<div *ngIf="activePanel === 'guests'" class="filter-panel" [class.active]="activePanel === 'guests'">
+  <div class="filter-header">
+    <h2 class="filter-title">Who's coming?</h2>
+    <button class="close-filter" (click)="closePanel()">×</button>
+  </div>
+
+  <div class="guests-content">
+    <!-- Adults -->
+    <div class="guest-type">
+      <div class="guest-info">
+        <h3>Adults</h3>
+        <p>Ages 13 or above</p>
+      </div>
+      <div class="guest-counter">
+        <button class="counter-btn" [class.disabled]="guestSelection.adults === 0"
+          (click)="updateGuests('adults', -1)">−</button>
+        <span class="counter-value">{{ guestSelection.adults }}</span>
+        <button class="counter-btn" (click)="updateGuests('adults', 1)">+</button>
+      </div>
+    </div>
+
+    <!-- Children -->
+    <div class="guest-type">
+      <div class="guest-info">
+        <h3>Children</h3>
+        <p>Ages 2–12</p>
+      </div>
+      <div class="guest-counter">
+        <button class="counter-btn" [class.disabled]="guestSelection.children === 0"
+          (click)="updateGuests('children', -1)">−</button>
+        <span class="counter-value">{{ guestSelection.children }}</span>
+        <button class="counter-btn" (click)="updateGuests('children', 1)">+</button>
+      </div>
+    </div>
+
+    <!-- Infants -->
+    <div class="guest-type">
+      <div class="guest-info">
+        <h3>Infants</h3>
+        <p>Under 2</p>
+      </div>
+      <div class="guest-counter">
+        <button class="counter-btn" [class.disabled]="guestSelection.infants === 0"
+          (click)="updateGuests('infants', -1)">−</button>
+        <span class="counter-value">{{ guestSelection.infants }}</span>
+        <button class="counter-btn" (click)="updateGuests('infants', 1)">+</button>
+      </div>
+    </div>
+
+    <!-- Pets -->
+    <div class="guest-type">
+      <div class="guest-info">
+        <h3>Pets</h3>
+        <p>Bringing a service animal?</p>
+      </div>
+      <div class="guest-counter">
+        <button class="counter-btn" [class.disabled]="guestSelection.pets === 0"
+          (click)="updateGuests('pets', -1)">−</button>
+        <span class="counter-value">{{ guestSelection.pets }}</span>
+        <button class="counter-btn" (click)="updateGuests('pets', 1)">+</button>
+      </div>
+    </div>
+
+    <div class="guests-footer">
+      <button class="clear-guests" (click)="clearGuests()">Clear all</button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div *ngIf="activePanel !== null" class="overlay" [class.active]="activePanel !== null" (click)="closePanel()"></div>

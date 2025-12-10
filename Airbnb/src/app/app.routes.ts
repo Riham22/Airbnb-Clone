@@ -120,7 +120,7 @@ export const routes: Routes = [
       },
       {
         path: 'search',
-        loadComponent: () => import('./Pages/search/search').then(m => m.SearchComponent)
+        loadComponent: () => import('./Components/search/search').then(m => m.SearchComponent)
       },
       {
         path: 'auth',
@@ -183,7 +183,7 @@ export const routes: Routes = [
       },
       {
         path: 'account',
-        loadComponent: () => import('./Components/user-profile/user-profile').then(m => m.UserProfile),
+        loadComponent: () => import('./Components/user-profile/user-profile').then(m => m.UserProfileComponent),
         canActivate: [AuthGuard]
       },
       {

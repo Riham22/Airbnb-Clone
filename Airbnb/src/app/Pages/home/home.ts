@@ -1,20 +1,21 @@
-// home.component.ts - Fixed Version
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RentalProperty } from '../../Models/rental-property';
 import { PropertyList } from '../../Components/property-list/property-list';
-import { SearchComponent } from '../search/search';
-import { Data } from '../../Services/data';
 import { FilterModalComponent } from '../../Components/filter-modal/filter-modal.component';
+import { MainSearchBarComponent } from "../../Components/main-search-bar-component/main-search-bar-component";
+import { NavBarComponent } from "../../Components/nav-bar/nav-bar.component";
+import { Data } from '../../Services/data';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     CommonModule,
-    SearchComponent,
     PropertyList,
-    FilterModalComponent
+    FilterModalComponent,
+    MainSearchBarComponent,
+    NavBarComponent
   ],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
@@ -26,18 +27,31 @@ export class HomeComponent implements OnInit {
   isFilterModalOpen = false;
   selectedCategory: string = 'All';
   isLoading = true;
+  activePanel: string | null = null;
+
+  // Location options for MainSearchBarComponent
+  locationOptions = [
+    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' },
+    { value: 'new_york', label: 'New York', icon: '🏙️', description: 'Big Apple adventures' },
+    { value: 'los_angeles', label: 'Los Angeles', icon: '🌴', description: 'Sunny California' },
+    { value: 'miami', label: 'Miami', icon: '🏖️', description: 'Beachfront escapes' },
+    { value: 'chicago', label: 'Chicago', icon: '🏙️', description: 'Windy City stays' },
+    { value: 'las_vegas', label: 'Las Vegas', icon: '🎰', description: 'Entertainment capital' },
+    { value: 'san_francisco', label: 'San Francisco', icon: '🌉', description: 'Golden Gate views' },
+    { value: 'seattle', label: 'Seattle', icon: '🌧️', description: 'Pacific Northwest' },
+    { value: 'austin', label: 'Austin', icon: '🎸', description: 'Live music capital' },
+    { value: 'boston', label: 'Boston', icon: '🎓', description: 'Historic charm' }
+  ];
 
   constructor(private dataService: Data) { }
 
   ngOnInit() {
     console.log('🏠 HomeComponent initialized');
 
-    // Force refresh data from API
     this.dataService.loadProperties();
     this.dataService.loadExperiences();
     this.dataService.loadServices();
 
-    // Subscribe to properties
     this.dataService.properties$.subscribe(props => {
       this.properties = props;
       this.filteredProperties = props;
@@ -45,26 +59,42 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  // Handle filter button click from SearchComponent
+  // Handle panel opened from both components
+  onPanelOpened(panel: string): void {
+    console.log('Home: Panel opened:', panel);
+    this.activePanel = panel;
+  }
+
+  // Handle filter button click
   onOpenFilters(): void {
     this.openFilters();
   }
 
-  // Handle search results from SearchComponent
+  // Handle property type filters from NavBarComponent
+  onNavBarFiltersChange(filters: any) {
+    console.log('Home: NavBar filters received:', filters);
+    // Merge with existing filters
+    this.activeFilters = { ...this.activeFilters, ...filters };
+    this.applyComplexFilters();
+  }
+
+  // Handle search filters from MainSearchBarComponent
+  onSearchFiltersChanged(filters: any) {
+    console.log('Home: Search filters received:', filters);
+    // Merge with existing filters
+    this.activeFilters = { ...this.activeFilters, ...filters };
+    this.applyComplexFilters();
+  }
+
+  // Handle filtered properties from NavBarComponent
   onFilteredPropertiesChange(properties: RentalProperty[]) {
-    console.log("Received from search:", properties.length);
+    console.log("Home: Received properties from NavBar:", properties.length);
+    // Store these as the base for further filtering
     if (properties.length === 0) {
       this.filteredProperties = [...this.properties];
     } else {
       this.filteredProperties = properties;
     }
-  }
-
-  // Handle active filters from SearchComponent
-  onActiveFiltersChange(filters: any) {
-    console.log('Filters received:', filters);
-    this.activeFilters = filters;
-    this.applyComplexFilters();
   }
 
   // Open filter modal
@@ -81,18 +111,30 @@ export class HomeComponent implements OnInit {
 
   // Apply filters from modal
   onApplyFilters(filters: any) {
-    console.log('Filters applied:', filters);
+    console.log('Home: Filters applied from modal:', filters);
     this.activeFilters = { ...this.activeFilters, ...filters };
     this.applyComplexFilters();
     this.closeFilters();
   }
 
-  // Apply all filters (from search and modal)
+  // Apply all filters (from both components and modal)
   applyComplexFilters() {
     let filtered = [...this.properties];
 
-    // Apply location filter from search
-    if (this.activeFilters.location && this.activeFilters.location !== 'anywhere') {
+    // Apply property type filter from NavBar
+    if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
+      filtered = filtered.filter(property => {
+        switch (this.activeFilters.propertyType) {
+          case 'property': return property.type === 'property';
+          case 'experience': return property.type === 'experience';
+          case 'service': return property.type === 'service';
+          default: return true;
+        }
+      });
+    }
+
+    // Apply location filter from MainSearchBar
+    if (this.activeFilters.location && this.activeFilters.location !== '' && this.activeFilters.location !== 'flexible') {
       filtered = filtered.filter(property =>
         property.location?.toLowerCase().includes(this.activeFilters.location.toLowerCase())
       );
@@ -107,14 +149,14 @@ export class HomeComponent implements OnInit {
       );
     }
 
-    // Apply dates filter from search
+    // Apply dates filter from MainSearchBar
     if (this.activeFilters.dates?.start && this.activeFilters.dates?.end) {
       filtered = filtered.filter(property =>
         property.isAvailable !== false
       );
     }
 
-    // Apply guests filter from search
+    // Apply guests filter from MainSearchBar
     if (this.activeFilters.guests?.adults || this.activeFilters.guests?.children) {
       const totalGuests = (this.activeFilters.guests.adults || 0) + (this.activeFilters.guests.children || 0);
       filtered = filtered.filter(property =>
@@ -131,27 +173,15 @@ export class HomeComponent implements OnInit {
       );
     }
 
-    // Apply category filter - FIXED: Added type for tag parameter
-    if (this.selectedCategory && this.selectedCategory !== 'All') {
-      const categoryLower = this.selectedCategory.toLowerCase();
-      filtered = filtered.filter(property =>
-        property.category?.toLowerCase() === categoryLower ||
-        property.tags?.some((tag: string) => tag.toLowerCase() === categoryLower)
-      );
-    }
-
     this.filteredProperties = filtered;
   }
 
-  // Wishlist handler - FIXED: Use toggleWishlist method
+  // Wishlist handler
   onWishlistChange(event: any) {
     console.log("Wish changed:", event);
     const { propertyId, isWishlisted, itemType } = event;
-
-    // Check which type of item this is (property, experience, or service)
-    const type = itemType || 'Property'; // Default to Property if not specified
-
-    // Use the toggleWishlist method from Data service
+    const type = itemType || 'Property';
+    
     this.dataService.toggleWishlist(type, propertyId).subscribe({
       next: (response) => {
         console.log('Wishlist updated:', response);
@@ -173,8 +203,10 @@ export class HomeComponent implements OnInit {
       return `${location} Properties`;
     }
 
-    if (this.selectedCategory && this.selectedCategory !== 'All') {
-      return `${this.selectedCategory} Stays`;
+    if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
+      const type = this.activeFilters.propertyType.charAt(0).toUpperCase() +
+        this.activeFilters.propertyType.slice(1);
+      return `${type} Listings`;
     }
 
     return 'All Available Stays';
