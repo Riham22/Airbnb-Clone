@@ -210,6 +210,30 @@ export const routes: Routes = [
         data: { roles: ['Admin'] }
       },
       {
+        path: 'admin/add-user',
+        loadComponent: () => import('./Components/admin-dashboard/add-user/add-user.component').then(m => m.AddUserComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['Admin'] }
+      },
+      {
+        path: 'admin/add-listing',
+        loadComponent: () => import('./Components/admin-dashboard/add-listing/add-listing.component').then(m => m.AddListingComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['Admin'] }
+      },
+      {
+        path: 'admin/add-service',
+        loadComponent: () => import('./Components/admin-dashboard/add-service/add-service.component').then(m => m.AddServiceComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['Admin'] }
+      },
+      {
+        path: 'admin/add-experience',
+        loadComponent: () => import('./Components/admin-dashboard/add-experience/add-experience.component').then(m => m.AddExperienceComponent),
+        canActivate: [AuthGuard, RoleGuard],
+        data: { roles: ['Admin'] }
+      },
+      {
         path: 'account-settings',
         loadComponent: () => import('./Components/personal-account/personal-account.component').then(m => m.PersonalAccountComponent),
         canActivate: [AuthGuard]

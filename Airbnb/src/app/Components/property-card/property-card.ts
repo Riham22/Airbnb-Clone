@@ -26,6 +26,11 @@ export class PropertyCardComponent implements OnInit, OnChanges {
   // Boolean property for wishlist state
   isWishlisted: boolean = false;
 
+  // Stable properties for random values
+  randomDistance: string = '';
+  instantBookStatus: boolean = false;
+  showImageIndicators = true;
+
   constructor(
     private router: Router,
     private dataService: Data,
@@ -97,18 +102,20 @@ export class PropertyCardComponent implements OnInit, OnChanges {
     });
   }
 
-  handleImageError() {
-    this.property.imageUrl = 'https://via.placeholder.com/400x300?text=Fallback+Image';
+  handleImageError(event: any) {
+    console.error('❌ Image failed to load:', this.property.imageUrl);
+    console.log('Event details:', event);
+
+    // Prevent infinite loop if fallback also fails (though local asset shouldn't)
+    if (this.property.imageUrl !== 'assets/default-listing.jpg') {
+      this.property.imageUrl = 'assets/default-listing.jpg';
+    }
   }
 
   getSuperhostStatus(): boolean {
     // Mock superhost status - in real app this would come from your data
     return this.property.rating >= 4.8 && this.property.reviewCount > 50;
   }
-
-  // Stable properties for random values
-  randomDistance: string = '';
-  instantBookStatus: boolean = false;
 
   private initializeRandomValues() {
     // Calculate these once to avoid NG0100 errors
@@ -124,8 +131,6 @@ export class PropertyCardComponent implements OnInit, OnChanges {
   isInstantBook(): boolean {
     return this.instantBookStatus;
   }
-
-  showImageIndicators = true;
 
   getImageIndicators(): any[] {
     return this.property.images ? new Array(this.property.images.length) : [];

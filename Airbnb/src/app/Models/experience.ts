@@ -31,6 +31,16 @@ export interface Experience {
   meetingPoint: string;
   languages: string[];
   activities: ExperienceActivity[];
+<<<<<<< HEAD
+=======
+}
+
+export interface ExperienceActivity {
+  id: number;
+  name: string;
+  description: string;
+  durationMinutes: number;
+>>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
 }
 
 export interface ExperienceActivity {

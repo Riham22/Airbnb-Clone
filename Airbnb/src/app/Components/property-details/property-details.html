@@ -1,5 +1,5 @@
 <!-- property-details.component.html -->
-<div class="property-details-container">
+<div class="property-details-container" *ngIf="property">
   <!-- Header -->
   <header class="property-header">
     <button class="back-button" (click)="goBack()">
@@ -12,7 +12,9 @@
   <!-- Image Gallery -->
   <div class="image-gallery">
     <div class="main-image">
-      <img alt="" [src]="property.images[selectedImageIndex]" [alt]="property.name">
+      <img alt=""
+        [src]="(property.images && property.images.length > 0 ? property.images[selectedImageIndex] : property.imageUrl) || 'assets/default-listing.jpg'"
+        [alt]="property.name">
     </div>
     <div class="thumbnail-grid">
       <div *ngFor="let image of property.images; let i = index" class="thumbnail"
@@ -42,7 +44,7 @@
       </div>
 
       <!-- Property Highlights -->
-      <div class="property-highlights">
+      <div class="property-highlights" *ngIf="property.highlights?.length">
         <div class="highlight-item" *ngFor="let highlight of property.highlights">
           <i class="fas fa-check-circle"></i> {{ highlight }}
         </div>
@@ -60,8 +62,11 @@
         <div class="detail-item">
           <i class="fas fa-user-friends"></i>
           <div>
-            <strong>Up to {{ property.maxGuests }} guests</strong>
-            <span>{{ property.bedrooms }} bedrooms · {{ property.beds }} beds · {{ property.bathrooms }} baths</span>
+            <strong>Up to {{ $any(property).maxGuests || $any(property).maxParticipants || property.maxGuests }}
+              guests</strong>
+            <span *ngIf="property.type === 'property'">{{ property.bedrooms }} bedrooms · {{ property.beds }} beds · {{
+              property.bathrooms }} baths</span>
+            <span *ngIf="property.type !== 'property'">{{ $any(property).duration }} duration</span>
           </div>
         </div>
       </div>
@@ -70,9 +75,8 @@
       <div class="amenities-section">
         <h2>What this place offers</h2>
         <div class="amenities-grid">
-          <div class="amenity-item"
-            *ngFor="let amenity of (showAllAmenities ? property.amenities : property.amenities.slice(0, 6))">
-            <i class="fas fa-check"></i> {{ amenity }}
+          <div class="amenity-item" *ngFor="let amenity of displayedAmenities">
+            <i class="fas fa-check-circle"></i> {{ amenity }}
           </div>
         </div>
         <button class="show-more-btn" (click)="toggleAmenities()">
@@ -86,8 +90,38 @@
         <p>{{ property.description }}</p>
       </div>
 
-      <!-- Reviews -->
-      <!-- Reviews -->
+      <!-- Service Specific Details -->
+      <div class="service-details" *ngIf="property.type === 'service'">
+        <div *ngIf="$any(property).includes?.length" class="detail-block">
+          <h3>What's Included</h3>
+          <ul>
+            <li *ngFor="let inc of $any(property).includes">{{ inc }}</li>
+          </ul>
+        </div>
+        <div *ngIf="$any(property).requirements?.length" class="detail-block">
+          <h3>Requirements</h3>
+          <ul>
+            <li *ngFor="let req of $any(property).requirements">{{ req }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Experience Activities -->
+      <div class="activities-section" *ngIf="property.type === 'experience' && $any(property).activities?.length > 0">
+        <h2>What we'll do</h2>
+        <div class="activities-list">
+          <div class="activity-item" *ngFor="let activity of $any(property).activities">
+            <div class="activity-header">
+              <h3>{{ activity.name }}</h3>
+              <span class="activity-duration" *ngIf="activity.durationMinutes > 0">
+                <i class="far fa-clock"></i> {{ activity.durationMinutes }} mins
+              </span>
+            </div>
+            <p>{{ activity.description }}</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Reviews -->
       <div class="reviews-section" *ngIf="property">
         <app-review-list [itemId]="property.id" type="property"></app-review-list>
@@ -109,10 +143,11 @@
       </div>
 
       <!-- Host Info -->
-      <div class="host-section">
+      <div class="host-section" *ngIf="property.host">
         <h2>Hosted by {{ property.host.name }}</h2>
         <div class="host-info">
-          <img alt="" [src]="property.host.avatar" [alt]="property.host.name" class="host-avatar">
+          <img alt="" [src]="property.host.avatar || 'assets/images/placeholder-user.png'" [alt]="property.host.name"
+            class="host-avatar">
           <div class="host-details">
             <div class="host-badge" *ngIf="property.host.isSuperhost">
               <i class="fas fa-medal"></i> Superhost
@@ -145,7 +180,7 @@
       <div class="guests-selector">
         <label>GUESTS</label>
         <select title="guests" name="guests" [(ngModel)]="guests">
-          <option *ngFor="let num of [1,2,3,4]" [value]="num">{{ num }} guest{{ num > 1 ? 's' : '' }}</option>
+          <option *ngFor="let num of getGuestOptions()" [value]="num">{{ num }} guest{{ num > 1 ? 's' : '' }}</option>
         </select>
       </div>
 
@@ -171,4 +206,28 @@
       </div>
     </div>
   </div>
+<<<<<<< HEAD
 </div>
+=======
+
+  <!-- Suggestions Section -->
+  <div class="suggestions-section" *ngIf="suggestions.length > 0">
+    <h2>You might also like</h2>
+    <div class="suggestions-grid">
+      <div class="suggestion-card" *ngFor="let item of suggestions" [routerLink]="['/' + property.type, item.id]">
+        <div class="suggestion-image-container">
+          <img [src]="item.imageUrl || item.images?.[0]" [alt]="item.name">
+        </div>
+        <div class="suggestion-info">
+          <h4>{{ item.name }}</h4>
+          <p>{{ item.location }}</p>
+          <span class="price">${{ item.price }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="!property" class="loading-container">
+  <p>Loading property details...</p>
+</div>
+>>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df

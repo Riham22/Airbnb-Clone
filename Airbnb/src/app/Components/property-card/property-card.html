@@ -1,7 +1,7 @@
 <!-- Enhanced Property Card Template -->
 <div class="property-card" (click)="onCardClick()">
   <div class="property-image-container">
-    <img [src]="property.imageUrl" alt="{{ property.name }}" class="property-image" (error)="handleImageError()"
+    <img [src]="property.imageUrl" alt="{{ property.name }}" class="property-image" (error)="handleImageError($event)"
       loading="lazy" />
 
     <!-- Property Type Badge -->
