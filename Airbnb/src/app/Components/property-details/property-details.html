@@ -213,7 +213,7 @@
     <div class="suggestions-grid">
       <div class="suggestion-card" *ngFor="let item of suggestions" [routerLink]="['/' + property.type, item.id]">
         <div class="suggestion-image-container">
-          <img [src]="item.imageUrl || item.images?.[0]" [alt]="item.name">
+          <img [src]="item.imageUrl || item.images?.[0]" alt="item.name">
         </div>
         <div class="suggestion-info">
           <h4>{{ item.name }}</h4>

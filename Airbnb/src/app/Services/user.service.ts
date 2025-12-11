@@ -199,6 +199,36 @@ export class UserService {
     return tryEndpoint(0);
   }
 
+  // ============ Refresh User Profile ============
+  refreshUserProfile(): Observable<UserProfile> {
+    console.log('Refreshing user profile...');
+
+    // إعادة تحميل البيانات من الـ API
+    return this.getMyProfile().pipe(
+      tap(profile => {
+        console.log('User profile refreshed successfully:', profile);
+
+        // تحديث الـ AuthService أيضاً إذا لزم الأمر
+        const currentAuthUser = this.authService.getCurrentUser();
+        if (currentAuthUser && profile) {
+          const updatedAuthUser = {
+            ...currentAuthUser,
+            firstName: profile.firstName || currentAuthUser.firstName,
+            lastName: profile.lastName || currentAuthUser.lastName,
+            email: profile.email || currentAuthUser.email,
+            photoURL: profile.photoURL || currentAuthUser.photoURL
+          };
+          this.authService.updateCurrentUser(updatedAuthUser);
+          console.log('AuthService user updated with latest profile');
+        }
+      }),
+      catchError(error => {
+        console.error('Failed to refresh user profile:', error);
+        return throwError(() => new Error('Could not refresh profile'));
+      })
+    );
+  }
+
   uploadProfilePhoto(file: File): Observable<any> {
     console.log('uploadProfilePhoto called with file:', file.name);
 

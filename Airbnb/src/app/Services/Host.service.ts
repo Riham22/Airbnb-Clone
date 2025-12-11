@@ -134,7 +134,7 @@ export class HostService {
 
     return this.http.put(`${this.apiUrl}/Booking/${bookingId}/status`, payload).pipe(
       switchMap(() => {
-        // بعد التحديث الناجح، أعد تحميل البيانات من الـ API
+
         return this.getBookings();
       }),
       catchError(err => {
@@ -244,7 +244,7 @@ export class HostService {
     );
   }
 
-  updateListingStatus(listingId: string, status: 'active' | 'inactive'): Observable<any> {
+  updateListingStatus(listingId: number, status: 'active' | 'inactive'): Observable<any> {
     const action = status === 'active' ? 'publish' : 'unpublish';
 
     return this.http.put(`${this.apiUrl}/Properties/${listingId}/${action}`, {}).pipe(
@@ -259,10 +259,10 @@ export class HostService {
     );
   }
 
-  deleteListing(listingId: string): Observable<boolean> {
+  deleteListing(listingId: number): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Properties/${listingId}`).pipe(
       switchMap(() => {
-        // بعد الحذف الناجح، أعد تحميل البيانات من الـ API
+
         return this.getListings().pipe(map(() => true));
       }),
       catchError(err => {
@@ -315,7 +315,7 @@ export class HostService {
     );
   }
 
-  updateServiceStatus(serviceId: string, status: 'active' | 'inactive'): Observable<any> {
+  updateServiceStatus(serviceId: number, status: 'active' | 'inactive'): Observable<any> {
     const action = status === 'active' ? 'publish' : 'unpublish';
 
     return this.http.put(`${this.apiUrl}/Services/${serviceId}/${action}`, {}).pipe(
@@ -330,7 +330,7 @@ export class HostService {
     );
   }
 
-  deleteService(serviceId: string): Observable<boolean> {
+  deleteService(serviceId: number): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Services/${serviceId}`).pipe(
       switchMap(() => {
         // بعد الحذف الناجح، أعد تحميل البيانات من الـ API
@@ -388,7 +388,7 @@ export class HostService {
     );
   }
 
-  updateExperienceStatus(experienceId: string, status: 'active' | 'inactive'): Observable<any> {
+  updateExperienceStatus(experienceId: number, status: 'active' | 'inactive'): Observable<any> {
     const action = status === 'active' ? 'publish' : 'unpublish';
 
     return this.http.put(`${this.apiUrl}/Experience/${experienceId}/${action}`, {}).pipe(
@@ -403,7 +403,7 @@ export class HostService {
     );
   }
 
-  deleteExperience(experienceId: string): Observable<boolean> {
+  deleteExperience(experienceId: number): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Experience/${experienceId}`).pipe(
       switchMap(() => {
         // بعد الحذف الناجح، أعد تحميل البيانات من الـ API
@@ -573,4 +573,212 @@ export class HostService {
       }
     });
   }
+
+
+
+  // ==================== CREATE EXPERIENCE ====================
+
+createExperience(experienceData: any, files: File[] = []): Observable<any> {
+  this.setLoading(true);
+
+  const payload = {
+    expTitle: experienceData.title,
+    expDescribe: experienceData.description,
+    guestPrice: Number(experienceData.price),
+    currency: experienceData.currency || 'USD',
+    country: experienceData.country,
+    city: experienceData.city,
+    address: experienceData.address || '',
+    latitude: experienceData.latitude ?? 0,
+    longitude: experienceData.longitude ?? 0,
+    expCatograyId: Number(experienceData.categoryId),
+    expSubCatograyId: experienceData.subCategoryId ? Number(experienceData.subCategoryId) : null,
+    expActivities: experienceData.activities || '',
+    maximumGuest: experienceData.maxParticipants || 10,
+    duration: experienceData.duration || '3 hours',
+    includes: experienceData.includes || [],
+    whatToBring: experienceData.whatToBring || '',
+    cancellationPolicy: experienceData.cancellationPolicy || 'Flexible',
+    language: experienceData.language || 'English',
+    status: experienceData.isPublished ? 3 : 1 // 3 = Published, 1 = Draft
+  };
+
+  console.log('📤 [Host] Sending createExperience payload:', payload);
+
+  return this.http.post<any>(`${this.apiUrl}/Experience`, payload).pipe(
+    switchMap((created: any) => {
+      const createdId = created?.id || created?.data?.id;
+      if (createdId && files.length > 0) {
+        return this.uploadExperienceImages(createdId, files).pipe(
+          map(results => ({ created, uploads: results })),
+          catchError(err => {
+            console.error('Failed to upload experience images', err);
+            return of({ created, imageError: err });
+          })
+        );
+      }
+      return of({ created });
+    }),
+    tap((res) => {
+      console.log('[Host] createExperience response:', res);
+      this.setLoading(false);
+    }),
+    switchMap((res) => this.getExperiences().pipe(map(() => res))),
+    catchError(err => {
+      console.error('[Host] createExperience error', err);
+      this.setLoading(false);
+      throw err;
+    })
+  );
+}
+
+// ==================== UPDATE EXPERIENCE ====================
+
+updateExperience(experienceId: number, experienceData: any, files: File[] = []): Observable<any> {
+  this.setLoading(true);
+
+  const payload = {
+    id: Number(experienceId),
+    expTitle: experienceData.title,
+    expDescribe: experienceData.description,
+    guestPrice: Number(experienceData.price),
+    currency: experienceData.currency || 'USD',
+    country: experienceData.country,
+    city: experienceData.city,
+    address: experienceData.address || '',
+    latitude: experienceData.latitude ?? 0,
+    longitude: experienceData.longitude ?? 0,
+    expCatograyId: Number(experienceData.categoryId),
+    expSubCatograyId: experienceData.subCategoryId ? Number(experienceData.subCategoryId) : null,
+    expActivities: experienceData.activities || '',
+    maximumGuest: experienceData.maxParticipants || 10,
+    duration: experienceData.duration || '3 hours',
+    includes: experienceData.includes || [],
+    whatToBring: experienceData.whatToBring || '',
+    cancellationPolicy: experienceData.cancellationPolicy || 'Flexible',
+    language: experienceData.language || 'English',
+    status: experienceData.isPublished ? 3 : 1
+  };
+
+  console.log('📤 [Host] Sending updateExperience payload:', payload);
+
+  return this.http.put<any>(`${this.apiUrl}/Experience/${experienceId}`, payload).pipe(
+    switchMap((updated: any) => {
+      if (files.length > 0) {
+        return this.uploadExperienceImages(Number(experienceId), files).pipe(
+          map(results => ({ updated, uploads: results })),
+          catchError(err => {
+            console.error('Failed to upload experience images during update', err);
+            return of({ updated, imageError: err });
+          })
+        );
+      }
+      return of({ updated });
+    }),
+    tap(() => {
+      this.setLoading(false);
+      console.log('[Host] Experience updated successfully');
+    }),
+    switchMap((res) => this.getExperiences().pipe(map(() => res))),
+    catchError(err => {
+      console.error('[Host] updateExperience error', err);
+      this.setLoading(false);
+      throw err;
+    })
+  );
+}
+
+// ==================== CREATE SERVICE ====================
+
+createService(serviceData: any, files: File[] = []): Observable<any> {
+  this.setLoading(true);
+
+  const payload = {
+    title: serviceData.title,
+    description: serviceData.description,
+    price: Number(serviceData.price),
+    currency: serviceData.currency || 'USD',
+    pricingType: serviceData.pricingType || 'PerHour',
+    country: serviceData.country,
+    city: serviceData.city,
+    address: serviceData.address || '',
+    serviceCategoryId: Number(serviceData.categoryId),
+    isPublished: serviceData.isPublished !== undefined ? serviceData.isPublished : true
+  };
+
+  console.log('📤 [Host] Sending createService payload:', payload);
+
+  return this.http.post<any>(`${this.apiUrl}/Services`, payload).pipe(
+    switchMap((created: any) => {
+      const createdId = created?.id || created?.data?.id;
+      if (createdId && files.length > 0) {
+        return this.uploadServiceImages(createdId, files).pipe(
+          map(results => ({ created, uploads: results })),
+          catchError(err => {
+            console.error('Failed to upload service images', err);
+            return of({ created, imageError: err });
+          })
+        );
+      }
+      return of({ created });
+    }),
+    tap((res) => {
+      console.log('[Host] createService response:', res);
+      this.setLoading(false);
+    }),
+    switchMap((res) => this.getServices().pipe(map(() => res))),
+    catchError(err => {
+      console.error('[Host] createService error', err);
+      this.setLoading(false);
+      throw err;
+    })
+  );
+}
+
+// ==================== UPDATE SERVICE ====================
+
+updateService(serviceId: number, serviceData: any, files: File[] = []): Observable<any> {
+  this.setLoading(true);
+
+  const payload = {
+    id: Number(serviceId),
+    title: serviceData.title,
+    description: serviceData.description,
+    price: Number(serviceData.price),
+    currency: serviceData.currency || 'USD',
+    pricingType: serviceData.pricingType || 'PerHour',
+    country: serviceData.country,
+    city: serviceData.city,
+    address: serviceData.address || '',
+    serviceCategoryId: Number(serviceData.categoryId),
+    isPublished: serviceData.isPublished !== undefined ? serviceData.isPublished : true
+  };
+
+  console.log('📤 [Host] Sending updateService payload:', payload);
+
+  return this.http.put<any>(`${this.apiUrl}/Services/${serviceId}`, payload).pipe(
+    switchMap((updated: any) => {
+      if (files.length > 0) {
+        return this.uploadServiceImages(Number(serviceId), files).pipe(
+          map(results => ({ updated, uploads: results })),
+          catchError(err => {
+            console.error('Failed to upload service images during update', err);
+            return of({ updated, imageError: err });
+          })
+        );
+      }
+      return of({ updated });
+    }),
+    tap(() => {
+      this.setLoading(false);
+      console.log('[Host] Service updated successfully');
+    }),
+    switchMap((res) => this.getServices().pipe(map(() => res))),
+    catchError(err => {
+      console.error('[Host] updateService error', err);
+      this.setLoading(false);
+      throw err;
+    })
+  );
+}
 }

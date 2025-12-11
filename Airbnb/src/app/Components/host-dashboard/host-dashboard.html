@@ -1,4 +1,3 @@
-<!-- components/host-dashboard/host-dashboard.html -->
 <div class="host-dashboard">
 
   <!-- Loading Overlay -->
@@ -98,7 +97,7 @@
           <h3>Recent Bookings</h3>
           <div *ngFor="let booking of bookings.slice(0, 5)" class="activity-item">
             <div class="booking-avatar">
-              <img src="assets/default-avatar.png" [alt]="booking.guestName">
+              <img src="assets/default-avatar.png" alt="booking.guestName">
             </div>
             <div class="activity-info">
               <strong>{{ booking.guestName }}</strong>
@@ -113,13 +112,13 @@
           <h3>Recent Listings</h3>
           <div *ngFor="let listing of listings.slice(0, 5)" class="activity-item">
             <div class="listing-image">
-              <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
+              <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
             </div>
             <div class="activity-info">
               <strong>{{ listing.title }}</strong>
               <span class="listing-location">{{ listing.location }}</span>
             </div>
-            <span class="activity-date">{{ listing.createdAt | date:'MMM d' }}</span>
+            <!-- <span class="activity-date">{{ listing.createdAt | date:'MMM d' }}</span> -->
           </div>
         </div>
       </div>
@@ -132,13 +131,21 @@
       <h2>Property Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddListingModal()">+ Add Property</button>
-        <input type="text" placeholder="Search properties..." class="search-input">
-        <select title="status" class="filter-select" (change)="filterListings($event)">
+        <input type="text"
+               placeholder="Search properties..."
+               class="search-input"
+               [(ngModel)]="searchText"
+               (input)="onSearchChange($event)">
+        <select title="status"
+                class="filter-select"
+                [(ngModel)]="statusFilter"
+                (change)="filterListings($event)">
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
       </div>
+      <div class="results-count">{{ getFilteredResultsMessage() }}</div>
     </div>
 
     <div class="table-container">
@@ -155,10 +162,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let listing of listings">
+          <tr *ngFor="let listing of filteredListings">
             <td class="listing-cell">
               <div class="listing-image">
-                <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
+                <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
               </div>
               <div class="listing-info">
                 <strong>{{ listing.title }}</strong>
@@ -180,20 +187,20 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button *ngIf="listing.status === 'active'" 
-                        (click)="updateListingStatus(listing.id, 'inactive')" 
-                        class="btn-warning" 
+                <button *ngIf="listing.status === 'active'"
+                        (click)="updateListingStatus(listing.id, 'inactive')"
+                        class="btn-warning"
                         title="Deactivate">
                   Deactivate
                 </button>
-                <button *ngIf="listing.status === 'inactive'" 
-                        (click)="updateListingStatus(listing.id, 'active')" 
-                        class="btn-success" 
+                <button *ngIf="listing.status === 'inactive'"
+                        (click)="updateListingStatus(listing.id, 'active')"
+                        class="btn-success"
                         title="Activate">
                   Activate
                 </button>
-                <button (click)="deleteListing(listing.id)" 
-                        class="btn-danger" 
+                <button (click)="deleteListing(listing.id)"
+                        class="btn-danger"
                         title="Delete">
                   Delete
                 </button>
@@ -204,9 +211,10 @@
       </table>
     </div>
 
-    <div *ngIf="listings.length === 0" class="empty-state">
+    <div *ngIf="filteredListings.length === 0" class="empty-state">
       <div class="empty-icon">🏠</div>
-      <h3>No properties found</h3>
+      <h3 *ngIf="listings.length === 0">No properties found</h3>
+      <h3 *ngIf="listings.length > 0 && filteredListings.length === 0">No properties match your search</h3>
       <p>Start by adding your first property!</p>
       <button class="btn-primary" (click)="openAddListingModal()">+ Add Property</button>
     </div>
@@ -218,8 +226,13 @@
       <h2>Service Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
-        <input type="text" placeholder="Search services..." class="search-input">
+        <input type="text"
+               placeholder="Search services..."
+               class="search-input"
+               [(ngModel)]="searchText"
+               (input)="onSearchChange($event)">
       </div>
+      <div class="results-count">{{ getFilteredResultsMessage() }}</div>
     </div>
 
     <div class="table-container">
@@ -235,7 +248,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let service of services">
+          <tr *ngFor="let service of filteredServices">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="getImageUrl(service.imageUrl || service.images?.[0])" alt="">
@@ -255,20 +268,20 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button *ngIf="service.status === 'active'" 
-                        (click)="updateServiceStatus(service.id, 'inactive')" 
-                        class="btn-warning" 
+                <button *ngIf="service.status === 'active'"
+                        (click)="updateServiceStatus(service.id, 'inactive')"
+                        class="btn-warning"
                         title="Deactivate">
                   Deactivate
                 </button>
-                <button *ngIf="service.status === 'inactive'" 
-                        (click)="updateServiceStatus(service.id, 'active')" 
-                        class="btn-success" 
+                <button *ngIf="service.status === 'inactive'"
+                        (click)="updateServiceStatus(service.id, 'active')"
+                        class="btn-success"
                         title="Activate">
                   Activate
                 </button>
-                <button (click)="deleteService(service.id)" 
-                        class="btn-danger" 
+                <button (click)="deleteService(service.id)"
+                        class="btn-danger"
                         title="Delete">
                   Delete
                 </button>
@@ -279,9 +292,10 @@
       </table>
     </div>
 
-    <div *ngIf="services.length === 0" class="empty-state">
+    <div *ngIf="filteredServices.length === 0" class="empty-state">
       <div class="empty-icon">🛠️</div>
-      <h3>No services found</h3>
+      <h3 *ngIf="services.length === 0">No services found</h3>
+      <h3 *ngIf="services.length > 0 && filteredServices.length === 0">No services match your search</h3>
       <p>Start by adding your first service!</p>
       <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
     </div>
@@ -293,8 +307,13 @@
       <h2>Experience Management</h2>
       <div class="table-actions">
         <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
-        <input type="text" placeholder="Search experiences..." class="search-input">
+        <input type="text"
+               placeholder="Search experiences..."
+               class="search-input"
+               [(ngModel)]="searchText"
+               (input)="onSearchChange($event)">
       </div>
+      <div class="results-count">{{ getFilteredResultsMessage() }}</div>
     </div>
 
     <div class="table-container">
@@ -311,7 +330,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let experience of experiences">
+          <tr *ngFor="let experience of filteredExperiences">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="getImageUrl(experience.imageUrl || experience.images?.[0])" alt="">
@@ -332,20 +351,20 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button *ngIf="experience.status === 'active'" 
-                        (click)="updateExperienceStatus(experience.id, 'inactive')" 
-                        class="btn-warning" 
+                <button *ngIf="experience.status === 'active'"
+                        (click)="updateExperienceStatus(experience.id, 'inactive')"
+                        class="btn-warning"
                         title="Deactivate">
                   Deactivate
                 </button>
-                <button *ngIf="experience.status === 'inactive'" 
-                        (click)="updateExperienceStatus(experience.id, 'active')" 
-                        class="btn-success" 
+                <button *ngIf="experience.status === 'inactive'"
+                        (click)="updateExperienceStatus(experience.id, 'active')"
+                        class="btn-success"
                         title="Activate">
                   Activate
                 </button>
-                <button (click)="deleteExperience(experience.id)" 
-                        class="btn-danger" 
+                <button (click)="deleteExperience(experience.id)"
+                        class="btn-danger"
                         title="Delete">
                   Delete
                 </button>
@@ -356,9 +375,10 @@
       </table>
     </div>
 
-    <div *ngIf="experiences.length === 0" class="empty-state">
+    <div *ngIf="filteredExperiences.length === 0" class="empty-state">
       <div class="empty-icon">🏄</div>
-      <h3>No experiences found</h3>
+      <h3 *ngIf="experiences.length === 0">No experiences found</h3>
+      <h3 *ngIf="experiences.length > 0 && filteredExperiences.length === 0">No experiences match your search</h3>
       <p>Start by adding your first experience!</p>
       <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
     </div>
@@ -396,7 +416,7 @@
           <tr *ngFor="let booking of bookings">
             <td class="user-cell">
               <div class="user-avatar">
-                <img src="assets/default-avatar.png" [alt]="booking.guestName">
+                <img src="assets/default-avatar.png" alt="booking.guestName">
               </div>
               <div class="user-info">
                 <strong>{{ booking.guestName }}</strong>
@@ -420,21 +440,21 @@
             <td>
               <div class="action-buttons">
                 <!-- Status-specific actions -->
-                <button *ngIf="booking.status === 'upcoming' || booking.status === 'pending'" 
-                        (click)="updateBookingStatus(booking.id, 'confirmed')" 
-                        class="btn-success" 
+                <button *ngIf="booking.status === 'pending'"
+                        (click)="updateBookingStatus(booking.id, 'confirmed')"
+                        class="btn-success"
                         title="Confirm Booking">
                   Confirm
                 </button>
-                <button *ngIf="booking.status === 'confirmed'" 
-                        (click)="updateBookingStatus(booking.id, 'completed')" 
-                        class="btn-primary" 
+                <button *ngIf="booking.status === 'confirmed'"
+                        (click)="updateBookingStatus(booking.id, 'completed')"
+                        class="btn-primary"
                         title="Mark as Completed">
                   Complete
                 </button>
-                <button *ngIf="booking.status !== 'cancelled' && booking.status !== 'completed'" 
-                        (click)="updateBookingStatus(booking.id, 'cancelled')" 
-                        class="btn-warning" 
+                <button *ngIf="booking.status !== 'cancelled' && booking.status !== 'completed'"
+                        (click)="updateBookingStatus(booking.id, 'cancelled')"
+                        class="btn-warning"
                         title="Cancel Booking">
                   Cancel
                 </button>
@@ -516,7 +536,7 @@
             <input type="number" [(ngModel)]="newListing.price" name="price" required min="0">
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Location *</label>
@@ -527,24 +547,24 @@
             <input type="number" [(ngModel)]="newListing.maxGuests" name="maxGuests" required min="1">
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Property Type *</label>
-            <select [(ngModel)]="newListing.propertyTypeId" name="propertyTypeId" required>
+            <select [(ngModel)]="newListing.propertyTypeId" title="propertyTypeId"  name="propertyTypeId" required>
               <option [ngValue]="null" disabled>Select Property Type</option>
               <option *ngFor="let type of propertyTypes" [value]="type.id">{{ type.name }}</option>
             </select>
           </div>
           <div class="form-group">
             <label>Property Category *</label>
-            <select [(ngModel)]="newListing.propertyCategoryId" name="propertyCategoryId" required>
+            <select [(ngModel)]="newListing.propertyCategoryId" title="propertyCategoryId" name="propertyCategoryId" required>
               <option [ngValue]="null" disabled>Select Category</option>
               <option *ngFor="let category of propertyCategories" [value]="category.id">{{ category.name }}</option>
             </select>
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Bedrooms</label>
@@ -559,18 +579,18 @@
             <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" min="0">
           </div>
         </div>
-        
+
         <div class="form-group">
           <label>Description *</label>
           <textarea [(ngModel)]="newListing.description" name="description" required rows="3" placeholder="Describe your property..."></textarea>
         </div>
-        
+
         <div class="form-group">
           <label>Property Images *</label>
           <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
           <small>Select one or more images (first image will be used as cover)</small>
         </div>
-        
+
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
           <button type="submit" class="btn-primary" [disabled]="!newListing.name || !newListing.price || !newListing.location || !newListing.propertyTypeId || !newListing.propertyCategoryId">Create Property</button>
@@ -594,7 +614,7 @@
             <input type="number" [(ngModel)]="newService.price" name="price" required min="0">
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Location *</label>
@@ -602,33 +622,33 @@
           </div>
           <div class="form-group">
             <label>Pricing Type</label>
-            <select [(ngModel)]="newService.pricingType" name="pricingType">
+            <select [(ngModel)]="newService.pricingType" name="pricingType"  title="pricingType">
               <option value="PerHour">Per Hour</option>
               <option value="PerDay">Per Day</option>
               <option value="Fixed">Fixed Price</option>
             </select>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label>Service Category *</label>
-          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId" required>
+          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId"  title="serviceCategoryId"  required>
             <option [ngValue]="null" disabled>Select Category</option>
             <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label>Description *</label>
           <textarea [(ngModel)]="newService.description" name="description" required rows="3" placeholder="Describe your service..."></textarea>
         </div>
-        
+
         <div class="form-group">
           <label>Service Images</label>
           <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
           <small>Select one or more images</small>
         </div>
-        
+
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
           <button type="submit" class="btn-primary" [disabled]="!newService.name || !newService.price || !newService.location || !newService.serviceCategoryId">Create Service</button>
@@ -652,7 +672,7 @@
             <input type="number" [(ngModel)]="newExperience.price" name="price" required min="0">
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Location *</label>
@@ -663,18 +683,18 @@
             <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required min="1" max="100">
           </div>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label>Category *</label>
-            <select [(ngModel)]="newExperience.expCatograyId" name="expCatograyId" required (change)="onExperienceCategoryChange()">
+            <select [(ngModel)]="newExperience.expCatograyId" name="expCatograyId"  title="expCatograyId" required (change)="onExperienceCategoryChange()">
               <option [ngValue]="null" disabled>Select Category</option>
               <option *ngFor="let cat of experienceCategories" [value]="cat.id">{{ cat.name }}</option>
             </select>
           </div>
           <div class="form-group">
             <label>Subcategory *</label>
-            <select [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required [disabled]="!newExperience.expCatograyId">
+            <select [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId"  title="expSubCatograyId" required [disabled]="!newExperience.expCatograyId">
               <option [ngValue]="null" disabled>
                 {{ newExperience.expCatograyId ? 'Select Subcategory' : 'First select a category' }}
               </option>
@@ -682,12 +702,12 @@
             </select>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label>Description *</label>
           <textarea [(ngModel)]="newExperience.description" name="description" required rows="3" placeholder="Describe the experience..."></textarea>
         </div>
-        
+
         <!-- Activities Section -->
         <div class="activities-section">
           <h4>Activities</h4>
@@ -699,7 +719,7 @@
             <textarea [(ngModel)]="newActivity.describe" placeholder="Description" rows="2" class="form-control"></textarea>
             <button type="button" (click)="addActivity()" class="btn-secondary">+ Add Activity</button>
           </div>
-          
+
           <div *ngIf="newExperience.expActivities && newExperience.expActivities.length > 0" class="activities-list">
             <div *ngFor="let act of newExperience.expActivities; let i = index" class="activity-item">
               <div class="activity-info">
@@ -711,17 +731,17 @@
             </div>
           </div>
         </div>
-        
+
         <div class="form-group">
           <label>Experience Images</label>
           <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
           <small>Select one or more images</small>
         </div>
-        
+
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
-          <button type="submit" class="btn-primary" 
-                  [disabled]="!newExperience.name || !newExperience.price || !newExperience.location || 
+          <button type="submit" class="btn-primary"
+                  [disabled]="!newExperience.name || !newExperience.price || !newExperience.location ||
                              !newExperience.expCatograyId || !newExperience.expSubCatograyId">
             Create Experience
           </button>

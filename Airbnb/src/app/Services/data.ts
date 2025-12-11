@@ -750,8 +750,4 @@ export class Data {
   updateWishlist(propertyId: number, isWishlisted: boolean) {
     return this.toggleWishlist('Property', propertyId);
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
