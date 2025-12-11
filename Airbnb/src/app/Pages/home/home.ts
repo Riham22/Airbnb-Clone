@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RentalProperty } from '../../Models/rental-property';
 import { PropertyList } from '../../Components/property-list/property-list';
 import { FilterModalComponent } from '../../Components/filter-modal/filter-modal.component';
 import { MainSearchBarComponent } from "../../Components/main-search-bar-component/main-search-bar-component";
 import { NavBarComponent } from "../../Components/nav-bar/nav-bar.component";
 import { Data } from '../../Services/data';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -21,8 +21,11 @@ import { Data } from '../../Services/data';
   styleUrls: ['./home.css']
 })
 export class HomeComponent implements OnInit {
-  properties: any[] = [];
-  filteredProperties: any[] = [];
+  allProperties: any[] = []; // تخزين جميع الـ properties من الـ API
+  allExperiences: any[] = []; // تخزين جميع الـ experiences
+  allServices: any[] = []; // تخزين جميع الـ services
+
+  filteredProperties: any[] = []; // للعرض بعد الفلترة
   activeFilters: any = {};
   isFilterModalOpen = false;
   selectedCategory: string = 'All';
@@ -48,14 +51,42 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     console.log('🏠 HomeComponent initialized');
 
-    this.dataService.loadProperties();
-    this.dataService.loadExperiences();
-    this.dataService.loadServices();
+    // استخدام combineLatest لجمع البيانات من جميع الـ Observables
+    combineLatest([
+      this.dataService.properties$,
+      this.dataService.experiences$,
+      this.dataService.services$
+    ]).subscribe({
+      next: ([properties, experiences, services]) => {
+        console.log('📦 Data received:');
+        console.log('Properties:', properties?.length);
+        console.log('Experiences:', experiences?.length);
+        console.log('Services:', services?.length);
 
-    this.dataService.properties$.subscribe(props => {
-      this.properties = props;
-      this.filteredProperties = props;
-      this.isLoading = false;
+        this.allProperties = properties || [];
+        this.allExperiences = experiences || [];
+        this.allServices = services || [];
+
+        // دمج جميع الأنواع في مصفوفة واحدة للعرض
+        const allListings = [
+          ...this.allProperties,
+          ...this.allExperiences,
+          ...this.allServices
+        ];
+
+        console.log('Total listings:', allListings.length);
+
+        if (allListings.length > 0) {
+          console.log('First listing:', allListings[0]);
+        }
+
+        this.filteredProperties = allListings;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error loading data:', error);
+        this.isLoading = false;
+      }
     });
   }
 
@@ -87,11 +118,11 @@ export class HomeComponent implements OnInit {
   }
 
   // Handle filtered properties from NavBarComponent
-  onFilteredPropertiesChange(properties: RentalProperty[]) {
-    console.log("Home: Received properties from NavBar:", properties.length);
-    // Store these as the base for further filtering
-    if (properties.length === 0) {
-      this.filteredProperties = [...this.properties];
+  onFilteredPropertiesChange(properties: any[]) {
+    console.log("Home: Received properties from NavBar:", properties?.length);
+    // إذا أرسلت NavBar قائمة خالية، استخدم كل البيانات
+    if (!properties || properties.length === 0) {
+      this.applyComplexFilters(); // إعادة تطبيق الفلاتر
     } else {
       this.filteredProperties = properties;
     }
@@ -119,70 +150,95 @@ export class HomeComponent implements OnInit {
 
   // Apply all filters (from both components and modal)
   applyComplexFilters() {
-    let filtered = [...this.properties];
+    console.log('🎯 Applying complex filters:', this.activeFilters);
+
+    // دمج جميع الأنواع
+    let allListings = [
+      ...this.allProperties,
+      ...this.allExperiences,
+      ...this.allServices
+    ];
+
+    console.log('Total listings before filtering:', allListings.length);
 
     // Apply property type filter from NavBar
     if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
-      filtered = filtered.filter(property => {
-        switch (this.activeFilters.propertyType) {
-          case 'property': return property.type === 'property';
-          case 'experience': return property.type === 'experience';
-          case 'service': return property.type === 'service';
-          default: return true;
-        }
+      console.log('Filtering by type:', this.activeFilters.propertyType);
+      allListings = allListings.filter(listing => {
+        return listing.type === this.activeFilters.propertyType;
       });
+      console.log('After type filter:', allListings.length);
     }
 
     // Apply location filter from MainSearchBar
     if (this.activeFilters.location && this.activeFilters.location !== '' && this.activeFilters.location !== 'flexible') {
-      filtered = filtered.filter(property =>
-        property.location?.toLowerCase().includes(this.activeFilters.location.toLowerCase())
+      console.log('Filtering by location:', this.activeFilters.location);
+      allListings = allListings.filter(listing =>
+        listing.location?.toLowerCase().includes(this.activeFilters.location.toLowerCase())
       );
+      console.log('After location filter:', allListings.length);
     }
 
     // Apply price filter from modal
     if (this.activeFilters.minPrice || this.activeFilters.maxPrice) {
       const minPrice = this.activeFilters.minPrice || 0;
       const maxPrice = this.activeFilters.maxPrice || Infinity;
-      filtered = filtered.filter(property =>
-        property.price >= minPrice && property.price <= maxPrice
+      console.log('Filtering by price:', minPrice, 'to', maxPrice);
+      allListings = allListings.filter(listing =>
+        listing.price >= minPrice && listing.price <= maxPrice
       );
+      console.log('After price filter:', allListings.length);
     }
 
     // Apply dates filter from MainSearchBar
     if (this.activeFilters.dates?.start && this.activeFilters.dates?.end) {
-      filtered = filtered.filter(property =>
-        property.isAvailable !== false
+      console.log('Filtering by dates');
+      allListings = allListings.filter(listing =>
+        listing.isAvailable !== false
       );
+      console.log('After dates filter:', allListings.length);
     }
 
     // Apply guests filter from MainSearchBar
     if (this.activeFilters.guests?.adults || this.activeFilters.guests?.children) {
       const totalGuests = (this.activeFilters.guests.adults || 0) + (this.activeFilters.guests.children || 0);
-      filtered = filtered.filter(property =>
-        (property.maxGuests ?? 0) >= totalGuests
+      console.log('Filtering by guests:', totalGuests);
+      allListings = allListings.filter(listing =>
+        (listing.maxGuests ?? 0) >= totalGuests
       );
+      console.log('After guests filter:', allListings.length);
     }
 
     // Apply amenities filter from modal
     if (this.activeFilters.amenities && this.activeFilters.amenities.length > 0) {
-      filtered = filtered.filter(property =>
-        this.activeFilters.amenities.every((amenity: string) =>
-          property.amenities?.includes(amenity)
+      console.log('Filtering by amenities:', this.activeFilters.amenities);
+      allListings = allListings.filter(listing =>
+        listing.amenities && this.activeFilters.amenities.every((amenity: string) =>
+          listing.amenities.includes(amenity)
         )
       );
+      console.log('After amenities filter:', allListings.length);
     }
 
-    this.filteredProperties = filtered;
+    this.filteredProperties = allListings;
+    console.log('Final filtered listings:', this.filteredProperties.length);
+
+    // إذا لم توجد نتائج، أظهر رسالة في الكونسول
+    if (this.filteredProperties.length === 0) {
+      console.log('❌ No listings found after filtering');
+      console.log('Active filters:', this.activeFilters);
+      console.log('All properties:', this.allProperties.length);
+      console.log('All experiences:', this.allExperiences.length);
+      console.log('All services:', this.allServices.length);
+    }
   }
 
   // Wishlist handler
   onWishlistChange(event: any) {
     console.log("Wish changed:", event);
     const { propertyId, isWishlisted, itemType } = event;
-    const type = itemType || 'Property';
-    
-    this.dataService.toggleWishlist(type, propertyId).subscribe({
+
+    this.dataService.toggleWishlist(itemType || 'Property', propertyId).subscribe({
       next: (response) => {
         console.log('Wishlist updated:', response);
       },
@@ -194,13 +250,13 @@ export class HomeComponent implements OnInit {
 
   getResultsTitle(): string {
     if (this.filteredProperties.length === 0 && !this.isLoading) {
-      return 'No properties found';
+      return 'No listings found';
     }
 
     if (this.activeFilters.location && this.activeFilters.location !== 'anywhere') {
       const location = this.activeFilters.location.charAt(0).toUpperCase() +
         this.activeFilters.location.slice(1);
-      return `${location} Properties`;
+      return `${location} Listings`;
     }
 
     if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
@@ -209,10 +265,11 @@ export class HomeComponent implements OnInit {
       return `${type} Listings`;
     }
 
-    return 'All Available Stays';
+    return 'All Available Listings';
   }
 
-  onPropertyClick(property: RentalProperty) {
+  onPropertyClick(property: any) {
     console.log('Property clicked:', property);
+    // يمكنك إضافة التنقل لصفحة التفاصيل هنا
   }
 }
