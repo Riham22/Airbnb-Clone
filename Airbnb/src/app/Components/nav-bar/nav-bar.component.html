@@ -109,25 +109,27 @@
   </div>
 
   <!-- Menu Panel -->
-  <div *ngIf="showMenuPanel" class="menu-panel scrollable" [class.active]="showMenuPanel">
-    <div class="panel-header">
-      <h3 class="panel-title">Menu</h3>
-      <button class="close-panel" (click)="toggleMenuPanel()">×</button>
+  <!-- Menu Panel -->
+<div *ngIf="showMenuPanel" class="menu-panel scrollable" [class.active]="showMenuPanel">
+  <div class="panel-header">
+    <h3 class="panel-title">Menu</h3>
+    <button class="close-panel" (click)="toggleMenuPanel()">×</button>
+  </div>
+
+  <div class="menu-list">
+    <!-- User info section (للمستخدم المسجل فقط) -->
+    <div class="user-section" *ngIf="isAuthenticated && currentUser">
+      <div class="user-avatar-large">
+        {{ getUserInitials() }}
+      </div>
+      <div class="user-details">
+        <h3 class="user-fullname">{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
+        <p class="user-email">{{ currentUser.email }}</p>
+      </div>
     </div>
 
-    <div class="menu-list">
-      <!-- User info section -->
-      <div class="user-section" *ngIf="isAuthenticated && currentUser">
-        <div class="user-avatar-large">
-          {{ getUserInitials() }}
-        </div>
-        <div class="user-details">
-          <h3 class="user-fullname">{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
-          <p class="user-email">{{ currentUser.email }}</p>
-        </div>
-      </div>
-
-      <!-- Menu items -->
+    <!-- Menu for logged in users -->
+    <div *ngIf="isAuthenticated">
       <!-- My Trips -->
       <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/trips'])">
         <span class="menu-icon">
@@ -141,7 +143,7 @@
       </div>
 
       <!-- Wishlists -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/wishlists'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -153,7 +155,7 @@
       </div>
 
       <!-- Messages -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/messages'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
@@ -165,7 +167,7 @@
       </div>
 
       <!-- Notifications -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/notifications'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
@@ -179,7 +181,7 @@
       <div class="menu-separator"></div>
 
       <!-- Host your home -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -191,7 +193,7 @@
       </div>
 
       <!-- Host an experience -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/host/experience'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
@@ -203,7 +205,7 @@
       </div>
 
       <!-- Account settings -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/account/settings'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
@@ -214,10 +216,8 @@
         </div>
       </div>
 
-      <div class="menu-separator"></div>
-
       <!-- Help Center -->
-      <div class="menu-option" (click)="showMenuPanel = false">
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/help'])">
         <span class="menu-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
@@ -229,7 +229,7 @@
       </div>
 
       <!-- Logout section -->
-      <div class="logout-section" *ngIf="isAuthenticated">
+      <div class="logout-section">
         <div class="menu-separator"></div>
         <button class="logout-btn styled" (click)="logout()">
           <span class="logout-icon">
@@ -241,5 +241,59 @@
         </button>
       </div>
     </div>
+
+    <!-- Menu for guests (غير مسجل دخول) -->
+    <div *ngIf="!isAuthenticated">
+      <!-- Become a Host -->
+      <div class="menu-option highlighted" (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
+        <span class="menu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF385C">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+        </span>
+        <div class="menu-content">
+          <span class="menu-label host-label">Become a Host</span>
+        </div>
+      </div>
+
+      <div class="menu-separator"></div>
+
+      <!-- Login Button -->
+      <div class="menu-option auth-option" (click)="showMenuPanel = false; router.navigate(['/login'])">
+        <span class="menu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+            <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
+          </svg>
+        </span>
+        <div class="menu-content">
+          <span class="menu-label auth-label">Login</span>
+        </div>
+      </div>
+
+      <!-- Signup Button -->
+      <div class="menu-option auth-option" (click)="showMenuPanel = false; router.navigate(['/signup'])">
+        <span class="menu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </span>
+        <div class="menu-content">
+          <span class="menu-label auth-label">Sign Up</span>
+        </div>
+      </div>
+
+      <!-- Help Center -->
+      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/help'])">
+        <span class="menu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+          </svg>
+        </span>
+        <div class="menu-content">
+          <span class="menu-label">Help Center</span>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 </nav>

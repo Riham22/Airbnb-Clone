@@ -40,7 +40,7 @@ export interface UserProfile extends UserProfileUpdate {
 })
 export class UserService {
   private userApiUrl = "https://localhost:7020/api/User";
-  private accountApiUrl = "https://localhost:7020/api/Acount";
+  private accountApiUrl = "https://localhost:7020/api/Account";
 
   private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
   userProfile$ = this.userProfileSubject.asObservable();
