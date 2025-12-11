@@ -1,328 +1,733 @@
+<!-- components/host-dashboard/host-dashboard.html -->
 <div class="host-dashboard">
+
+  <!-- Loading Overlay -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-spinner">Loading...</div>
+  </div>
+
   <!-- Header -->
-  <header class="dashboard-header">
-    <div class="header-content">
-      <div class="header-left">
-        <h1>Host Dashboard</h1>
-        <p class="header-subtitle">Manage your listings and bookings</p>
-      </div>
-      <button class="btn-primary" (click)="toggleCreateListing()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 1a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2H9v5a1 1 0 1 1-2 0V9H2a1 1 0 0 1 0-2h5V2a1 1 0 0 1 1-1z"/>
-        </svg>
-        {{ showCreateListing ? 'Cancel' : 'Create Listing' }}
+  <header class="host-header">
+    <h1>Host Dashboard</h1>
+    <div class="host-actions">
+      <button class="btn-secondary" (click)="testEndpoints()" [disabled]="loading">
+        🧪 Test APIs
+      </button>
+      <button class="btn-primary" (click)="refreshData()" [disabled]="loading">
+        🔄 Refresh Data
       </button>
     </div>
   </header>
 
-  <!-- Create Listing Modal -->
-  <div *ngIf="showCreateListing" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Create a new listing</h2>
-        <button class="close-btn" (click)="toggleCreateListing()">×</button>
-      </div>
-      <div class="modal-body">
-        <form class="listing-form">
-          <div class="form-section">
-            <h3>Basic Information</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="title">Listing Title</label>
-                <input type="text" id="title" placeholder="Cozy apartment in city center">
-              </div>
-              <div class="form-group">
-                <label for="type">Property Type</label>
-                <select id="type">
-                  <option value="">Select property type</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="house">House</option>
-                  <option value="condo">Condo</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="description">Description</label>
-              <textarea id="description" rows="4" placeholder="Describe your space..."></textarea>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>Pricing</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="price">Price per night ($)</label>
-                <input type="number" id="price" placeholder="100">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn-secondary" (click)="toggleCreateListing()">Cancel</button>
-            <button type="submit" class="btn-primary">Create Listing</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
   <!-- Navigation Tabs -->
-  <nav class="dashboard-nav">
-    <div class="nav-tabs">
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'overview'"
-        (click)="setActiveTab('overview')">
-        Overview
-      </button>
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'listings'"
-        (click)="setActiveTab('listings')">
-        Listings
-      </button>
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'bookings'"
-        (click)="setActiveTab('bookings')">
-        Bookings
-      </button>
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'earnings'"
-        (click)="setActiveTab('earnings')">
-        Earnings
-      </button>
-    </div>
+  <nav class="host-tabs">
+    <button [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')" class="tab-button">
+      📊 Overview
+    </button>
+    <button [class.active]="activeTab === 'listings'" (click)="setActiveTab('listings')" class="tab-button">
+      🏠 Properties
+    </button>
+    <button [class.active]="activeTab === 'services'" (click)="setActiveTab('services')" class="tab-button">
+      🛠️ Services
+    </button>
+    <button [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')" class="tab-button">
+      🏄 Experiences
+    </button>
+    <button [class.active]="activeTab === 'bookings'" (click)="setActiveTab('bookings')" class="tab-button">
+      📅 Bookings
+    </button>
+    <button [class.active]="activeTab === 'earnings'" (click)="setActiveTab('earnings')" class="tab-button">
+      💰 Earnings
+    </button>
   </nav>
 
-  <!-- Main Content -->
-  <main class="dashboard-content">
-
-    <!-- Overview Tab -->
-    <div *ngIf="activeTab === 'overview'" class="tab-content overview-tab">
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon earnings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.78-1.18 2.73-3.12 3.16z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats?.totalEarnings || 0 | currency }}</h3>
-            <p>Total Earnings</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon bookings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 11V3H7v4H3v14h8v-4h2v4h8V11h-4zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm4 4H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats?.totalBookings || 0 }}</h3>
-            <p>Total Bookings</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon listings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats?.activeListings || 0 }}</h3>
-            <p>Active Listings</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon occupancy">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-            </svg>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats?.occupancyRate || 0 }}%</h3>
-            <p>Occupancy Rate</p>
-          </div>
+  <!-- ==================== OVERVIEW TAB ==================== -->
+  <section *ngIf="activeTab === 'overview' && stats" class="tab-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+          <h3>${{ stats.totalEarnings | number }}</h3>
+          <p>Total Earnings</p>
         </div>
       </div>
-
-      <!-- Recent Activity -->
-      <div class="activity-section">
-        <div class="section-header">
-          <h2>Recent Activity</h2>
-          <a routerLink="/bookings" class="see-all">See all</a>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-info">
+          <h3>${{ stats.monthlyEarnings | number }}</h3>
+          <p>Monthly Earnings</p>
         </div>
-        <div class="activity-list">
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏠</div>
+        <div class="stat-info">
+          <h3>{{ stats.activeListings | number }}</h3>
+          <p>Active Listings</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-info">
+          <h3>{{ stats.totalBookings | number }}</h3>
+          <p>Total Bookings</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-info">
+          <h3>{{ stats.occupancyRate | number: '1.0-1' }}%</h3>
+          <p>Occupancy Rate</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-info">
+          <h3>{{ stats.averageRating | number: '1.1-1' }}</h3>
+          <p>Average Rating</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-activity">
+      <h2>Recent Activity</h2>
+      <div class="activity-grid">
+        <!-- Recent Bookings -->
+        <div class="recent-bookings">
+          <h3>Recent Bookings</h3>
           <div *ngFor="let booking of bookings.slice(0, 5)" class="activity-item">
-            <div class="activity-avatar">
-              <img [src]="booking.guestAvatar" alt="booking.guestName" />
+            <div class="booking-avatar">
+              <img src="assets/default-avatar.png" [alt]="booking.guestName">
             </div>
-            <div class="activity-details">
-              <p><strong>{{ booking.guestName }}</strong> booked <strong>{{ booking.listingName }}</strong></p>
-              <span class="activity-date">{{ booking.checkIn }} - {{ booking.checkOut }}</span>
+            <div class="activity-info">
+              <strong>{{ booking.guestName }}</strong>
+              <span class="booking-location">{{ booking.propertyName }}</span>
             </div>
-            <div class="activity-amount">
-              {{ booking.totalPrice| currency }}
+            <span class="activity-date">{{ booking.checkIn | date:'MMM d' }}</span>
+          </div>
+        </div>
+
+        <!-- Recent Listings -->
+        <div class="recent-listings">
+          <h3>Recent Listings</h3>
+          <div *ngFor="let listing of listings.slice(0, 5)" class="activity-item">
+            <div class="listing-image">
+              <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
             </div>
+            <div class="activity-info">
+              <strong>{{ listing.title }}</strong>
+              <span class="listing-location">{{ listing.location }}</span>
+            </div>
+            <span class="activity-date">{{ listing.createdAt | date:'MMM d' }}</span>
           </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Listings Tab -->
-    <div *ngIf="activeTab === 'listings'" class="tab-content listings-tab">
-      <div class="section-header">
-        <h2>Your Listings ({{ listings.length }})</h2>
+  <!-- ==================== PROPERTIES TAB ==================== -->
+  <section *ngIf="activeTab === 'listings'" class="tab-content">
+    <div class="section-header">
+      <h2>Property Management</h2>
+      <div class="table-actions">
+        <button class="btn-primary" (click)="openAddListingModal()">+ Add Property</button>
+        <input type="text" placeholder="Search properties..." class="search-input">
+        <select title="status" class="filter-select" (change)="filterListings($event)">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
+    </div>
 
-      <div class="listings-grid">
-        <div *ngFor="let listing of listings" class="listing-card">
-          <div class="listing-image">
-            <img alt="" [src]="listing.images[0]"   />
-            <div class="listing-status" [class.active]="listing.status === 'active'">
-              {{ listing.status }}
-            </div>
-          </div>
-          <div class="listing-content">
-            <h3 class="listing-title">{{ listing.title }}</h3>
-            <p class="listing-location">{{ listing.location }}</p>
-            <div class="listing-stats">
-              <span class="listing-price">{{ listing.price | currency }} <small>night</small></span>
-              <div class="listing-meta">
-                <span>⭐ {{ listing.rating }}</span>
-                <span>·</span>
-                <span>{{ listing.reviewCount }} reviews</span>
+    <div class="table-container">
+      <table class="host-table">
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Bookings</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let listing of listings">
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img [src]="getImageUrl(listing.images[0])" [alt]="listing.title">
               </div>
-            </div>
-            <div class="listing-actions">
-              <button
-                class="status-toggle"
-                [class.active]="listing.status === 'active'"
-                (click)="toggleListingStatus(listing.id, listing.status)">
-                {{ listing.status === 'active' ? 'Active' : 'Inactive' }}
-              </button>
-              <button class="btn-edit">Edit</button>
-            </div>
-          </div>
+              <div class="listing-info">
+                <strong>{{ listing.title }}</strong>
+                <span class="listing-location">{{ listing.location }}</span>
+              </div>
+            </td>
+            <td>{{ listing.type }}</td>
+            <td>${{ listing.price }}/night</td>
+            <td>
+              <div class="rating">
+                ⭐ {{ listing.rating }} ({{ listing.reviewCount }})
+              </div>
+            </td>
+            <td>{{ listing.bookingsCount }}</td>
+            <td>
+              <span [class]="'status-badge ' + getStatusClass(listing.status)">
+                {{ listing.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button *ngIf="listing.status === 'active'" 
+                        (click)="updateListingStatus(listing.id, 'inactive')" 
+                        class="btn-warning" 
+                        title="Deactivate">
+                  Deactivate
+                </button>
+                <button *ngIf="listing.status === 'inactive'" 
+                        (click)="updateListingStatus(listing.id, 'active')" 
+                        class="btn-success" 
+                        title="Activate">
+                  Activate
+                </button>
+                <button (click)="deleteListing(listing.id)" 
+                        class="btn-danger" 
+                        title="Delete">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="listings.length === 0" class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <h3>No properties found</h3>
+      <p>Start by adding your first property!</p>
+      <button class="btn-primary" (click)="openAddListingModal()">+ Add Property</button>
+    </div>
+  </section>
+
+  <!-- ==================== SERVICES TAB ==================== -->
+  <section *ngIf="activeTab === 'services'" class="tab-content">
+    <div class="section-header">
+      <h2>Service Management</h2>
+      <div class="table-actions">
+        <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
+        <input type="text" placeholder="Search services..." class="search-input">
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="host-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let service of services">
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img [src]="getImageUrl(service.imageUrl || service.images?.[0])" alt="">
+              </div>
+              <div class="listing-info">
+                <strong>{{ service.name }}</strong>
+                <span class="listing-location">{{ service.location }}</span>
+              </div>
+            </td>
+            <td>{{ service.category }}</td>
+            <td>${{ service.price }}</td>
+            <td>⭐ {{ service.rating }} ({{ service.reviewCount }})</td>
+            <td>
+              <span [class]="'status-badge ' + getStatusClass(service.status)">
+                {{ service.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button *ngIf="service.status === 'active'" 
+                        (click)="updateServiceStatus(service.id, 'inactive')" 
+                        class="btn-warning" 
+                        title="Deactivate">
+                  Deactivate
+                </button>
+                <button *ngIf="service.status === 'inactive'" 
+                        (click)="updateServiceStatus(service.id, 'active')" 
+                        class="btn-success" 
+                        title="Activate">
+                  Activate
+                </button>
+                <button (click)="deleteService(service.id)" 
+                        class="btn-danger" 
+                        title="Delete">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="services.length === 0" class="empty-state">
+      <div class="empty-icon">🛠️</div>
+      <h3>No services found</h3>
+      <p>Start by adding your first service!</p>
+      <button class="btn-primary" (click)="openAddServiceModal()">+ Add Service</button>
+    </div>
+  </section>
+
+  <!-- ==================== EXPERIENCES TAB ==================== -->
+  <section *ngIf="activeTab === 'experiences'" class="tab-content">
+    <div class="section-header">
+      <h2>Experience Management</h2>
+      <div class="table-actions">
+        <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
+        <input type="text" placeholder="Search experiences..." class="search-input">
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="host-table">
+        <thead>
+          <tr>
+            <th>Experience</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Rating</th>
+            <th>Participants</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let experience of experiences">
+            <td class="listing-cell">
+              <div class="listing-image">
+                <img [src]="getImageUrl(experience.imageUrl || experience.images?.[0])" alt="">
+              </div>
+              <div class="listing-info">
+                <strong>{{ experience.name }}</strong>
+                <span class="listing-location">{{ experience.location }}</span>
+              </div>
+            </td>
+            <td>{{ experience.category }}</td>
+            <td>${{ experience.price }}</td>
+            <td>⭐ {{ experience.rating }} ({{ experience.reviewCount }})</td>
+            <td>{{ experience.maxParticipants }}</td>
+            <td>
+              <span [class]="'status-badge ' + getStatusClass(experience.status)">
+                {{ experience.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button *ngIf="experience.status === 'active'" 
+                        (click)="updateExperienceStatus(experience.id, 'inactive')" 
+                        class="btn-warning" 
+                        title="Deactivate">
+                  Deactivate
+                </button>
+                <button *ngIf="experience.status === 'inactive'" 
+                        (click)="updateExperienceStatus(experience.id, 'active')" 
+                        class="btn-success" 
+                        title="Activate">
+                  Activate
+                </button>
+                <button (click)="deleteExperience(experience.id)" 
+                        class="btn-danger" 
+                        title="Delete">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="experiences.length === 0" class="empty-state">
+      <div class="empty-icon">🏄</div>
+      <h3>No experiences found</h3>
+      <p>Start by adding your first experience!</p>
+      <button class="btn-primary" (click)="openAddExperienceModal()">+ Add Experience</button>
+    </div>
+  </section>
+
+  <!-- ==================== BOOKINGS TAB ==================== -->
+  <section *ngIf="activeTab === 'bookings'" class="tab-content">
+    <div class="section-header">
+      <h2>Booking Management</h2>
+      <div class="table-actions">
+        <select title="status" class="filter-select">
+          <option>All Bookings</option>
+          <option>Upcoming</option>
+          <option>Confirmed</option>
+          <option>Completed</option>
+          <option>Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="host-table">
+        <thead>
+          <tr>
+            <th>Guest</th>
+            <th>Property</th>
+            <th>Dates</th>
+            <th>Guests</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let booking of bookings">
+            <td class="user-cell">
+              <div class="user-avatar">
+                <img src="assets/default-avatar.png" [alt]="booking.guestName">
+              </div>
+              <div class="user-info">
+                <strong>{{ booking.guestName }}</strong>
+                <span class="user-email">{{ booking.guestEmail }}</span>
+              </div>
+            </td>
+            <td>{{ booking.propertyName }}</td>
+            <td>
+              <div class="booking-dates">
+                <div>{{ booking.checkIn | date:'MMM d' }}</div>
+                <div>→ {{ booking.checkOut | date:'MMM d' }}</div>
+              </div>
+            </td>
+            <td>{{ booking.guests }}</td>
+            <td>${{ booking.totalPrice }}</td>
+            <td>
+              <span [class]="'status-badge ' + getStatusClass(booking.status)">
+                {{ getBookingStatusText(booking.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <!-- Status-specific actions -->
+                <button *ngIf="booking.status === 'upcoming' || booking.status === 'pending'" 
+                        (click)="updateBookingStatus(booking.id, 'confirmed')" 
+                        class="btn-success" 
+                        title="Confirm Booking">
+                  Confirm
+                </button>
+                <button *ngIf="booking.status === 'confirmed'" 
+                        (click)="updateBookingStatus(booking.id, 'completed')" 
+                        class="btn-primary" 
+                        title="Mark as Completed">
+                  Complete
+                </button>
+                <button *ngIf="booking.status !== 'cancelled' && booking.status !== 'completed'" 
+                        (click)="updateBookingStatus(booking.id, 'cancelled')" 
+                        class="btn-warning" 
+                        title="Cancel Booking">
+                  Cancel
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="bookings.length === 0" class="empty-state">
+      <div class="empty-icon">📅</div>
+      <h3>No bookings yet</h3>
+      <p>When guests book your listings, they'll appear here.</p>
+    </div>
+  </section>
+
+  <!-- ==================== EARNINGS TAB ==================== -->
+  <section *ngIf="activeTab === 'earnings'" class="tab-content">
+    <div class="section-header">
+      <h2>Earnings Overview</h2>
+      <div class="earnings-summary">
+        <div class="total-earnings">
+          <h3>Total Earnings</h3>
+          <div class="earnings-amount">${{ stats?.totalEarnings | number }}</div>
+          <p>All time earnings</p>
+        </div>
+        <div class="monthly-earnings">
+          <h3>This Month</h3>
+          <div class="earnings-amount">${{ stats?.monthlyEarnings | number }}</div>
+          <p>{{ stats?.occupancyRate | number: '1.0-1' }}% occupancy rate</p>
         </div>
       </div>
     </div>
 
-    <!-- Bookings Tab -->
-<div *ngIf="activeTab === 'bookings'" class="tab-content bookings-tab">
-  <div class="section-header">
-    <h2>Bookings</h2>
-    <div class="booking-filters">
-      <select title="g" class="filter-select">
-        <option>All bookings</option>
-        <option>Upcoming</option>
-        <option>Current</option>
-        <option>Completed</option>
-        <option>Cancelled</option>
-      </select>
+    <!-- Earnings Chart Placeholder -->
+    <div class="earnings-chart">
+      <div class="chart-placeholder">
+        <div class="placeholder-icon">📈</div>
+        <h3>Earnings Analytics</h3>
+        <p>Detailed charts and analytics coming soon.</p>
+      </div>
+    </div>
+
+    <!-- Earnings Breakdown -->
+    <div class="earnings-breakdown">
+      <h3>Earnings Breakdown</h3>
+      <div class="breakdown-list">
+        <div class="breakdown-item">
+          <span class="breakdown-label">Properties</span>
+          <span class="breakdown-amount">${{ (stats?.totalEarnings || 0) * 0.7 | number }}</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">Services</span>
+          <span class="breakdown-amount">${{ (stats?.totalEarnings || 0) * 0.2 | number }}</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">Experiences</span>
+          <span class="breakdown-amount">${{ (stats?.totalEarnings || 0) * 0.1 | number }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Add Property Modal -->
+  <div class="modal-overlay" *ngIf="showAddListingModal">
+    <div class="modal-content">
+      <h3>Add New Property</h3>
+      <form (ngSubmit)="addListing()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Property Name *</label>
+            <input type="text" [(ngModel)]="newListing.name" name="name" required placeholder="Enter property name">
+          </div>
+          <div class="form-group">
+            <label>Price per Night *</label>
+            <input type="number" [(ngModel)]="newListing.price" name="price" required min="0">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" [(ngModel)]="newListing.location" name="location" required placeholder="City, Country">
+          </div>
+          <div class="form-group">
+            <label>Max Guests *</label>
+            <input type="number" [(ngModel)]="newListing.maxGuests" name="maxGuests" required min="1">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Property Type *</label>
+            <select [(ngModel)]="newListing.propertyTypeId" name="propertyTypeId" required>
+              <option [ngValue]="null" disabled>Select Property Type</option>
+              <option *ngFor="let type of propertyTypes" [value]="type.id">{{ type.name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Property Category *</label>
+            <select [(ngModel)]="newListing.propertyCategoryId" name="propertyCategoryId" required>
+              <option [ngValue]="null" disabled>Select Category</option>
+              <option *ngFor="let category of propertyCategories" [value]="category.id">{{ category.name }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bedrooms</label>
+            <input type="number" [(ngModel)]="newListing.bedrooms" name="bedrooms" min="0">
+          </div>
+          <div class="form-group">
+            <label>Beds</label>
+            <input type="number" [(ngModel)]="newListing.beds" name="beds" min="0">
+          </div>
+          <div class="form-group">
+            <label>Bathrooms</label>
+            <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea [(ngModel)]="newListing.description" name="description" required rows="3" placeholder="Describe your property..."></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Property Images *</label>
+          <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
+          <small>Select one or more images (first image will be used as cover)</small>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="!newListing.name || !newListing.price || !newListing.location || !newListing.propertyTypeId || !newListing.propertyCategoryId">Create Property</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <div class="bookings-list">
-    <div *ngFor="let booking of bookings" class="booking-card">
-      <div class="booking-header">
-        <div class="booking-guest">
-          <img alt="" [src]="booking.guestAvatar"  class="guest-avatar" />
-          <div class="guest-info">
-            <h4>{{ booking.guestName }}</h4>
-            <p>{{ booking.guests }} guests · {{ booking.listingName }}</p>
+  <!-- Add Service Modal -->
+  <div class="modal-overlay" *ngIf="showAddServiceModal">
+    <div class="modal-content">
+      <h3>Add New Service</h3>
+      <form (ngSubmit)="addService()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Service Name *</label>
+            <input type="text" [(ngModel)]="newService.name" name="name" required placeholder="Enter service name">
+          </div>
+          <div class="form-group">
+            <label>Price *</label>
+            <input type="number" [(ngModel)]="newService.price" name="price" required min="0">
           </div>
         </div>
-        <div class="booking-status" [class]="booking.status">
-          {{ booking.status }}
-        </div>
-      </div>
-
-      <div class="booking-details">
-        <div class="booking-dates">
-          <div class="date-group">
-            <label>Check-in</label>
-            <strong>{{ booking.checkIn }}</strong>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" [(ngModel)]="newService.location" name="location" required>
           </div>
-          <div class="date-group">
-            <label>Check-out</label>
-            <strong>{{ booking.checkOut }}</strong>
+          <div class="form-group">
+            <label>Pricing Type</label>
+            <select [(ngModel)]="newService.pricingType" name="pricingType">
+              <option value="PerHour">Per Hour</option>
+              <option value="PerDay">Per Day</option>
+              <option value="Fixed">Fixed Price</option>
+            </select>
           </div>
         </div>
-
-        <div class="booking-amount">
-          <label>Total</label>
-          <strong>{{ booking.totalPrice| currency }}</strong>
-        </div>
-      </div>
-
-      <div class="booking-actions">
-        <!-- Use 'upcoming' instead of 'pending' -->
-        <button
-          *ngIf="booking.status === 'upcoming'"
-          class="btn-confirm"
-          (click)="confirmBooking(booking.id)">
-          Confirm Booking
-        </button>
-        <button class="btn-message">Message</button>
-        <button
-          *ngIf="booking.status === 'upcoming'"
-          class="btn-cancel"
-          (click)="cancelBooking(booking.id)">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-    <!-- Earnings Tab -->
-    <div *ngIf="activeTab === 'earnings'" class="tab-content earnings-tab">
-      <div class="earnings-header">
-        <div class="earnings-summary">
-          <h2>Earnings</h2>
-          <div class="earnings-amount">{{ stats?.totalEarnings | currency }}</div>
-          <p>Total earnings all time</p>
-        </div>
-        <div class="earnings-period">
-          <select title="l" class="period-select">
-            <option>Last 30 days</option>
-            <option>Last 3 months</option>
-            <option>Last 12 months</option>
-            <option>All time</option>
+        
+        <div class="form-group">
+          <label>Service Category *</label>
+          <select [(ngModel)]="newService.serviceCategoryId" name="serviceCategoryId" required>
+            <option [ngValue]="null" disabled>Select Category</option>
+            <option *ngFor="let cat of serviceCategories" [value]="cat.id">{{ cat.name }}</option>
           </select>
         </div>
-      </div>
-
-      <div class="earnings-chart">
-        <div class="chart-placeholder">
-          <p>Earnings chart would be displayed here</p>
+        
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea [(ngModel)]="newService.description" name="description" required rows="3" placeholder="Describe your service..."></textarea>
         </div>
-      </div>
-
-      <div class="earnings-breakdown">
-        <h3>Earnings Breakdown</h3>
-        <div class="breakdown-list">
-          <div class="breakdown-item">
-            <span class="breakdown-label">Completed stays</span>
-            <span class="breakdown-amount">{{ stats?.totalBookings }} bookings</span>
-          </div>
-          <div class="breakdown-item">
-            <span class="breakdown-label">Average nightly rate</span>
-            <span class="breakdown-amount">{{ stats?.averageRating | currency }}</span>
-          </div>
-          <div class="breakdown-item">
-            <span class="breakdown-label">Occupancy rate</span>
-            <span class="breakdown-amount">{{ stats?.occupancyRate || 0 }}%</span>
-          </div>
+        
+        <div class="form-group">
+          <label>Service Images</label>
+          <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
+          <small>Select one or more images</small>
         </div>
-      </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="!newService.name || !newService.price || !newService.location || !newService.serviceCategoryId">Create Service</button>
+        </div>
+      </form>
     </div>
-  </main>
+  </div>
+
+  <!-- Add Experience Modal -->
+  <div class="modal-overlay" *ngIf="showAddExperienceModal">
+    <div class="modal-content">
+      <h3>Add New Experience</h3>
+      <form (ngSubmit)="addExperience()">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Experience Name *</label>
+            <input type="text" [(ngModel)]="newExperience.name" name="name" required placeholder="Enter experience name">
+          </div>
+          <div class="form-group">
+            <label>Price per Guest *</label>
+            <input type="number" [(ngModel)]="newExperience.price" name="price" required min="0">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location *</label>
+            <input type="text" [(ngModel)]="newExperience.location" name="location" required>
+          </div>
+          <div class="form-group">
+            <label>Max Participants *</label>
+            <input type="number" [(ngModel)]="newExperience.maxParticipants" name="maxParticipants" required min="1" max="100">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category *</label>
+            <select [(ngModel)]="newExperience.expCatograyId" name="expCatograyId" required (change)="onExperienceCategoryChange()">
+              <option [ngValue]="null" disabled>Select Category</option>
+              <option *ngFor="let cat of experienceCategories" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Subcategory *</label>
+            <select [(ngModel)]="newExperience.expSubCatograyId" name="expSubCatograyId" required [disabled]="!newExperience.expCatograyId">
+              <option [ngValue]="null" disabled>
+                {{ newExperience.expCatograyId ? 'Select Subcategory' : 'First select a category' }}
+              </option>
+              <option *ngFor="let sub of experienceSubCategories" [value]="sub.id">{{ sub.name }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea [(ngModel)]="newExperience.description" name="description" required rows="3" placeholder="Describe the experience..."></textarea>
+        </div>
+        
+        <!-- Activities Section -->
+        <div class="activities-section">
+          <h4>Activities</h4>
+          <div class="activity-form">
+            <div class="form-row">
+              <input type="text" [(ngModel)]="newActivity.name" placeholder="Activity Name" class="form-control">
+              <input type="number" [(ngModel)]="newActivity.timeMinute" placeholder="Duration (min)" class="form-control" min="1">
+            </div>
+            <textarea [(ngModel)]="newActivity.describe" placeholder="Description" rows="2" class="form-control"></textarea>
+            <button type="button" (click)="addActivity()" class="btn-secondary">+ Add Activity</button>
+          </div>
+          
+          <div *ngIf="newExperience.expActivities && newExperience.expActivities.length > 0" class="activities-list">
+            <div *ngFor="let act of newExperience.expActivities; let i = index" class="activity-item">
+              <div class="activity-info">
+                <strong>{{ act.name }}</strong>
+                <span>{{ act.timeMinute }} min</span>
+                <p>{{ act.describe }}</p>
+              </div>
+              <button type="button" (click)="removeActivity(i)" class="btn-danger">&times;</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Experience Images</label>
+          <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
+          <small>Select one or more images</small>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeAddExperienceModal()">Cancel</button>
+          <button type="submit" class="btn-primary" 
+                  [disabled]="!newExperience.name || !newExperience.price || !newExperience.location || 
+                             !newExperience.expCatograyId || !newExperience.expSubCatograyId">
+            Create Experience
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>

@@ -14,10 +14,11 @@ export interface Service {
   images: string[];
   category: string;
   duration: string;
-  provider: {
+  maxGuests?: number;
+  host: {
     name: string;
     joinedDate: string;
-    isVerified: boolean;
+    isSuperhost: boolean;
     avatar: string;
   };
   description: string;

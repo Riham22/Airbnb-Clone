@@ -129,7 +129,7 @@ export class Data {
           console.log('===================');
 
           // PascalCase fallbacks
-          const id = p.id || p.Id;
+          const id = Number(p.id || p.Id);
           const title = p.title || p.Title;
           const city = p.city || p.City;
           const country = p.country || p.Country;
@@ -153,10 +153,10 @@ export class Data {
             price: price || 0,
             rating: rating || 0,
             reviewCount: reviewCount || 0,
-            imageUrl: this.processImageUrl(coverImage),
+            imageUrl: (coverImage && coverImage !== '') ? this.processImageUrl(coverImage) : (images?.length > 0 ? this.processImageUrl(images[0].imageUrl || images[0].ImageUrl || images[0].imageURL) : 'assets/default-listing.jpg'),
             images: images?.length > 0
               ? images.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl || img.imageURL)).filter((url: string) => url)
-              : [this.processImageUrl(coverImage)],
+              : [],
             type: 'property',
             propertyType: categoryForUI,
             maxGuests: maxGuests || 2,
@@ -259,6 +259,9 @@ export class Data {
     this.http.get<any[]>('https://localhost:7020/api/Experience').subscribe({
       next: (data) => {
         console.log('✅ Experiences API Response:', data?.length);
+        if (data && data.length > 0) {
+          console.log('📦 First Experience JSON:', JSON.stringify(data[0]));
+        }
 
         if (!data || data.length === 0) {
           console.warn('⚠️ No experiences returned from API');
@@ -267,18 +270,25 @@ export class Data {
         }
 
         const mappedExperiences: Experience[] = data.map(exp => {
-          const id = exp.id || exp.Id;
+          console.log('🔍 Raw Experience Data:', exp.id, exp.name || exp.title, exp.ExpActivity, exp.expActivity);
+
+          const id = Number(exp.id || exp.Id);
           const title = exp.expTitle || exp.ExpTitle || exp.title || exp.Title || exp.name || exp.Name || 'Experience';
           const city = exp.city || exp.City;
           const country = exp.country || exp.Country;
           const price = exp.guestPrice || exp.GuestPrice || exp.price || exp.Price;
-          const images = exp.images || exp.Images;
+          const images = exp.expImages || exp.ExpImages || exp.images || exp.Images;
           const desc = exp.expDescribe || exp.ExpDescribe || exp.expSummary || exp.ExpSummary || exp.description || exp.Description;
           const catName = exp.expCatograyName || exp.ExpCatograyName || exp.categoryName || exp.CategoryName;
           const maxGuest = exp.maximumGuest || exp.MaximumGuest || exp.maxParticipants || exp.MaxParticipants;
           const postedDate = exp.postedDate || exp.PostedDate;
           const locationName = exp.locationName || exp.LocationName;
           const language = exp.usingLanguage || exp.UsingLanguage;
+
+          const processedImages = images?.map((img: any) => this.processImageUrl(img.imageURL || img.ImageUrl || img.imageUrl)) || [];
+          if (processedImages.length === 0) {
+            processedImages.push('assets/images/placeholder.jpg'); // Fallback to avoid empty array
+          }
 
           return {
             id: id,
@@ -288,11 +298,12 @@ export class Data {
             price: price || 0,
             rating: 4.5,
             reviewCount: 0,
-            imageUrl: this.processImageUrl(images?.[0]?.imageURL || images?.[0]?.ImageUrl || images?.[0]?.imageUrl),
-            images: images?.map((img: any) => this.processImageUrl(img.imageURL || img.ImageUrl || img.imageUrl)) || [],
+            imageUrl: (processedImages.length > 0) ? processedImages[0] : 'assets/default-experience.jpg',
+            images: processedImages,
             category: catName || 'general',
             duration: '3 hours',
             maxParticipants: maxGuest || 10,
+            maxGuests: maxGuest || 10,
             host: {
               name: 'Host',
               joinedDate: new Date(postedDate || Date.now()).getFullYear().toString(),
@@ -303,10 +314,17 @@ export class Data {
             highlights: [],
             includes: [],
             requirements: [],
+            amenities: [], // Added fallback for UI compatibility
             meetingPoint: locationName || '',
             languages: language ? [language] : ['English'],
             reviews: [],
-            isWishlisted: this.isWishlistedSync('Experience', id)
+            isWishlisted: this.isWishlistedSync('Experience', id),
+            activities: (exp.activities || exp.Activities || []).map((act: any) => ({
+              id: act.id || act.Id,
+              name: act.name || act.Name,
+              description: act.describe || act.Describe || act.description || act.Description,
+              durationMinutes: act.timeMinute || act.TimeMinute || 0
+            }))
           };
         });
 
@@ -339,7 +357,7 @@ export class Data {
 
         try {
           const mappedServices: Service[] = data.map(svc => {
-            const id = svc.id || svc.Id;
+            const id = Number(svc.id || svc.Id);
             const title = svc.title || svc.Title || svc.name || svc.Name || 'Service';
             const city = svc.city || svc.City;
             const country = svc.country || svc.Country;
@@ -359,14 +377,15 @@ export class Data {
               price: price || 0,
               rating: rating || 0,
               reviewCount: reviewCount || 0,
-              imageUrl: this.processImageUrl(coverImage),
-              images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [this.processImageUrl(coverImage)],
+              imageUrl: (coverImage && coverImage !== '') ? this.processImageUrl(coverImage) : (images?.length > 0 ? this.processImageUrl(images[0].imageUrl || images[0].ImageUrl) : 'assets/default-listing.jpg'),
+              images: images?.map((img: any) => this.processImageUrl(img.imageUrl || img.ImageUrl)) || [],
               category: catName || 'general',
               duration: '3 hours',
-              provider: {
+              maxGuests: 4, // Default for services as it's not in API yet
+              host: {
                 name: 'Provider',
                 joinedDate: '2024',
-                isVerified: true,
+                isSuperhost: true,
                 avatar: ''
               },
               description: description || '',
@@ -469,6 +488,23 @@ export class Data {
 
   getPropertyById(id: number): RentalProperty | undefined {
     return this.getProperties().find(property => property.id === id);
+  }
+
+  getPropertyDetails(id: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Properties/${id}`).pipe(
+      tap(p => console.log('📦 GetPropertyDetails API:', p)),
+      // We map it here or in the component. Let's map it here to be consistent
+      // But for simplicity, let's return the raw Observable and map in component or use a helper
+      // actually, reusing the mapping logic is better.
+    );
+  }
+
+  getServiceDetails(id: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Services/${id}`);
+  }
+
+  getExperienceDetails(id: number) {
+    return this.http.get<any>(`https://localhost:7020/api/Experience/GetById/${id}`);
   }
 
   searchProperties(filters: SearchFilters): RentalProperty[] {
@@ -678,24 +714,40 @@ export class Data {
   private isPropertyAvailable(propertyId: number, checkIn: Date, checkOut: Date): boolean {
     return Math.random() > 0.2;
   }
-  private processImageUrl(url: string | null | undefined): string {
-    if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-    if (url.startsWith('http') || url.startsWith('assets')) return url;
 
-    // Normalize path separators (Windows backslashes to forward slashes)
-    let normalizedUrl = url.replace(/\\/g, '/');
+  public processImageUrl(url: string | null | undefined): string {
+    if (!url) return 'assets/default-listing.jpg';
 
-    // Remove leading slash if present to avoid double slashes with base URL
-    if (normalizedUrl.startsWith('/')) {
-      normalizedUrl = normalizedUrl.substring(1);
+    // Handle legacy seed data paths that point to non-existent /images/ folder
+    if (url.startsWith('/images/') || url.startsWith('images/')) {
+      return 'assets/default-listing.jpg';
     }
 
-    // Assuming backend is running on localhost:7020
-    return `https://localhost:7020/${normalizedUrl}`;
-  }
-  // Add this method to your Data service class
-updateWishlist(propertyId: number, isWishlisted: boolean) {
-  return this.toggleWishlist('Property', propertyId);
+    // Handle standard absolute URLs (http/https)
+    if (url.startsWith('http')) {
+      // Fix for stale localhost:5000/7187 URLs in database if they occur
+      if (url.includes('localhost') && !url.includes('7020')) {
+        // Extract the path after 'uploads/'
+        const match = url.match(/\/uploads\/(.*)/);
+        if (match) {
+          return `https://localhost:7020/uploads/${match[1]}`;
+        }
+      }
+      return url;
+    }
 
-}
+    // Handle bare filenames (e.g. "101.jpg") -> Assume properties upload folder as fallback
+    if (!url.includes('/') && !url.includes('\\')) {
+      return `https://localhost:7020/uploads/properties/${url}`;
+    }
+
+    // Handle API-relative paths (e.g. "uploads/...")
+    // Ensure we don't double-slash
+    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+    return `https://localhost:7020/${cleanPath}`;
+  }
+
+  updateWishlist(propertyId: number, isWishlisted: boolean) {
+    return this.toggleWishlist('Property', propertyId);
+  }
 }
