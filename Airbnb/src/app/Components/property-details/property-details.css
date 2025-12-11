@@ -593,30 +593,6 @@
   .empty-content h3 {
     font-size: 20px;
   }
-<<<<<<< HEAD
-
-  .empty-content p {
-    font-size: 15px;
-  }
-}
-
-
-.view-btn:focus-visible,
-.see-all-btn:focus-visible,
-.clear-filters-btn:focus-visible,
-.load-more-btn:focus-visible,
-.remove-filter:focus-visible,
-.clear-all-filters:focus-visible {
-  outline: 2px solid var(--airbnb-red);
-  outline-offset: 2px;
-}
-
-.listing-type-card:focus-visible {
-  outline: 2px solid var(--airbnb-red);
-  outline-offset: 2px;
-  border-radius: var(--border-radius);
-}
-=======
 }
 
 /* Activities Section */
@@ -758,4 +734,3 @@
   font-weight: bold;
   color: #222;
 }
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df

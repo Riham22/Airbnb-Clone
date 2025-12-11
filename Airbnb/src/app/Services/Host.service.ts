@@ -12,7 +12,7 @@ import { HostListing } from '../Models/HostListing';
 })
 export class HostService {
   private apiUrl = 'https://localhost:7020/api';
-  
+
   private statsSubject = new BehaviorSubject<HostStats>(this.getInitialStats());
   private bookingsSubject = new BehaviorSubject<HostBooking[]>([]);
   private listingsSubject = new BehaviorSubject<HostListing[]>([]);
@@ -38,7 +38,7 @@ export class HostService {
     const properties$ = this.http.get<any[]>(`${this.apiUrl}/Properties/my-properties`).pipe(
       catchError(() => of([]))
     );
-    
+
     const bookings$ = this.http.get<any>(`${this.apiUrl}/Booking/host-bookings`).pipe(
       map(res => res.data || res || []),
       catchError(() => of([]))
@@ -49,19 +49,19 @@ export class HostService {
       bookings: bookings$
     }).pipe(
       map(({ properties, bookings }) => {
-        const activeProperties = properties.filter((p: any) => 
+        const activeProperties = properties.filter((p: any) =>
           p.isPublished || p.IsPublished || p.status === 'active'
         ).length;
-        
+
         const totalBookings = bookings.length;
-        const completedBookings = bookings.filter((b: any) => 
+        const completedBookings = bookings.filter((b: any) =>
           b.status === 'completed' || b.status === 'Confirmed'
         ).length;
-        
+
         // حساب الإيرادات (افتراضي)
         const totalEarnings = completedBookings * 150;
         const monthlyEarnings = totalEarnings * 0.3; // 30% من الإجمالي
-        
+
         const stats: HostStats = {
           totalEarnings: totalEarnings,
           monthlyEarnings: monthlyEarnings,
@@ -92,19 +92,19 @@ export class HostService {
   // ==================== BOOKINGS MANAGEMENT ====================
   getBookings(): Observable<HostBooking[]> {
     this.setLoading(true);
-    
+
     return this.http.get<any>(`${this.apiUrl}/Booking/host-bookings`).pipe(
       map((response: any) => {
         const bookings = Array.isArray(response) ? response : (response?.data || []);
-        
+
         const hostBookings: HostBooking[] = bookings.map((b: any) => {
           const property = b.property || b.Property;
           const guest = b.user || b.User;
-          
+
           return {
             id: b.id || b.Id,
             propertyName: property?.title || property?.Title || property?.name || 'Unknown Property',
-            guestName: guest ? `${guest.firstName || guest.FirstName} ${guest.lastName || guest.LastName}` 
+            guestName: guest ? `${guest.firstName || guest.FirstName} ${guest.lastName || guest.LastName}`
                      : b.guestName || 'Unknown Guest',
             guestEmail: guest?.email || guest?.Email || b.guestEmail || '',
             checkIn: b.checkInDate ? new Date(b.checkInDate) : new Date(),
@@ -116,7 +116,7 @@ export class HostService {
             propertyImage: property?.coverImageUrl || property?.imageUrl || ''
           };
         });
-        
+
         this.bookingsSubject.next(hostBookings);
         return hostBookings;
       }),
@@ -131,23 +131,11 @@ export class HostService {
 
   updateBookingStatus(bookingId: number, status: 'pending' | 'confirmed' | 'cancelled' | 'completed'): Observable<any> {
     const payload = { status: status };
-    
+
     return this.http.put(`${this.apiUrl}/Booking/${bookingId}/status`, payload).pipe(
-      tap(() => {
-        // تحديث الحالة محلياً
-        const bookings = this.bookingsSubject.value.map(booking =>
-          booking.id === bookingId ? { ...booking, status, updatedAt: new Date() } : booking
-        );
-        this.bookingsSubject.next(bookings);
-        
-        // تحديث الـ stats
-        const stats = this.statsSubject.value;
-        if (status === 'completed') {
-          this.updateStats({
-            ...stats,
-            totalEarnings: stats.totalEarnings + (bookings.find(b => b.id === bookingId)?.totalPrice || 0)
-          });
-        }
+      switchMap(() => {
+        // بعد التحديث الناجح، أعد تحميل البيانات من الـ API
+        return this.getBookings();
       }),
       catchError(err => {
         console.error('updateBookingStatus error', err);
@@ -159,17 +147,17 @@ export class HostService {
   // ==================== LISTINGS MANAGEMENT ====================
   getListings(): Observable<HostListing[]> {
     this.setLoading(true);
-    
+
     return this.http.get<any>(`${this.apiUrl}/Properties/my-properties`).pipe(
       map((response: any) => {
         const properties = Array.isArray(response) ? response : (response?.data || []);
-        
+
         const hostListings: HostListing[] = properties.map((p: any) => {
           const city = p.city || p.City;
           const country = p.country || p.Country;
           const images = p.images || p.Images;
           const isPublished = p.isPublished || p.IsPublished;
-          
+
           return {
             id: (p.id || p.Id)?.toString() ?? '',
             title: p.title || p.Title || p.name || p.Name || 'Unnamed Property',
@@ -180,8 +168,8 @@ export class HostService {
             rating: p.averageRating || p.rating || 0,
             reviewCount: p.reviewsCount || p.reviewCount || 0,
             bookingsCount: p.bookingsCount || 0,
-            images: images?.length ? 
-              images.map((i: any) => i.imageUrl || i.ImageUrl || i.imageURL) 
+            images: images?.length ?
+              images.map((i: any) => i.imageUrl || i.ImageUrl || i.imageURL)
               : [p.coverImageUrl || p.CoverImageUrl || p.imageUrl || p.ImageUrl || ''],
             createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
             lastBooking: p.lastBookingDate ? new Date(p.lastBookingDate) : null,
@@ -190,7 +178,7 @@ export class HostService {
             bathrooms: p.bathrooms || 0
           };
         });
-        
+
         this.listingsSubject.next(hostListings);
         return hostListings;
       }),
@@ -258,14 +246,11 @@ export class HostService {
 
   updateListingStatus(listingId: string, status: 'active' | 'inactive'): Observable<any> {
     const action = status === 'active' ? 'publish' : 'unpublish';
-    
+
     return this.http.put(`${this.apiUrl}/Properties/${listingId}/${action}`, {}).pipe(
-      tap(() => {
-        // تحديث الحالة محلياً
-        const listings = this.listingsSubject.value.map(listing =>
-          listing.id === listingId ? { ...listing, status, updatedAt: new Date() } : listing
-        );
-        this.listingsSubject.next(listings);
+      switchMap(() => {
+        // بعد التحديث الناجح، أعد تحميل البيانات من الـ API
+        return this.getListings();
       }),
       catchError(err => {
         console.error(`updateListingStatus to ${status} error`, err);
@@ -276,18 +261,10 @@ export class HostService {
 
   deleteListing(listingId: string): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Properties/${listingId}`).pipe(
-      tap(() => {
-        const listings = this.listingsSubject.value.filter(listing => listing.id !== listingId);
-        this.listingsSubject.next(listings);
-
-        // تحديث الـ stats
-        const stats = this.statsSubject.value;
-        this.updateStats({
-          ...stats,
-          activeListings: Math.max(0, stats.activeListings - 1)
-        });
+      switchMap(() => {
+        // بعد الحذف الناجح، أعد تحميل البيانات من الـ API
+        return this.getListings().pipe(map(() => true));
       }),
-      map(() => true),
       catchError(err => {
         console.error('deleteListing error', err);
         throw err;
@@ -298,17 +275,17 @@ export class HostService {
   // ==================== SERVICES MANAGEMENT ====================
   getServices(): Observable<any[]> {
     this.setLoading(true);
-    
+
     return this.http.get<any>(`${this.apiUrl}/Services/my-services`).pipe(
       map((response: any) => {
         const services = Array.isArray(response) ? response : (response?.data || []);
-        
+
         const mappedServices = services.map((s: any) => {
           const city = s.city || s.City;
           const country = s.country || s.Country;
           const images = s.images || s.Images;
           const isPublished = s.isPublished || s.IsPublished;
-          
+
           return {
             id: (s.id || s.Id)?.toString() || '',
             name: s.title || s.Title || s.name || s.Name || 'Unnamed Service',
@@ -325,7 +302,7 @@ export class HostService {
             createdAt: s.createdAt ? new Date(s.createdAt) : new Date()
           };
         });
-        
+
         this.servicesSubject.next(mappedServices);
         return mappedServices;
       }),
@@ -340,13 +317,11 @@ export class HostService {
 
   updateServiceStatus(serviceId: string, status: 'active' | 'inactive'): Observable<any> {
     const action = status === 'active' ? 'publish' : 'unpublish';
-    
+
     return this.http.put(`${this.apiUrl}/Services/${serviceId}/${action}`, {}).pipe(
-      tap(() => {
-        const services = this.servicesSubject.value.map(s =>
-          s.id === serviceId ? { ...s, status } : s
-        );
-        this.servicesSubject.next(services);
+      switchMap(() => {
+        // بعد التحديث الناجح، أعد تحميل البيانات من الـ API
+        return this.getServices();
       }),
       catchError(err => {
         console.error(`updateServiceStatus to ${status} error`, err);
@@ -357,11 +332,10 @@ export class HostService {
 
   deleteService(serviceId: string): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Services/${serviceId}`).pipe(
-      tap(() => {
-        const services = this.servicesSubject.value.filter(s => s.id !== serviceId);
-        this.servicesSubject.next(services);
+      switchMap(() => {
+        // بعد الحذف الناجح، أعد تحميل البيانات من الـ API
+        return this.getServices().pipe(map(() => true));
       }),
-      map(() => true),
       catchError(err => {
         console.error('deleteService error', err);
         throw err;
@@ -372,18 +346,18 @@ export class HostService {
   // ==================== EXPERIENCES MANAGEMENT ====================
   getExperiences(): Observable<any[]> {
     this.setLoading(true);
-    
+
     return this.http.get<any>(`${this.apiUrl}/Experience/my-experiences`).pipe(
       map((response: any) => {
         const experiences = Array.isArray(response) ? response : (response?.data || []);
-        
+
         const mappedExperiences = experiences.map((e: any) => {
           const city = e.city || e.City;
           const country = e.country || e.Country;
           const images = e.images || e.Images;
           const status = e.status || e.Status;
           const isActive = status === 3 || status === 'Published' || status === 'Active';
-          
+
           return {
             id: (e.id || e.Id)?.toString() || '',
             name: e.title || e.Title || e.name || e.Name || e.expTitle || e.ExpTitle || 'Unnamed Experience',
@@ -401,7 +375,7 @@ export class HostService {
             maxParticipants: e.maximumGuest || e.maxParticipants || 10
           };
         });
-        
+
         this.experiencesSubject.next(mappedExperiences);
         return mappedExperiences;
       }),
@@ -416,13 +390,11 @@ export class HostService {
 
   updateExperienceStatus(experienceId: string, status: 'active' | 'inactive'): Observable<any> {
     const action = status === 'active' ? 'publish' : 'unpublish';
-    
+
     return this.http.put(`${this.apiUrl}/Experience/${experienceId}/${action}`, {}).pipe(
-      tap(() => {
-        const experiences = this.experiencesSubject.value.map(e =>
-          e.id === experienceId ? { ...e, status } : e
-        );
-        this.experiencesSubject.next(experiences);
+      switchMap(() => {
+        // بعد التحديث الناجح، أعد تحميل البيانات من الـ API
+        return this.getExperiences();
       }),
       catchError(err => {
         console.error(`updateExperienceStatus to ${status} error`, err);
@@ -433,11 +405,10 @@ export class HostService {
 
   deleteExperience(experienceId: string): Observable<boolean> {
     return this.http.delete(`${this.apiUrl}/Experience/${experienceId}`).pipe(
-      tap(() => {
-        const experiences = this.experiencesSubject.value.filter(e => e.id !== experienceId);
-        this.experiencesSubject.next(experiences);
+      switchMap(() => {
+        // بعد الحذف الناجح، أعد تحميل البيانات من الـ API
+        return this.getExperiences().pipe(map(() => true));
       }),
-      map(() => true),
       catchError(err => {
         console.error('deleteExperience error', err);
         throw err;
@@ -516,7 +487,7 @@ export class HostService {
     const endpoint = categoryId
       ? `${this.apiUrl}/ExpSubCatogray/CatograyId/${categoryId}`
       : `${this.apiUrl}/ExpSubCatogray`;
-    
+
     return this.http.get<any[]>(endpoint).pipe(
       map(subs => subs.map(s => ({
         id: s.id || s.Id,
@@ -549,16 +520,24 @@ export class HostService {
 
   private calculateAverageRating(properties: any[]): number {
     if (!properties.length) return 0;
-    
+
     const totalRating = properties.reduce((sum, p) => {
-      return sum + (p.averageRating || p.rating || 0);
+      const rating = Number(p.averageRating || p.rating || 0);
+      return sum + rating;
     }, 0);
-    
+
     return totalRating / properties.length;
   }
 
-  private mapBookingStatus(status: string): 'pending' | 'confirmed' | 'cancelled' | 'completed' {
-    const statusMap: { [key: string]: any } = {
+  private mapBookingStatus(status: string | number): 'pending' | 'confirmed' | 'cancelled' | 'completed' {
+    // حوّل إلى string إذا كان رقم
+    const statusStr = typeof status === 'number' ? status.toString() : String(status || '');
+
+    const statusMap: { [key: string]: 'pending' | 'confirmed' | 'cancelled' | 'completed' } = {
+      '1': 'pending',
+      '2': 'confirmed',
+      '3': 'cancelled',
+      '4': 'completed',
       'Pending': 'pending',
       'Confirmed': 'confirmed',
       'Cancelled': 'cancelled',
@@ -568,14 +547,14 @@ export class HostService {
       'cancelled': 'cancelled',
       'completed': 'completed'
     };
-    
-    return statusMap[status] || 'pending';
+
+    return statusMap[statusStr] || 'pending';
   }
 
   // ==================== TEST METHODS ====================
   testEndpoints(): void {
     console.log('🧪 Testing Host Service endpoints...');
-    
+
     this.http.get(`${this.apiUrl}/Properties/my-properties`).subscribe({
       next: (data) => {
         console.log('✅ Host Properties endpoint works!', data);

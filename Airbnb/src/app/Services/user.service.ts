@@ -39,15 +39,11 @@ export interface UserProfile extends UserProfileUpdate {
   providedIn: 'root'
 })
 export class UserService {
-<<<<<<< HEAD
   private userApiUrl = "https://localhost:7020/api/User";
   private accountApiUrl = "https://localhost:7020/api/Acount";
 
   private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
   userProfile$ = this.userProfileSubject.asObservable();
-=======
-  private apiUrl = "https://localhost:7020/api/Account";
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
 
   constructor(
     private http: HttpClient,
@@ -292,18 +288,12 @@ export class UserService {
     return this.userProfileSubject.value;
   }
 
-<<<<<<< HEAD
-  refreshUserProfile(): Observable<UserProfile> {
-    console.log('Refreshing user profile...');
-    this.userProfileSubject.next(null);
-    return this.getMyProfile();
-=======
   // ============ Upload Profile Photo ============
   uploadPhoto(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post(`${this.apiUrl}/upload-photo`, formData).pipe(
+    return this.http.post(`${this.accountApiUrl}/upload-photo`, formData).pipe(
       catchError(error => {
         console.error('Error uploading photo:', error);
         return throwError(() => error);
@@ -313,7 +303,7 @@ export class UserService {
 
   // ============ Get User Stats ============
   getUserStats(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/stats`).pipe(
+    return this.http.get(`${this.accountApiUrl}/stats`).pipe(
       catchError(error => {
         console.error('Error fetching user stats:', error);
         return throwError(() => error);
@@ -325,7 +315,6 @@ export class UserService {
   getCurrentUserId(): string | null {
     const currentUser = this.authService.getCurrentUser();
     return currentUser?.id || currentUser?.Id || currentUser?.userId || null;
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
   }
 
   debugAuthInfo(): void {

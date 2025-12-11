@@ -1,6 +1,4 @@
 
-<<<<<<< HEAD
-=======
 /* Top Row - Logo, Filters, Icons */
 .navbar-top {
   display: flex;
@@ -1906,4 +1904,3 @@ input[type="checkbox"]:checked+.checkmark::after {
 .home-icon {
   font-size: 16px;
 }
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df

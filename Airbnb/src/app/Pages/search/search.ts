@@ -1,4 +1,4 @@
-// search.component.ts - Simplified Version
+// search.component.ts - Cleaned and Fixed Version
 import { Component, Output, EventEmitter, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';
@@ -6,9 +6,17 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Data } from '../../Services/data';
 import { AuthService } from '../../Services/auth';
+import { GuestCounts } from '../../Models/guest-counts';
 import { RentalProperty } from '../../Models/rental-property';
 import { Experience } from '../../Models/experience';
 import { Service } from '../../Models/service';
+import { DateRange } from '../../Models/DateRange';
+
+// Menu item type definition
+export type MenuItem =
+  | { label: string; icon: string; route: string; action?: never; separator?: never }
+  | { label: string; icon: string; action: string; route?: never; separator?: never }
+  | { separator: true; label?: never; icon?: never; route?: never; action?: never };
 
 @Component({
   selector: 'app-search-bar',
@@ -20,6 +28,7 @@ import { Service } from '../../Models/service';
 export class SearchComponent implements OnInit {
   @Output() filteredPropertiesChange = new EventEmitter<any[]>();
   @Output() activeFiltersChange = new EventEmitter<any>();
+  @Output() openFilters = new EventEmitter<void>(); // Add this output for filter button
 
   // Data collections
   private properties: RentalProperty[] = [];
@@ -27,6 +36,9 @@ export class SearchComponent implements OnInit {
   private services: Service[] = [];
 
   // Filter subjects for RxJS
+  private guestFilter$ = new BehaviorSubject<GuestCounts | null>(null);
+  private locationFilter$ = new BehaviorSubject<string>('');
+  private dateFilter$ = new BehaviorSubject<DateRange>({ start: null, end: null, flexible: false });
   private propertyTypeFilter$ = new BehaviorSubject<string>('all');
 
   // Property types for UI
@@ -38,14 +50,66 @@ export class SearchComponent implements OnInit {
   ];
 
   selectedPropertyType = 'all';
+  currentFilters = {
+    location: '',
+    dates: { start: null as Date | null, end: null as Date | null, flexible: false } as DateRange,
+    guests: { adults: 0, children: 0, infants: 0, pets: 0 },
+    propertyType: 'all'
+  };
+
+  // UI state
+  activePanel: string | null = null;
+  currentMonth: Date = new Date();
+  calendarView: 'month' | 'year' | 'decade' = 'month';
+  dateSelection = {
+    start: null as Date | null,
+    end: null as Date | null,
+    selectingStart: true
+  };
+  guestSelection = {
+    adults: 0,
+    children: 0,
+    infants: 0,
+    pets: 0
+  };
+
+  // Constants
+  readonly minDate: Date = new Date(2024, 0, 1);
+  readonly maxDate: Date = new Date(2070, 11, 31);
+  readonly locationOptions = [
+    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' },
+    { value: 'new_york', label: 'New York', icon: '🏙️', description: 'Big Apple adventures' },
+    { value: 'los_angeles', label: 'Los Angeles', icon: '🌴', description: 'Sunny California' },
+    { value: 'miami', label: 'Miami', icon: '🏖️', description: 'Beachfront escapes' },
+    { value: 'chicago', label: 'Chicago', icon: '🏙️', description: 'Windy City stays' },
+    { value: 'las_vegas', label: 'Las Vegas', icon: '🎰', description: 'Entertainment capital' },
+    { value: 'san_francisco', label: 'San Francisco', icon: '🌉', description: 'Golden Gate views' },
+    { value: 'seattle', label: 'Seattle', icon: '🌧️', description: 'Pacific Northwest' },
+    { value: 'austin', label: 'Austin', icon: '🎸', description: 'Live music capital' },
+    { value: 'boston', label: 'Boston', icon: '🎓', description: 'Historic charm' }
+  ];
 
   // Auth state
   isAuthenticated = false;
   currentUser: any = null;
+
+  // Language & Menu
+  languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+    { code: 'pt', name: 'Português', flag: '🇵🇹' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+  ];
+  selectedLanguage = this.languages[0];
+  showLanguagePanel = false;
   showMenuPanel = false;
 
-<<<<<<< HEAD
-=======
   // Search state
   searchQuery: string = '';
   isSearchFocused = false;
@@ -64,7 +128,6 @@ export class SearchComponent implements OnInit {
   availableYears: number[] = [];
   availableDecades: number[] = [];
 
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
   constructor(
     private dataService: Data,
     private router: Router,
@@ -83,6 +146,9 @@ export class SearchComponent implements OnInit {
     this.isTripsPage = this.router.url.includes('/trips'); // Initial check
     this.isAccountPage = this.router.url.includes('/account'); // Initial check
     this.loadAllData();
+    this.generateAvailableYears();
+    this.generateAvailableDecades();
+    this.checkMobileView();
     this.setupFilterObservables();
     this.setupAuthObservables();
   }
@@ -91,16 +157,210 @@ export class SearchComponent implements OnInit {
 
   selectPropertyType(type: string): void {
     this.selectedPropertyType = type;
+    this.currentFilters.propertyType = type;
     this.propertyTypeFilter$.next(type);
-    this.activeFiltersChange.emit({ propertyType: type });
+    this.activeFiltersChange.emit(this.currentFilters);
   }
 
-  // ========== AUTH METHODS ==========
+  selectLocation(location: string): void {
+    this.currentFilters.location = location;
+    this.locationFilter$.next(location);
+    this.activeFiltersChange.emit(this.currentFilters);
+    setTimeout(() => this.closePanel(), 300);
+  }
+
+  // ========== DATE METHODS ==========
+
+  selectDate(date: Date): void {
+    if (!this.isDateSelectable(date)) return;
+
+    if (this.dateSelection.selectingStart || !this.dateSelection.start) {
+      this.dateSelection.start = date;
+      this.dateSelection.selectingStart = false;
+      if (this.dateSelection.end && this.dateSelection.end < date) {
+        this.dateSelection.end = null;
+      }
+    } else {
+      if (date >= this.dateSelection.start!) {
+        this.dateSelection.end = date;
+        this.dateSelection.selectingStart = true;
+        this.currentFilters.dates = { start: this.dateSelection.start, end: this.dateSelection.end };
+        this.dateFilter$.next(this.currentFilters.dates);
+        this.activeFiltersChange.emit(this.currentFilters);
+      } else {
+        this.dateSelection.start = date;
+        this.dateSelection.end = null;
+        this.dateSelection.selectingStart = false;
+      }
+    }
+  }
+
+  clearDates(): void {
+    this.dateSelection.start = null;
+    this.dateSelection.end = null;
+    this.dateSelection.selectingStart = true;
+    this.currentFilters.dates = { start: null, end: null };
+    this.dateFilter$.next(this.currentFilters.dates);
+    this.activeFiltersChange.emit(this.currentFilters);
+  }
+
+  selectNextWeekend(): void {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7;
+
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + daysUntilSaturday);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
+
+    this.setDateSelection(startDate, endDate);
+  }
+
+  selectNextWeek(): void {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+
+    this.setDateSelection(startDate, endDate);
+  }
+
+  selectNextMonth(): void {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1);
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setDate(endDate.getDate() - 1);
+
+    this.setDateSelection(startDate, endDate);
+  }
+
+  private setDateSelection(start: Date, end: Date): void {
+    this.dateSelection.start = start;
+    this.dateSelection.end = end;
+    this.dateSelection.selectingStart = true;
+    this.currentFilters.dates = { start, end };
+    this.dateFilter$.next(this.currentFilters.dates);
+    this.activeFiltersChange.emit(this.currentFilters);
+  }
+
+  // ========== GUEST METHODS ==========
+
+  updateGuests(type: 'adults' | 'children' | 'infants' | 'pets', change: number): void {
+    const newValue = this.guestSelection[type] + change;
+    if (newValue >= 0) {
+      if (type === 'adults' && newValue === 0 && this.getTotalGuests() > 0) return;
+      this.guestSelection[type] = newValue;
+      this.currentFilters.guests = { ...this.guestSelection };
+      const guestCounts: GuestCounts = {
+        adults: this.guestSelection.adults,
+        children: this.guestSelection.children,
+        infants: this.guestSelection.infants,
+        pets: this.guestSelection.pets,
+        totalGuests: this.getTotalGuests()
+      };
+      this.guestFilter$.next(guestCounts.totalGuests > 0 ? guestCounts : null);
+      this.activeFiltersChange.emit(this.currentFilters);
+    }
+  }
+
+  clearGuests(): void {
+    this.guestSelection = { adults: 0, children: 0, infants: 0, pets: 0 };
+    this.currentFilters.guests = { ...this.guestSelection };
+    this.guestFilter$.next(null);
+    this.activeFiltersChange.emit(this.currentFilters);
+  }
+
+  getTotalGuests(): number {
+    return this.guestSelection.adults + this.guestSelection.children;
+  }
+
+  // ========== CALENDAR NAVIGATION ==========
+
+  navigateMonth(direction: number): void {
+    this.currentMonth = new Date(
+      this.currentMonth.getFullYear(),
+      this.currentMonth.getMonth() + direction,
+      1
+    );
+  }
+
+  navigateYear(direction: number): void {
+    this.currentMonth = new Date(
+      this.currentMonth.getFullYear() + direction,
+      this.currentMonth.getMonth(),
+      1
+    );
+  }
+
+  switchToYearView(): void {
+    this.calendarView = 'year';
+  }
+
+  switchToDecadeView(): void {
+    this.calendarView = 'decade';
+  }
+
+  switchToMonthView(): void {
+    this.calendarView = 'month';
+  }
+
+  selectYear(year: number): void {
+    this.currentMonth = new Date(year, this.currentMonth.getMonth(), 1);
+    this.calendarView = 'month';
+  }
+
+  selectDecade(decade: number): void {
+    this.currentMonth = new Date(decade, 0, 1);
+    this.calendarView = 'year';
+  }
+
+  selectMonth(monthNumber: number): void {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), monthNumber, 1);
+    this.calendarView = 'month';
+  }
+
+  // ========== UI PANEL METHODS ==========
+
+  openPanel(panel: string): void {
+    this.activePanel = panel;
+    if (panel === 'dates') {
+      this.currentMonth = new Date();
+      this.calendarView = 'month';
+    }
+  }
+
+  closePanel(): void {
+    this.activePanel = null;
+    this.calendarView = 'month';
+  }
+
+  onOpenFilters(): void {
+    this.openFilters.emit(); // Emit event to parent component
+  }
+
+  onSearch(): void {
+    console.log('Searching with filters:', this.currentFilters);
+    this.closePanel();
+  }
+
+  // ========== AUTH & MENU METHODS ==========
+
+  toggleLanguagePanel(): void {
+    this.showLanguagePanel = !this.showLanguagePanel;
+    this.showMenuPanel = false;
+    this.activePanel = null;
+  }
+
+  selectLanguage(language: any): void {
+    this.selectedLanguage = language;
+    this.showLanguagePanel = false;
+    console.log('Language changed to:', language.name);
+  }
 
   toggleMenuPanel(): void {
     this.showMenuPanel = !this.showMenuPanel;
-<<<<<<< HEAD
-=======
     this.showLanguagePanel = false;
     this.activePanel = null;
   }
@@ -110,11 +370,11 @@ export class SearchComponent implements OnInit {
     this.showLanguagePanel = false;
     this.showMenuPanel = false;
     this.calendarView = 'month';
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
   }
 
   onMenuItemClick(item: any): void {
     this.showMenuPanel = false;
+    console.log('Menu item clicked:', item.label);
 
     if (item.action === 'logout') {
       this.logout();
@@ -129,8 +389,6 @@ export class SearchComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);
-<<<<<<< HEAD
-=======
     console.log('Logout successful');
   }
 
@@ -267,7 +525,6 @@ export class SearchComponent implements OnInit {
 
   isCurrentDecade(decade: number): boolean {
     return this.getCurrentDecade() === decade;
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
   }
 
   // ========== USER DISPLAY METHODS ==========
@@ -288,21 +545,37 @@ export class SearchComponent implements OnInit {
     return '👤';
   }
 
+  // ========== UTILITY METHODS ==========
+
+  formatDate(date: Date): string {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  goToCurrentMonth(): void {
+    this.currentMonth = new Date();
+    this.calendarView = 'month';
+  }
+
   // ========== PRIVATE HELPER METHODS ==========
 
   private setupFilterObservables(): void {
-    this.propertyTypeFilter$.pipe(
-      map(propertyType => {
+    combineLatest([
+      this.locationFilter$,
+      this.dateFilter$,
+      this.guestFilter$,
+      this.propertyTypeFilter$
+    ]).pipe(
+      map(([location, dates, guestCounts, propertyType]) => {
         const allListings = this.getAllListings();
-        return this.applyPropertyTypeFilter(allListings, propertyType);
+        return this.applyAllFilters(allListings, { location, dates, guestCounts, propertyType });
       })
     ).subscribe(filteredProperties => {
       this.filteredPropertiesChange.emit(filteredProperties);
     });
 
-    // Emit initial state
-    this.activeFiltersChange.emit({ propertyType: 'all' });
-    this.filteredPropertiesChange.emit(this.getAllListings());
+    this.activeFiltersChange.emit(this.currentFilters);
+    const initialListings = this.getAllListings();
+    this.filteredPropertiesChange.emit(initialListings);
   }
 
   private setupAuthObservables(): void {
@@ -335,21 +608,45 @@ export class SearchComponent implements OnInit {
   }
 
   private updateAndEmitListings(): void {
-    const filtered = this.applyPropertyTypeFilter(this.getAllListings(), this.selectedPropertyType);
-    this.filteredPropertiesChange.emit(filtered);
+    this.filteredPropertiesChange.emit(this.getAllListings());
   }
 
   private getAllListings(): any[] {
     return [...this.properties, ...this.experiences, ...this.services];
   }
 
-  private applyPropertyTypeFilter(listings: any[], propertyType: string): any[] {
-    if (propertyType === 'all') {
-      return listings; // Return all listings when "All" is selected
-    }
-
+  private applyAllFilters(listings: any[], filters: any): any[] {
     return listings.filter(listing => {
-      return this.matchesPropertyType(listing, propertyType);
+      // Property type filter
+      if (filters.propertyType && filters.propertyType !== 'all') {
+        if (!this.matchesPropertyType(listing, filters.propertyType)) {
+          return false;
+        }
+      }
+
+      // Location filter
+      if (filters.location && filters.location !== '' && filters.location !== 'flexible') {
+        if (!this.isListingInLocation(listing, filters.location)) {
+          return false;
+        }
+      }
+
+      // Date filter
+      if (filters.dates.start && filters.dates.end && !this.isListingAvailable(listing, filters.dates.start, filters.dates.end)) {
+        return false;
+      }
+
+      // Guest filter
+      if (filters.guestCounts && filters.guestCounts.totalGuests > 0) {
+        if (listing.type === 'property' && listing.maxGuests < filters.guestCounts.totalGuests) {
+          return false;
+        }
+        if (listing.type === 'experience' && listing.maxParticipants < filters.guestCounts.totalGuests) {
+          return false;
+        }
+      }
+
+      return true;
     });
   }
 
@@ -362,18 +659,48 @@ export class SearchComponent implements OnInit {
     }
   }
 
+  private isListingInLocation(listing: any, location: string): boolean {
+    const locationMap: { [key: string]: string[] } = {
+      'new_york': ['New York', 'NY', 'New York City'],
+      'los_angeles': ['Los Angeles', 'LA', 'California', 'Malibu'],
+      'miami': ['Miami', 'Florida'],
+      'chicago': ['Chicago', 'Illinois'],
+      'las_vegas': ['Las Vegas', 'Nevada'],
+      'san_francisco': ['San Francisco', 'SF'],
+      'seattle': ['Seattle', 'Washington'],
+      'austin': ['Austin', 'Texas'],
+      'boston': ['Boston', 'Massachusetts']
+    };
+
+    const searchTerms = locationMap[location] || [location];
+    return searchTerms.some(term =>
+      listing.location.toLowerCase().includes(term.toLowerCase())
+    );
+  }
+
+  private isListingAvailable(listing: any, start: Date, end: Date): boolean {
+    return Math.random() > 0.2; // Mock availability
+  }
+
+  private generateAvailableYears(): void {
+    this.availableYears = [];
+    for (let year = 2024; year <= 2070; year++) {
+      this.availableYears.push(year);
+    }
+  }
+
+  private generateAvailableDecades(): void {
+    this.availableDecades = [2020, 2030, 2040, 2050, 2060];
+  }
+
+  private checkMobileView(): void {
+    this.isMobileView = window.innerWidth < 768;
+  }
+
   // ========== MENU ITEMS ==========
 
-  get menuItems(): any[] {
+  get menuItems(): MenuItem[] {
     if (this.isAuthenticated) {
-<<<<<<< HEAD
-      return [
-        { label: 'Messages', icon: '', route: '/messages' },
-        { label: 'Notifications', icon: '', route: '/notifications' },
-        { label: 'Trips', icon: '', route: '/trips' },
-        { label: 'Wishlists', icon: '', route: '/wishlists' },
-        { label: 'Account', icon: '', route: '/account' },
-=======
       const items: MenuItem[] = [
         { label: 'Messages', icon: '💬', route: '/messages' },
         { label: 'Notifications', icon: '🔔', route: '/notifications' },
@@ -387,30 +714,31 @@ export class SearchComponent implements OnInit {
       }
 
       items.push(
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
         { separator: true },
-        { label: 'Become a Host', icon: '', route: '/become-host' },
-        { label: 'Host an experience', icon: '', route: '/host-experience' },
-        { label: 'Help Center', icon: '', route: '/help' },
-        { label: 'Gift cards', icon: '', route: '/gift-cards' },
+        { label: 'Become a Host', icon: '🏠', route: '/become-host' },
+        { label: 'Host an experience', icon: '🌟', route: '/host-experience' },
+        { label: 'Help Center', icon: '❓', route: '/help' },
+        { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
         { separator: true },
-<<<<<<< HEAD
-        { label: 'Log out', icon: '', action: 'logout' }
-      ];
-=======
         { label: 'Log out', icon: '🚪', action: 'logout' }
       );
 
       return items;
->>>>>>> 481bb34615c4b29b09b3b85bc66cb66f22dfc7df
     } else {
       return [
-        { label: 'Become a Host', icon: '', route: '/become-host' },
-        { label: 'Help Center', icon: '', route: '/help' },
-        { label: 'Gift cards', icon: '', route: '/gift-cards' },
+        { label: 'Become a Host', icon: '🏠', route: '/become-host' },
+        { label: 'Help Center', icon: '❓', route: '/help' },
+        { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
         { separator: true },
-        { label: 'Log in or sign up', icon: '', route: '/auth' }
+        { label: 'Log in or sign up', icon: '👤', route: '/auth' }
       ];
     }
+  }
+
+  // ========== HOST LISTENER ==========
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkMobileView();
   }
 }
