@@ -183,7 +183,7 @@ export const routes: Routes = [
       },
       {
         path: 'account',
-        loadComponent: () => import('./Components/user-profile/user-profile').then(m => m.UserProfile),
+        loadComponent: () => import('./Components/personal-account/personal-account.component').then(m => m.PersonalAccountComponent),
         canActivate: [AuthGuard]
       },
       {
@@ -241,7 +241,7 @@ export const routes: Routes = [
       {
         path: 'payment',
         loadComponent: () => import('./Components/payment/payment').then(m => m.PaymentComponent),
-        canActivate: [AuthGuard],
+        canActivate: [AuthGuard]
 
       },
       {

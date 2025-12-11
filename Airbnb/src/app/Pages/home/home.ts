@@ -1,70 +1,131 @@
-// home.component.ts - Fixed Version
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RentalProperty } from '../../Models/rental-property';
 import { PropertyList } from '../../Components/property-list/property-list';
-import { SearchComponent } from '../search/search';
-import { Data } from '../../Services/data';
 import { FilterModalComponent } from '../../Components/filter-modal/filter-modal.component';
+import { MainSearchBarComponent } from "../../Components/main-search-bar-component/main-search-bar-component";
+import { NavBarComponent } from "../../Components/nav-bar/nav-bar.component";
+import { Data } from '../../Services/data';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
     CommonModule,
-    SearchComponent,
     PropertyList,
-    FilterModalComponent
+    FilterModalComponent,
+    MainSearchBarComponent,
+    NavBarComponent
   ],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
 export class HomeComponent implements OnInit {
-  properties: any[] = [];
-  filteredProperties: any[] = [];
+  allProperties: any[] = []; // تخزين جميع الـ properties من الـ API
+  allExperiences: any[] = []; // تخزين جميع الـ experiences
+  allServices: any[] = []; // تخزين جميع الـ services
+
+  filteredProperties: any[] = []; // للعرض بعد الفلترة
   activeFilters: any = {};
   isFilterModalOpen = false;
   selectedCategory: string = 'All';
   isLoading = true;
+  activePanel: string | null = null;
+
+  // Location options for MainSearchBarComponent
+  locationOptions = [
+    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' },
+    { value: 'new_york', label: 'New York', icon: '🏙️', description: 'Big Apple adventures' },
+    { value: 'los_angeles', label: 'Los Angeles', icon: '🌴', description: 'Sunny California' },
+    { value: 'miami', label: 'Miami', icon: '🏖️', description: 'Beachfront escapes' },
+    { value: 'chicago', label: 'Chicago', icon: '🏙️', description: 'Windy City stays' },
+    { value: 'las_vegas', label: 'Las Vegas', icon: '🎰', description: 'Entertainment capital' },
+    { value: 'san_francisco', label: 'San Francisco', icon: '🌉', description: 'Golden Gate views' },
+    { value: 'seattle', label: 'Seattle', icon: '🌧️', description: 'Pacific Northwest' },
+    { value: 'austin', label: 'Austin', icon: '🎸', description: 'Live music capital' },
+    { value: 'boston', label: 'Boston', icon: '🎓', description: 'Historic charm' }
+  ];
 
   constructor(private dataService: Data) { }
 
   ngOnInit() {
     console.log('🏠 HomeComponent initialized');
 
-    // Force refresh data from API
-    this.dataService.loadProperties();
-    this.dataService.loadExperiences();
-    this.dataService.loadServices();
+    // استخدام combineLatest لجمع البيانات من جميع الـ Observables
+    combineLatest([
+      this.dataService.properties$,
+      this.dataService.experiences$,
+      this.dataService.services$
+    ]).subscribe({
+      next: ([properties, experiences, services]) => {
+        console.log('📦 Data received:');
+        console.log('Properties:', properties?.length);
+        console.log('Experiences:', experiences?.length);
+        console.log('Services:', services?.length);
 
-    // Subscribe to properties
-    this.dataService.properties$.subscribe(props => {
-      this.properties = props;
-      this.filteredProperties = props;
-      this.isLoading = false;
+        this.allProperties = properties || [];
+        this.allExperiences = experiences || [];
+        this.allServices = services || [];
+
+        // دمج جميع الأنواع في مصفوفة واحدة للعرض
+        const allListings = [
+          ...this.allProperties,
+          ...this.allExperiences,
+          ...this.allServices
+        ];
+
+        console.log('Total listings:', allListings.length);
+
+        if (allListings.length > 0) {
+          console.log('First listing:', allListings[0]);
+        }
+
+        this.filteredProperties = allListings;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error loading data:', error);
+        this.isLoading = false;
+      }
     });
   }
 
-  // Handle filter button click from SearchComponent
+  // Handle panel opened from both components
+  onPanelOpened(panel: string): void {
+    console.log('Home: Panel opened:', panel);
+    this.activePanel = panel;
+  }
+
+  // Handle filter button click
   onOpenFilters(): void {
     this.openFilters();
   }
 
-  // Handle search results from SearchComponent
-  onFilteredPropertiesChange(properties: RentalProperty[]) {
-    console.log("Received from search:", properties.length);
-    if (properties.length === 0) {
-      this.filteredProperties = [...this.properties];
+  // Handle property type filters from NavBarComponent
+  onNavBarFiltersChange(filters: any) {
+    console.log('Home: NavBar filters received:', filters);
+    // Merge with existing filters
+    this.activeFilters = { ...this.activeFilters, ...filters };
+    this.applyComplexFilters();
+  }
+
+  // Handle search filters from MainSearchBarComponent
+  onSearchFiltersChanged(filters: any) {
+    console.log('Home: Search filters received:', filters);
+    // Merge with existing filters
+    this.activeFilters = { ...this.activeFilters, ...filters };
+    this.applyComplexFilters();
+  }
+
+  // Handle filtered properties from NavBarComponent
+  onFilteredPropertiesChange(properties: any[]) {
+    console.log("Home: Received properties from NavBar:", properties?.length);
+    // إذا أرسلت NavBar قائمة خالية، استخدم كل البيانات
+    if (!properties || properties.length === 0) {
+      this.applyComplexFilters(); // إعادة تطبيق الفلاتر
     } else {
       this.filteredProperties = properties;
     }
-  }
-
-  // Handle active filters from SearchComponent
-  onActiveFiltersChange(filters: any) {
-    console.log('Filters received:', filters);
-    this.activeFilters = filters;
-    this.applyComplexFilters();
   }
 
   // Open filter modal
@@ -81,78 +142,103 @@ export class HomeComponent implements OnInit {
 
   // Apply filters from modal
   onApplyFilters(filters: any) {
-    console.log('Filters applied:', filters);
+    console.log('Home: Filters applied from modal:', filters);
     this.activeFilters = { ...this.activeFilters, ...filters };
     this.applyComplexFilters();
     this.closeFilters();
   }
 
-  // Apply all filters (from search and modal)
+  // Apply all filters (from both components and modal)
   applyComplexFilters() {
-    let filtered = [...this.properties];
+    console.log('🎯 Applying complex filters:', this.activeFilters);
 
-    // Apply location filter from search
-    if (this.activeFilters.location && this.activeFilters.location !== 'anywhere') {
-      filtered = filtered.filter(property =>
-        property.location?.toLowerCase().includes(this.activeFilters.location.toLowerCase())
+    // دمج جميع الأنواع
+    let allListings = [
+      ...this.allProperties,
+      ...this.allExperiences,
+      ...this.allServices
+    ];
+
+    console.log('Total listings before filtering:', allListings.length);
+
+    // Apply property type filter from NavBar
+    if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
+      console.log('Filtering by type:', this.activeFilters.propertyType);
+      allListings = allListings.filter(listing => {
+        return listing.type === this.activeFilters.propertyType;
+      });
+      console.log('After type filter:', allListings.length);
+    }
+
+    // Apply location filter from MainSearchBar
+    if (this.activeFilters.location && this.activeFilters.location !== '' && this.activeFilters.location !== 'flexible') {
+      console.log('Filtering by location:', this.activeFilters.location);
+      allListings = allListings.filter(listing =>
+        listing.location?.toLowerCase().includes(this.activeFilters.location.toLowerCase())
       );
+      console.log('After location filter:', allListings.length);
     }
 
     // Apply price filter from modal
     if (this.activeFilters.minPrice || this.activeFilters.maxPrice) {
       const minPrice = this.activeFilters.minPrice || 0;
       const maxPrice = this.activeFilters.maxPrice || Infinity;
-      filtered = filtered.filter(property =>
-        property.price >= minPrice && property.price <= maxPrice
+      console.log('Filtering by price:', minPrice, 'to', maxPrice);
+      allListings = allListings.filter(listing =>
+        listing.price >= minPrice && listing.price <= maxPrice
       );
+      console.log('After price filter:', allListings.length);
     }
 
-    // Apply dates filter from search
+    // Apply dates filter from MainSearchBar
     if (this.activeFilters.dates?.start && this.activeFilters.dates?.end) {
-      filtered = filtered.filter(property =>
-        property.isAvailable !== false
+      console.log('Filtering by dates');
+      allListings = allListings.filter(listing =>
+        listing.isAvailable !== false
       );
+      console.log('After dates filter:', allListings.length);
     }
 
-    // Apply guests filter from search
+    // Apply guests filter from MainSearchBar
     if (this.activeFilters.guests?.adults || this.activeFilters.guests?.children) {
       const totalGuests = (this.activeFilters.guests.adults || 0) + (this.activeFilters.guests.children || 0);
-      filtered = filtered.filter(property =>
-        (property.maxGuests ?? 0) >= totalGuests
+      console.log('Filtering by guests:', totalGuests);
+      allListings = allListings.filter(listing =>
+        (listing.maxGuests ?? 0) >= totalGuests
       );
+      console.log('After guests filter:', allListings.length);
     }
 
     // Apply amenities filter from modal
     if (this.activeFilters.amenities && this.activeFilters.amenities.length > 0) {
-      filtered = filtered.filter(property =>
-        this.activeFilters.amenities.every((amenity: string) =>
-          property.amenities?.includes(amenity)
+      console.log('Filtering by amenities:', this.activeFilters.amenities);
+      allListings = allListings.filter(listing =>
+        listing.amenities && this.activeFilters.amenities.every((amenity: string) =>
+          listing.amenities.includes(amenity)
         )
       );
+      console.log('After amenities filter:', allListings.length);
     }
 
-    // Apply category filter - FIXED: Added type for tag parameter
-    if (this.selectedCategory && this.selectedCategory !== 'All') {
-      const categoryLower = this.selectedCategory.toLowerCase();
-      filtered = filtered.filter(property =>
-        property.category?.toLowerCase() === categoryLower ||
-        property.tags?.some((tag: string) => tag.toLowerCase() === categoryLower)
-      );
-    }
+    this.filteredProperties = allListings;
+    console.log('Final filtered listings:', this.filteredProperties.length);
 
-    this.filteredProperties = filtered;
+    // إذا لم توجد نتائج، أظهر رسالة في الكونسول
+    if (this.filteredProperties.length === 0) {
+      console.log('❌ No listings found after filtering');
+      console.log('Active filters:', this.activeFilters);
+      console.log('All properties:', this.allProperties.length);
+      console.log('All experiences:', this.allExperiences.length);
+      console.log('All services:', this.allServices.length);
+    }
   }
 
-  // Wishlist handler - FIXED: Use toggleWishlist method
+  // Wishlist handler
   onWishlistChange(event: any) {
     console.log("Wish changed:", event);
     const { propertyId, isWishlisted, itemType } = event;
 
-    // Check which type of item this is (property, experience, or service)
-    const type = itemType || 'Property'; // Default to Property if not specified
-
-    // Use the toggleWishlist method from Data service
-    this.dataService.toggleWishlist(type, propertyId).subscribe({
+    this.dataService.toggleWishlist(itemType || 'Property', propertyId).subscribe({
       next: (response) => {
         console.log('Wishlist updated:', response);
       },
@@ -164,23 +250,26 @@ export class HomeComponent implements OnInit {
 
   getResultsTitle(): string {
     if (this.filteredProperties.length === 0 && !this.isLoading) {
-      return 'No properties found';
+      return 'No listings found';
     }
 
     if (this.activeFilters.location && this.activeFilters.location !== 'anywhere') {
       const location = this.activeFilters.location.charAt(0).toUpperCase() +
         this.activeFilters.location.slice(1);
-      return `${location} Properties`;
+      return `${location} Listings`;
     }
 
-    if (this.selectedCategory && this.selectedCategory !== 'All') {
-      return `${this.selectedCategory} Stays`;
+    if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
+      const type = this.activeFilters.propertyType.charAt(0).toUpperCase() +
+        this.activeFilters.propertyType.slice(1);
+      return `${type} Listings`;
     }
 
-    return 'All Available Stays';
+    return 'All Available Listings';
   }
 
-  onPropertyClick(property: RentalProperty) {
+  onPropertyClick(property: any) {
     console.log('Property clicked:', property);
+    // يمكنك إضافة التنقل لصفحة التفاصيل هنا
   }
 }

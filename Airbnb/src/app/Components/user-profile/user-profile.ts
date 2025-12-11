@@ -11,8 +11,8 @@ import { DatePipe } from '@angular/common';
   selector: 'app-user-profile',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './user-profile.html',
-  styleUrl: './user-profile.css'
+  templateUrl: './user-profile.html'
+  // styleUrl: './user-profile.css'
 })
 export class UserProfile implements OnInit {
   user: any = null;
@@ -147,7 +147,7 @@ export class UserProfile implements OnInit {
           console.log('Photo uploaded:', res);
           this.isUploadingPhoto = false;
 
-          // Initial path depends on backend return. 
+          // Initial path depends on backend return.
           // If returns partial path "images/profiles/...", we need to prepend base URL or handle static serving
           // Assuming base URL is 'https://localhost:7020/'
 
@@ -217,7 +217,7 @@ export class UserProfile implements OnInit {
         // Show clear error to user
         alert(errorMessage);
 
-        // Optional: if user wants to 'force' local update, we could offer that, 
+        // Optional: if user wants to 'force' local update, we could offer that,
         // but for now let's strict to "Server Validated" updates.
       }
     });

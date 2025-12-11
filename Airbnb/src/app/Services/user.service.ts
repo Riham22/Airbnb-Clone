@@ -1,76 +1,321 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
+import { tap, catchError, map } from 'rxjs/operators';
 import { AuthService } from './auth';
+
+export interface UserProfileUpdate {
+  firstName?: string;
+  lastName?: string;
+  photoURL?: string;
+  about?: string;
+  location?: string;
+  work?: string;
+  wantedToTravel?: string;
+  pets?: string;
+  uselessSkill?: string;
+  showTheDecade?: boolean;
+  funFact?: string;
+  favoriteSong?: string;
+  school?: string;
+  spendTimeDoing?: string;
+  dateOfBirth?: string;
+  languageIds?: number[];
+  interestIds?: number[];
+  roles?: string[];
+}
+
+export interface UserProfile extends UserProfileUpdate {
+  id?: string;
+  email?: string;
+  username?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isVerified?: boolean;
+  isActive?: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = "https://localhost:7020/api/Account";
+  private userApiUrl = "https://localhost:7020/api/User";
+  private accountApiUrl = "https://localhost:7020/api/Account";
+
+  private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
+  userProfile$ = this.userProfileSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private authService: AuthService
   ) { }
 
-  // ============ Get User Profile ============
-  getMyProfile(): Observable<any> {
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser && (currentUser.id || currentUser.Id || currentUser.userId || currentUser.username)) {
-      console.log('Returning cached user from AuthService');
-      return of(currentUser);
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('No authentication token found');
+      throw new Error('User not authenticated');
     }
 
-    console.log('No user cached');
-    return of(null);
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
   }
 
-  // ============ Update Current User ============
-  updateCurrentUser(userData: any): Observable<any> {
+  private getUserId(): string {
+    const token = this.authService.getToken();
+    if (!token) {
+      throw new Error('No authentication token');
+    }
+
     try {
-      return this.authService.updateUserProfile(userData).pipe(
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      const possibleClaims = [
+        'sub',
+        'nameid',
+        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier',
+        'UserId',
+        'userId',
+        'id'
+      ];
+
+      for (const claim of possibleClaims) {
+        if (payload[claim]) {
+          return payload[claim].toString();
+        }
+      }
+
+      throw new Error('User ID not found in token');
+    } catch (e) {
+      console.error('Could not parse JWT token:', e);
+      throw new Error('Invalid authentication token');
+    }
+  }
+
+  getMyProfile(): Observable<UserProfile> {
+    console.log('getMyProfile called');
+
+    const userId = this.getUserId();
+    console.log('User ID:', userId);
+
+    const endpointsToTry = [
+      `${this.accountApiUrl}/${userId}`,
+      `${this.userApiUrl}/me`,
+      `${this.userApiUrl}/current`,
+      `${this.userApiUrl}`,
+      `${this.userApiUrl}/${userId}`
+    ];
+
+    const tryEndpoint = (index: number): Observable<UserProfile> => {
+      if (index >= endpointsToTry.length) {
+        return throwError(() => new Error('No valid endpoint found for user profile'));
+      }
+
+      const endpoint = endpointsToTry[index];
+      console.log(`Trying endpoint ${index}: ${endpoint}`);
+
+      return this.http.get<UserProfile>(endpoint, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        tap(profile => {
+          console.log(`Success with endpoint ${endpoint}:`, profile);
+          this.userProfileSubject.next(profile);
+        }),
         catchError(error => {
-          console.error('Error updating profile via AuthService:', error);
-          return throwError(() => error);
+          console.warn(`Endpoint ${endpoint} failed:`, error.status);
+          if (error.status === 404 || error.status === 401 || error.status === 403) {
+            return tryEndpoint(index + 1);
+          }
+          return throwError(() => new Error(`Failed to load profile: ${error.message}`));
         })
       );
-    } catch (error) {
-      console.error('Cannot update profile:', error);
-      return throwError(() => error);
-    }
+    };
+
+    return tryEndpoint(0);
   }
 
-  // ============ Delete User Account ============
-  deleteUser(): Observable<any> {
-    try {
-      return this.authService.deleteUserAccount().pipe(
+  updateCurrentUser(userData: UserProfileUpdate): Observable<UserProfile> {
+    console.log('updateCurrentUser called with data:', userData);
+
+    const userId = this.getUserId();
+
+    const apiData: UserProfileUpdate = {
+      ...userData,
+      languageIds: userData.languageIds || [],
+      interestIds: userData.interestIds || []
+    };
+
+    const endpointsToTry = [
+      `${this.accountApiUrl}/${userId}`,
+      `${this.userApiUrl}/${userId}`,
+      `${this.userApiUrl}/me`,
+      `${this.userApiUrl}/current`
+    ];
+
+    const tryEndpoint = (index: number): Observable<UserProfile> => {
+      if (index >= endpointsToTry.length) {
+        return throwError(() => new Error('No valid update endpoint found'));
+      }
+
+      const endpoint = endpointsToTry[index];
+      console.log(`Trying update endpoint ${index}: ${endpoint}`, apiData);
+
+      return this.http.put<UserProfile>(endpoint, apiData, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        tap(updatedProfile => {
+          console.log(`Update successful with endpoint ${endpoint}:`, updatedProfile);
+
+          this.userProfileSubject.next(updatedProfile);
+
+          const currentAuthUser = this.authService.getCurrentUser();
+          if (currentAuthUser) {
+            const updatedAuthUser = {
+              ...currentAuthUser,
+              firstName: userData.firstName || currentAuthUser.firstName,
+              lastName: userData.lastName || currentAuthUser.lastName,
+              email: updatedProfile.email || currentAuthUser.email
+            };
+            this.authService.updateCurrentUser(updatedAuthUser);
+          }
+        }),
         catchError(error => {
-          console.error('Error deleting account via AuthService:', error);
-          return throwError(() => error);
+          console.warn(`Update endpoint ${endpoint} failed:`, error.status, error.error);
+
+          if (error.error) {
+            console.log('API error response:', error.error);
+          }
+
+          if (error.status === 404 || error.status === 405 || error.status === 400) {
+            return tryEndpoint(index + 1);
+          }
+          return throwError(() => new Error(`Failed to update profile: ${error.message}`));
         })
       );
-    } catch (error) {
-      console.error('Cannot delete account:', error);
-      return throwError(() => error);
-    }
+    };
+
+    return tryEndpoint(0);
   }
 
-  // ============ Change Password ============
-  changePassword(passwordData: { currentPassword: string; newPassword: string }): Observable<any> {
-    return this.authService.changePassword(passwordData).pipe(
+  // ============ Refresh User Profile ============
+  refreshUserProfile(): Observable<UserProfile> {
+    console.log('Refreshing user profile...');
+
+    // إعادة تحميل البيانات من الـ API
+    return this.getMyProfile().pipe(
+      tap(profile => {
+        console.log('User profile refreshed successfully:', profile);
+
+        // تحديث الـ AuthService أيضاً إذا لزم الأمر
+        const currentAuthUser = this.authService.getCurrentUser();
+        if (currentAuthUser && profile) {
+          const updatedAuthUser = {
+            ...currentAuthUser,
+            firstName: profile.firstName || currentAuthUser.firstName,
+            lastName: profile.lastName || currentAuthUser.lastName,
+            email: profile.email || currentAuthUser.email,
+            photoURL: profile.photoURL || currentAuthUser.photoURL
+          };
+          this.authService.updateCurrentUser(updatedAuthUser);
+          console.log('AuthService user updated with latest profile');
+        }
+      }),
       catchError(error => {
-        console.error('Error changing password:', error);
-        return throwError(() => error);
+        console.error('Failed to refresh user profile:', error);
+        return throwError(() => new Error('Could not refresh profile'));
       })
     );
   }
 
-  // ============ Update Specific Field ============
-  updateUserField(field: string, value: any): Observable<any> {
-    const updateData = { [field]: value };
+  uploadProfilePhoto(file: File): Observable<any> {
+    console.log('uploadProfilePhoto called with file:', file.name);
+
+    const userId = this.getUserId();
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const endpointsToTry = [
+      `${this.accountApiUrl}/${userId}/upload-photo`,
+      `${this.userApiUrl}/${userId}/upload-photo`,
+      `${this.userApiUrl}/upload-photo`,
+      `${this.userApiUrl}/${userId}/photo`,
+      `${this.userApiUrl}/photo`
+    ];
+
+    const tryEndpoint = (index: number): Observable<any> => {
+      if (index >= endpointsToTry.length) {
+        return throwError(() => new Error('No upload endpoint available'));
+      }
+
+      const endpoint = endpointsToTry[index];
+      console.log(`Trying upload endpoint ${index}: ${endpoint}`);
+
+      return this.http.post(endpoint, formData, {
+        headers: new HttpHeaders({
+          'Authorization': `Bearer ${this.authService.getToken()}`
+        })
+      }).pipe(
+        tap((response: any) => {
+          console.log(`Upload successful with endpoint ${endpoint}:`, response);
+
+          if (response.photoURL) {
+            this.updateUserField('photoURL', response.photoURL).subscribe({
+              next: () => console.log('Photo URL updated in profile'),
+              error: (err) => console.warn('Could not update photo URL in profile:', err)
+            });
+          }
+        }),
+        catchError(error => {
+          console.warn(`Upload endpoint ${endpoint} failed:`, error.status);
+          if (error.status === 404 || error.status === 405) {
+            return tryEndpoint(index + 1);
+          }
+          return throwError(() => new Error(`Failed to upload photo: ${error.message}`));
+        })
+      );
+    };
+
+    return tryEndpoint(0);
+  }
+
+  updateUserField(field: keyof UserProfileUpdate, value: any): Observable<UserProfile> {
+    const updateData = { [field]: value } as UserProfileUpdate;
     return this.updateCurrentUser(updateData);
+  }
+
+  deleteUser(): Observable<any> {
+    const userId = this.getUserId();
+
+    return this.http.delete(`${this.accountApiUrl}/${userId}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(() => {
+        this.userProfileSubject.next(null);
+        this.authService.logout();
+      }),
+      catchError(error => {
+        console.error('Error deleting account:', error);
+        return throwError(() => new Error(`Failed to delete account: ${error.message}`));
+      })
+    );
+  }
+
+  changePassword(passwordData: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.post(`${this.accountApiUrl}/ChangePassword`, passwordData, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      catchError(error => {
+        console.error('Error changing password:', error);
+        return throwError(() => new Error(`Failed to change password: ${error.message}`));
+      })
+    );
+  }
+
+  getCurrentUserProfile(): UserProfile | null {
+    return this.userProfileSubject.value;
   }
 
   // ============ Upload Profile Photo ============
@@ -78,7 +323,7 @@ export class UserService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post(`${this.apiUrl}/upload-photo`, formData).pipe(
+    return this.http.post(`${this.accountApiUrl}/upload-photo`, formData).pipe(
       catchError(error => {
         console.error('Error uploading photo:', error);
         return throwError(() => error);
@@ -88,7 +333,7 @@ export class UserService {
 
   // ============ Get User Stats ============
   getUserStats(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/stats`).pipe(
+    return this.http.get(`${this.accountApiUrl}/stats`).pipe(
       catchError(error => {
         console.error('Error fetching user stats:', error);
         return throwError(() => error);
@@ -102,12 +347,21 @@ export class UserService {
     return currentUser?.id || currentUser?.Id || currentUser?.userId || null;
   }
 
-  isCurrentUserAdmin(): boolean {
-    return this.authService.isAdmin();
+  debugAuthInfo(): void {
+    console.log('=== DEBUG AUTH INFO ===');
+    console.log('Token:', this.authService.getToken());
+    console.log('Current User:', this.authService.getCurrentUser());
+    try {
+      console.log('User ID from method:', this.getUserId());
+    } catch (e) {
+      console.log('Cannot get user ID:', e);
+    }
+    console.log('Cached Profile:', this.userProfileSubject.value);
+    console.log('=== END DEBUG ===');
   }
 
-  getCurrentUsername(): string | null {
-    const currentUser = this.authService.getCurrentUser();
-    return currentUser?.username || currentUser?.email || null;
+  formatDateForApi(date: Date | string): string {
+    const dateObj = new Date(date);
+    return dateObj.toISOString().split('T')[0];
   }
 }
