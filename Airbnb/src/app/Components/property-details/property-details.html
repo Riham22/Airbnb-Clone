@@ -8,22 +8,61 @@
     <!-- Actions removed as per request -->
   </header>
 
-  <!-- Image Gallery -->
-  <div class="image-gallery">
-    <div class="main-image">
-      <img alt=""
-        [src]="(property.images && property.images.length > 0 ? property.images[selectedImageIndex] : property.imageUrl) || 'assets/default-listing.jpg'"
+  <!-- Image Gallery (Airbnb Style Grid) -->
+  <div class="image-gallery-grid">
+    <!-- Main Image (Left) -->
+    <div class="gallery-item main-item" (click)="togglePhotoGallery()">
+      <img [src]="property.images && property.images.length > 0 ? property.images[0] : property.imageUrl"
         [alt]="property.name">
+      <div class="image-overlay"></div>
     </div>
-    <div class="thumbnail-grid">
-      <div *ngFor="let image of property.images; let i = index" class="thumbnail"
-        [class.active]="i === selectedImageIndex" (click)="selectImage(i)">
-        <img alt="" [src]="image" [alt]="property.name + ' image ' + (i + 1)">
+
+    <!-- Side Images (Right Grid) -->
+    <div class="side-images">
+      <div class="gallery-item side-item" *ngFor="let image of property.images | slice:1:5; let i = index"
+        (click)="togglePhotoGallery()">
+        <img [src]="image" [alt]="property.name">
+        <div class="image-overlay"></div>
       </div>
     </div>
-    <button class="view-all-photos">
-      <i class="fas fa-camera"></i> Show all photos
+
+    <button class="view-all-photos" (click)="togglePhotoGallery()">
+      <i class="fas fa-th"></i> Show all photos
     </button>
+  </div>
+
+  <!-- Full Screen Photo Carousel -->
+  <div class="photo-gallery-overlay" *ngIf="showAllPhotos">
+    <div class="gallery-header">
+      <button class="close-gallery-btn" (click)="togglePhotoGallery()">
+        <i class="fas fa-times"></i> Close
+      </button>
+      <div class="gallery-counter">
+        {{ activeImageIndex + 1 }} / {{ property.images.length }}
+      </div>
+    </div>
+
+    <div class="carousel-content">
+      <button class="nav-btn prev" (click)="prevImage($event)">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="carousel-main-image">
+        <img [src]="property.images[activeImageIndex]" [alt]="property.name">
+      </div>
+
+      <button class="nav-btn next" (click)="nextImage($event)">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Optional Thumbnail Strip -->
+    <div class="carousel-thumbnails">
+      <div *ngFor="let img of property.images; let i = index" class="carousel-thumb"
+        [class.active]="i === activeImageIndex" (click)="activeImageIndex = i">
+        <img [src]="img" alt="">
+      </div>
+    </div>
   </div>
 
   <!-- Property Info Section -->

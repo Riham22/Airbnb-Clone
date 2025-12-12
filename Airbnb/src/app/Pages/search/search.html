@@ -7,17 +7,7 @@
     <!-- Property Type Filter Bar - Hide on Admin Page and Trips Page and Account Page -->
     <div class="property-type-bar" *ngIf="!isAdminPage && !isTripsPage && !isAccountPage">
       <div class="property-type-filters">
-        <!-- New Home Button -->
-        <div class="property-type-option" routerLink="/" (click)="selectPropertyType('all')">
-          <span class="type-icon">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
-              focusable="false" style="display: block; height: 16px; width: 16px; fill: currentcolor;">
-              <path d="M16 1L1 16h3v15h9V20h6v11h9V16h3L16 1zm0 2.83L25.17 13H25v16h-5V18h-8v11H7V13h-.17L16 3.83z">
-              </path>
-            </svg>
-          </span>
-          Home
-        </div>
+
         <div *ngFor="let type of propertyTypes" class="property-type-option"
           [class.active]="selectedPropertyType === type.value" (click)="selectPropertyType(type.value)">
           <span class="type-icon" [ngSwitch]="type.value">

@@ -23,7 +23,8 @@ export class AddListingComponent implements OnInit {
         bathrooms: 1,
         propertyTypeId: null,
         propertyCategoryId: null,
-        imageUrl: ''
+        imageUrl: '',
+        currency: 'USD'
     };
 
     propertyTypes: any[] = [];
@@ -61,12 +62,17 @@ export class AddListingComponent implements OnInit {
             return;
         }
 
+        if (this.newListing.price <= 0) {
+            alert('Price must be greater than 0');
+            return;
+        }
+
         this.isLoading = true;
         const listingPayload = {
             title: this.newListing.name,
             description: this.newListing.description,
             pricePerNight: Number(this.newListing.price),
-            currency: 'USD',
+            currency: this.newListing.currency || 'USD',
             country: this.newListing.location.split(',')[1]?.trim() || 'Unknown',
             city: this.newListing.location.split(',')[0]?.trim() || 'Unknown',
             address: this.newListing.location,

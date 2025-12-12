@@ -101,10 +101,31 @@
   cursor: not-allowed;
 }
 
+.btn-outline-primary {
+  background: white;
+  color: #E61E4D;
+  border: 1px solid #E61E4D;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  background: #fff0f5;
+  border-color: #D70466;
+  color: #D70466;
+}
+
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: white;
+  color: #222222;
+  border: 1px solid #dddddd;
   padding: 12px 20px;
   border-radius: 8px;
   font-weight: 600;
@@ -117,8 +138,8 @@
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #f7f7f7;
+  border-color: #222222;
 }
 
 .btn-icon {
@@ -841,6 +862,25 @@
 }
 
 /* Filter and Search Styles */
+/* Updated to ensure single line */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  /* Push to right */
+  white-space: nowrap;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: nowrap;
+  /* Prevent header wrapping */
+}
+
 .table-filters {
   display: flex;
   gap: 16px;

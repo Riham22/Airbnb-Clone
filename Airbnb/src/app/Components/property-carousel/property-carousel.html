@@ -2,29 +2,9 @@
 <section class="carousel-section">
   <div class="carousel-header" *ngIf="title">
     <h2 class="carousel-title">{{ title }}</h2>
-
-    <div class="carousel-controls" *ngIf="showControls && properties.length > 0">
-      <button class="carousel-button prev" (click)="scrollLeft()" [class.hidden]="!canScrollLeft"
-        aria-label="Scroll left" type="button">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
-          focusable="false">
-          <path
-            d="m20 28-11.29289322-11.2928932c-.39052429-.3905243-.39052429-1.0236893 0-1.4142136l11.29289322-11.2928932">
-          </path>
-        </svg>
-      </button>
-      <button class="carousel-button next" (click)="scrollRight()" [class.hidden]="!canScrollRight"
-        aria-label="Scroll right" type="button">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
-          focusable="false">
-          <path d="m12 4 11.2928932 11.2928932c.3905243.3905243.3905243 1.0236893 0 1.4142136l-11.2928932 11.2928932">
-          </path>
-        </svg>
-      </button>
-    </div>
   </div>
 
-  <div class="carousel-container" #carouselContainer (scroll)="checkScrollStatus()">
+  <div class="carousel-container">
     <div class="carousel-track" #carouselTrack>
       <app-property-card class="carousel-item" *ngFor="let p of properties; trackBy: trackByPropertyId" [property]="p"
         (cardClick)="onPropertyClick(p)" (wishlistChange)="onWishlistChange($event)">

@@ -175,7 +175,7 @@ export class AdminService {
     return defer(() => {
       this.increaseLoading();
       // Use the host-specific endpoint to get ALL properties (published and unpublished)
-      return this.http.get<any>(`${this.apiUrl}/Properties/my-properties`).pipe(
+      return this.http.get<any>(`${this.apiUrl}/Properties`).pipe(
         timeout(10000),
         map((response: any) => {
           const properties = Array.isArray(response) ? response : (response?.data || []);
@@ -339,7 +339,7 @@ export class AdminService {
     return defer(() => {
       this.increaseLoading();
       // Use the host-specific endpoint to get ALL services
-      return this.http.get<any>(`${this.apiUrl}/Services/my-services`).pipe(
+      return this.http.get<any>(`${this.apiUrl}/Services`).pipe(
         timeout(10000),
         map((response: any) => {
           const services = Array.isArray(response) ? response : (response?.data || []);
@@ -390,7 +390,7 @@ export class AdminService {
     return defer(() => {
       this.increaseLoading();
       // Use the host-specific endpoint to get ALL experiences
-      return this.http.get<any>(`${this.apiUrl}/Experience/my-experiences`).pipe(
+      return this.http.get<any>(`${this.apiUrl}/Experience`).pipe(
         timeout(10000),
         map((response: any) => {
           const experiences = Array.isArray(response) ? response : (response?.data || []);
@@ -454,9 +454,9 @@ export class AdminService {
 
       return forkJoin({
         users: this.http.get<any[]>(`${this.apiUrl}/User`).pipe(timeout(15000), catchError(err => { console.warn('Users fetch failed', err); return of([]); })),
-        properties: this.http.get<any[]>(`${this.apiUrl}/Properties/my-properties`).pipe(timeout(15000), catchError(err => { console.warn('Properties fetch failed', err); return of([]); })),
-        services: this.http.get<any[]>(`${this.apiUrl}/Services/my-services`).pipe(timeout(15000), catchError(err => { console.warn('Services fetch failed', err); return of([]); })),
-        experiences: this.http.get<any[]>(`${this.apiUrl}/Experience/my-experiences`).pipe(timeout(15000), catchError(err => { console.warn('Experiences fetch failed', err); return of([]); })),
+        properties: this.http.get<any[]>(`${this.apiUrl}/Properties`).pipe(timeout(15000), catchError(err => { console.warn('Properties fetch failed', err); return of([]); })),
+        services: this.http.get<any[]>(`${this.apiUrl}/Services`).pipe(timeout(15000), catchError(err => { console.warn('Services fetch failed', err); return of([]); })),
+        experiences: this.http.get<any[]>(`${this.apiUrl}/Experience`).pipe(timeout(15000), catchError(err => { console.warn('Experiences fetch failed', err); return of([]); })),
         bookings: this.getAllBookings().pipe(timeout(15000), catchError(err => { console.warn('Bookings fetch failed', err); return of([]); }))
       }).pipe(
         map(({ users, properties, services, experiences, bookings }) => {
@@ -924,18 +924,18 @@ export class AdminService {
   }
 
   getExperienceSubCategories(categoryId?: number): Observable<any[]> {
-    const endpoint = `${this.apiUrl}/ExpSubCatogray`;
-    return this.http.get<any[]>(endpoint).pipe(
+    // Use specific endpoint if categoryId is provided
+    const url = categoryId
+      ? `${this.apiUrl}/ExpSubCatogray/CatograyId/${categoryId}`
+      : `${this.apiUrl}/ExpSubCatogray`;
+
+    return this.http.get<any[]>(url).pipe(
       map(subs => {
         const mappedSubs = subs.map(s => ({
           id: s.id || s.Id,
           name: s.name || s.Name,
           expCatograyId: s.expCatograyId || s.ExpCatograyId
         }));
-
-        if (categoryId) {
-          return mappedSubs.filter(s => s.expCatograyId === categoryId);
-        }
         return mappedSubs;
       }),
       catchError(err => {
@@ -943,22 +943,9 @@ export class AdminService {
         const subCategories = [
           { id: 1, name: 'Painting', expCatograyId: 1 },
           { id: 2, name: 'Photography', expCatograyId: 1 },
-          { id: 3, name: 'Museums', expCatograyId: 1 },
-          { id: 4, name: 'Concerts', expCatograyId: 2 },
-          { id: 5, name: 'Theater', expCatograyId: 2 },
-          { id: 6, name: 'Cooking Class', expCatograyId: 3 },
-          { id: 7, name: 'Wine Tasting', expCatograyId: 3 },
-          { id: 8, name: 'Food Tour', expCatograyId: 3 },
-          { id: 9, name: 'Surfing', expCatograyId: 4 },
-          { id: 10, name: 'Yoga', expCatograyId: 4 },
-          { id: 11, name: 'Hiking', expCatograyId: 4 },
-          { id: 12, name: 'City Tour', expCatograyId: 5 },
+          { id: 12, name: 'City Tour', expCatograyId: 5 }, // Added specifically for Tours
           { id: 13, name: 'Boat Tour', expCatograyId: 5 },
-          { id: 14, name: 'Landmarks', expCatograyId: 6 },
-          { id: 15, name: 'Spa', expCatograyId: 7 },
-          { id: 16, name: 'Meditation', expCatograyId: 7 },
-          { id: 17, name: 'Camping', expCatograyId: 8 },
-          { id: 18, name: 'Wildlife', expCatograyId: 8 }
+          { id: 6, name: 'Cooking Class', expCatograyId: 3 }
         ];
         if (categoryId) {
           return of(subCategories.filter(s => s.expCatograyId === categoryId));

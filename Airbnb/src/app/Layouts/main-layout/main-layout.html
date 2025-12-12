@@ -1,5 +1,5 @@
 <div class="main-layout">
-  <app-search-bar (filtersChange)="onFiltersChange($event)">
+  <app-search-bar *ngIf="showSearch" (filtersChange)="onFiltersChange($event)">
   </app-search-bar>
 
   <main class="main-content">

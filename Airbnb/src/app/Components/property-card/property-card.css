@@ -286,6 +286,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -296,17 +297,32 @@
   animation: cardAppear 0.6s cubic-bezier(0.2, 0, 0, 1) both;
 }
 
-.property-card:nth-child(1) { animation-delay: 0.1s; }
-.property-card:nth-child(2) { animation-delay: 0.15s; }
-.property-card:nth-child(3) { animation-delay: 0.2s; }
-.property-card:nth-child(4) { animation-delay: 0.25s; }
-.property-card:nth-child(5) { animation-delay: 0.3s; }
+.property-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.property-card:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.property-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.property-card:nth-child(4) {
+  animation-delay: 0.25s;
+}
+
+.property-card:nth-child(5) {
+  animation-delay: 0.3s;
+}
 
 @keyframes cardAppear {
   from {
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

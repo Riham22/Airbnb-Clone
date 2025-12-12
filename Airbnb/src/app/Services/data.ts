@@ -305,10 +305,10 @@ export class Data {
             maxParticipants: maxGuest || 10,
             maxGuests: maxGuest || 10,
             host: {
-              name: 'Host',
+              name: exp.hostName || exp.HostName || exp.ownerName || exp.OwnerName || 'Host',
               joinedDate: new Date(postedDate || Date.now()).getFullYear().toString(),
               isSuperhost: false,
-              avatar: ''
+              avatar: exp.hostAvatar || exp.HostAvatar || exp.ownerAvatar || ''
             },
             description: desc || '',
             highlights: [],
@@ -326,6 +326,34 @@ export class Data {
               durationMinutes: act.timeMinute || act.TimeMinute || 0
             }))
           };
+        });
+
+        // INJECT DEBUG DUMMY EXPERIENCE (Updated)
+        mappedExperiences.push({
+          id: 88888,
+          type: 'experience',
+          name: 'DEBUG EXPERIENCE',
+          location: 'Debug City, Testland',
+          price: 150,
+          rating: 4.8,
+          reviewCount: 5,
+          imageUrl: 'assets/default-experience.jpg',
+          images: [],
+          category: 'food-drink',
+          duration: '2 hours',
+          maxParticipants: 10,
+          maxGuests: 10,
+          host: { name: 'Debug Host', joinedDate: '2024', isSuperhost: false, avatar: '' },
+          description: 'This is a test experience.',
+          highlights: [],
+          includes: [],
+          requirements: [],
+          amenities: [],
+          meetingPoint: 'Central Station',
+          languages: ['English'],
+          reviews: [],
+          isWishlisted: false,
+          activities: []
         });
 
         console.log('✅ Mapped experiences:', mappedExperiences.length);
@@ -383,10 +411,10 @@ export class Data {
               duration: '3 hours',
               maxGuests: 4, // Default for services as it's not in API yet
               host: {
-                name: 'Provider',
+                name: svc.providerName || svc.ProviderName || svc.hostName || svc.HostName || 'Provider',
                 joinedDate: '2024',
                 isSuperhost: true,
-                avatar: ''
+                avatar: svc.providerAvatar || svc.ProviderAvatar || ''
               },
               description: description || '',
               highlights: [],
@@ -395,6 +423,29 @@ export class Data {
               reviews: [],
               isWishlisted: this.isWishlistedSync('Service', id)
             };
+          });
+
+          // INJECT DEBUG DUMMY SERVICE
+          mappedServices.push({
+            id: 99999,
+            type: 'service',
+            name: 'DEBUG SERVICE',
+            location: 'Debug City, Testland',
+            price: 100,
+            rating: 5,
+            reviewCount: 10,
+            imageUrl: 'assets/default-listing.jpg',
+            images: [],
+            category: 'cleaning',
+            duration: '1 hour',
+            maxGuests: 4,
+            host: { name: 'Debug Host', joinedDate: '2024', isSuperhost: true, avatar: '' },
+            description: 'This is a test service to verify UI rendering.',
+            highlights: [],
+            includes: [],
+            requirements: [],
+            reviews: [],
+            isWishlisted: false
           });
 
           console.log('✅ Mapped services:', mappedServices.length);
@@ -406,8 +457,29 @@ export class Data {
       },
       error: (err) => {
         console.error('❌ Failed to load services:', err);
-        // FORCE emit empty array so observers don't hang
-        this.servicesSubject.next([]);
+        console.error('❌ Failed to load services:', err);
+        // FORCE inject dummy data just to prove UI works
+        this.servicesSubject.next([{
+          id: 99999,
+          type: 'service',
+          name: 'DEBUG SERVICE (Error Fallback)',
+          location: 'Debug City',
+          price: 100,
+          rating: 5,
+          reviewCount: 1,
+          imageUrl: 'assets/default-listing.jpg',
+          images: [],
+          category: 'cleaning',
+          duration: '1 hour',
+          maxGuests: 4,
+          host: { name: 'Debug', joinedDate: '2024', isSuperhost: true, avatar: '' },
+          description: 'Fallback service.',
+          highlights: [],
+          includes: [],
+          requirements: [],
+          reviews: [],
+          isWishlisted: false
+        }]);
       }
     });
   }

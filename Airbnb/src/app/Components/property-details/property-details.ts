@@ -28,6 +28,32 @@ export class PropertyDetailsComponent implements OnInit {
   hasBooking = false;
   suggestions: any[] = [];
   showReviewModal = false;
+  showAllPhotos = false;
+  activeImageIndex = 0;
+
+  togglePhotoGallery(index: number = 0) {
+    this.activeImageIndex = index;
+    this.showAllPhotos = !this.showAllPhotos;
+    if (this.showAllPhotos) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  nextImage(e?: Event) {
+    e?.stopPropagation();
+    if (this.property?.images) {
+      this.activeImageIndex = (this.activeImageIndex + 1) % this.property.images.length;
+    }
+  }
+
+  prevImage(e?: Event) {
+    e?.stopPropagation();
+    if (this.property?.images) {
+      this.activeImageIndex = (this.activeImageIndex - 1 + this.property.images.length) % this.property.images.length;
+    }
+  }
 
   getGuestOptions(): number[] {
     if (!this.property) return [];

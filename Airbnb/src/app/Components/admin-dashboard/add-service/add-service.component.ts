@@ -13,12 +13,15 @@ import { AdminService } from '../../../Services/Admin.service';
 })
 export class AddServiceComponent implements OnInit {
     newService = {
-        name: '',
+        title: '',
         description: '',
         price: 0,
-        location: '',
+        country: '',
+        city: '',
+        address: '',
         serviceCategoryId: null,
-        imageUrl: ''
+        imageUrl: '',
+        currency: 'USD'
     };
 
     serviceCategories: any[] = [];
@@ -45,20 +48,31 @@ export class AddServiceComponent implements OnInit {
     }
 
     onSubmit() {
-        if (!this.newService.name || !this.newService.price || !this.newService.serviceCategoryId) {
-            alert('Please fill in required fields');
+        if (!this.newService.title || !this.newService.price || !this.newService.serviceCategoryId || !this.newService.country || !this.newService.city) {
+            alert('Please fill in required fields (Title, Price, Category, Country, City)');
+            return;
+        }
+
+        if (this.newService.price <= 0) {
+            alert('Price must be greater than 0');
             return;
         }
 
         this.isLoading = true;
         const servicePayload = {
-            name: this.newService.name,
+            title: this.newService.title,
             description: this.newService.description,
             price: Number(this.newService.price),
-            location: this.newService.location,
+            country: this.newService.country,
+            city: this.newService.city,
+            address: this.newService.address,
             serviceCategoryId: Number(this.newService.serviceCategoryId),
-            imageUrl: ''
+            imageUrl: '',
+            currency: this.newService.currency,
+            pricingType: 'PerHour' // Default value matching backend
         };
+
+        console.log('Component Submitting Service Payload:', servicePayload);
 
         this.adminService.createService(servicePayload, this.selectedFiles).subscribe({
             next: () => {

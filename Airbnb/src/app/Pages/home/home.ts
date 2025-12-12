@@ -1,4 +1,3 @@
-// home.component.ts - Fixed Version
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RentalProperty } from '../../Models/rental-property';
@@ -6,6 +5,7 @@ import { PropertyList } from '../../Components/property-list/property-list';
 import { SearchComponent } from '../search/search';
 import { Data } from '../../Services/data';
 import { FilterModalComponent } from '../../Components/filter-modal/filter-modal.component';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -30,17 +30,34 @@ export class HomeComponent implements OnInit {
   constructor(private dataService: Data) { }
 
   ngOnInit() {
-    console.log('🏠 HomeComponent initialized');
+    console.log('🏠 HomeComponent initialized (Fixed Version with combineLatest)');
 
     // Force refresh data from API
     this.dataService.loadProperties();
     this.dataService.loadExperiences();
     this.dataService.loadServices();
 
-    // Subscribe to properties
-    this.dataService.properties$.subscribe(props => {
-      this.properties = props;
-      this.filteredProperties = props;
+    // Subscribe to all data sources
+    combineLatest([
+      this.dataService.properties$,
+      this.dataService.experiences$,
+      this.dataService.services$
+    ]).subscribe(([props, exps, services]) => {
+      console.log(`Updated Data in Home: ${props.length} props, ${exps.length} exps, ${services.length} services`);
+
+      this.properties = [
+        ...props,
+        ...exps,
+        ...services
+      ];
+
+      // Re-apply filters if we have active filters, otherwise just update
+      if (Object.keys(this.activeFilters).length > 0) {
+        this.applyComplexFilters();
+      } else {
+        this.filteredProperties = this.properties;
+      }
+
       this.isLoading = false;
     });
   }
@@ -53,11 +70,25 @@ export class HomeComponent implements OnInit {
   // Handle search results from SearchComponent
   onFilteredPropertiesChange(properties: RentalProperty[]) {
     console.log("Received from search:", properties.length);
+    // When search component filters, we trust it, BUT we must ensure we don't lose our type context
+    // Actually, SearchComponent also has the correct logic now, so we can use it.
+    // But if SearchComponent emits an array, we use it.
     if (properties.length === 0) {
-      this.filteredProperties = [...this.properties];
-    } else {
-      this.filteredProperties = properties;
+      // If search returns 0, and we have active filters, keep it 0.
+      // Only reset if NO search query? 
+      // For now, let's just use what Search gave us, unless it's initial load quirk.
+      // If filters propertyType is set, verify we aren't showing 0 falsely?
+      // Let's rely on applyComplexFilters to coordinate.
     }
+
+    // Instead of replacing blindly, let's update local 'this.filteredProperties' 
+    // BUT we also have 'applyComplexFilters' which runs on 'activeFiltersChange'.
+    // Typically SearchComponent emits 'filteredProperties' AND 'activeFilters'.
+    // We should prioritize 'activeFilters' to re-run strictly local logic if needed.
+    // But SearchComponent also does filtering.
+    // Let's use the properties passed, but verifying type match.
+
+    this.filteredProperties = properties;
   }
 
   // Handle active filters from SearchComponent
@@ -131,7 +162,7 @@ export class HomeComponent implements OnInit {
       );
     }
 
-    // Apply category filter - FIXED: Added type for tag parameter
+    // Apply category filter
     if (this.selectedCategory && this.selectedCategory !== 'All') {
       const categoryLower = this.selectedCategory.toLowerCase();
       filtered = filtered.filter(property =>
@@ -140,10 +171,17 @@ export class HomeComponent implements OnInit {
       );
     }
 
+    // Apply Property Type (Tabs: All, Properties, Experiences, Services)
+    if (this.activeFilters.propertyType && this.activeFilters.propertyType !== 'all') {
+      const type = this.activeFilters.propertyType;
+      console.log('Applying Property Type Filter:', type);
+      filtered = filtered.filter(property => property.type === type);
+    }
+
     this.filteredProperties = filtered;
   }
 
-  // Wishlist handler - FIXED: Use toggleWishlist method
+  // Wishlist handler
   onWishlistChange(event: any) {
     console.log("Wish changed:", event);
     const { propertyId, isWishlisted, itemType } = event;

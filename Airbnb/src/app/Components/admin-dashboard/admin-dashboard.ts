@@ -567,7 +567,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       title: this.newListing.name,
       description: this.newListing.description,
       pricePerNight: Number(this.newListing.price),
-      currency: 'USD',
+      currency: this.newListing.currency || 'USD',
       country: this.newListing.location.split(',')[1]?.trim() || 'Unknown',
       city: this.newListing.location.split(',')[0]?.trim() || 'Unknown',
       address: this.newListing.location,
@@ -601,6 +601,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     if (!this.newListing.propertyTypeId || !this.newListing.propertyCategoryId) {
       alert('Please select both Property Type and Property Category');
+      return;
+    }
+
+    if (this.newListing.price <= 0) {
+      alert('Price must be greater than 0');
       return;
     }
 
@@ -776,6 +781,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.users = this.users.map(user =>
             user.id === userId ? updatedUser : user
           );
+          this.filterUsers();
         },
         error: (error) => {
           console.error('Error suspending user:', error);
@@ -793,6 +799,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.users = this.users.map(user =>
             user.id === userId ? updatedUser : user
           );
+          this.filterUsers();
         },
         error: (error) => {
           console.error('Error activating user:', error);
@@ -831,6 +838,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.listings = this.listings.map(listing =>
             listing.id === listingId ? updatedListing : listing
           );
+          this.filterListings();
         },
         error: (error) => {
           console.error('Error approving listing:', error);
@@ -848,6 +856,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.listings = this.listings.map(listing =>
             listing.id === listingId ? updatedListing : listing
           );
+          this.filterListings();
         },
         error: (error) => {
           console.error('Error suspending listing:', error);
@@ -1005,7 +1014,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // CATEGORY MANAGEMENT METHODS
   // ============================================
 
-  categoryType: 'experience' | 'service' = 'experience';
+  categoryType: 'experience' | 'service' | 'property' = 'experience';
 
   loadCategoryData(): void {
     this.subscriptions.add(
@@ -1037,14 +1046,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Category Methods
-  openAddCategoryModal(type: 'experience' | 'service' = 'experience'): void {
+  openAddCategoryModal(type: 'experience' | 'service' | 'property' = 'experience'): void {
     this.categoryType = type;
     this.categoryModalMode = 'create';
     this.newCategory = { name: '', description: '' };
     this.showCategoryModal = true;
   }
 
-  openEditCategoryModal(category: any, type: 'experience' | 'service' = 'experience'): void {
+  openEditCategoryModal(category: any, type: 'experience' | 'service' | 'property' = 'experience'): void {
     this.categoryType = type;
     this.categoryModalMode = 'edit';
     this.selectedCategory = category;
@@ -1064,6 +1073,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     let isUnique = true;
     if (this.categoryType === 'service') {
       const existing = this.serviceCategories.find(c =>
+        c.name.toLowerCase() === this.newCategory.name.toLowerCase() &&
+        (this.categoryModalMode === 'create' || c.id !== this.selectedCategory?.id)
+      );
+      if (existing) isUnique = false;
+    } else if (this.categoryType === 'property') {
+      const existing = this.propertyCategories.find(c =>
         c.name.toLowerCase() === this.newCategory.name.toLowerCase() &&
         (this.categoryModalMode === 'create' || c.id !== this.selectedCategory?.id)
       );
@@ -1111,6 +1126,25 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             }
           })
         );
+      }
+    } else if (this.categoryType === 'property') {
+      // Property Category Logic
+      if (this.categoryModalMode === 'create') {
+        this.subscriptions.add(
+          this.adminService.createPropertyCategory(this.newCategory).subscribe({
+            next: () => {
+              alert('Property Category created successfully (Mock)');
+              this.closeAddCategoryModal();
+              this.loadCategories(); // Refresh property categories
+            },
+            error: (error) => {
+              console.error('Error creating property category:', error);
+              alert(`Failed to create category: ${error.message}`);
+            }
+          })
+        );
+      } else {
+        alert('Update Property Category not implemented yet');
       }
     } else {
       // Service Category Logic

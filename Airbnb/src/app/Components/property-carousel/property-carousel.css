@@ -94,36 +94,34 @@
 }
 
 .carousel-container {
-  position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
+  /* position: relative; */    /* Removed for grid */
+  /* overflow-x: auto; */      /* Removed for grid */
+  /* overflow-y: hidden; */    /* Removed for grid */
   padding: 0 80px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  /* scrollbar-width: none; */ /* Removed for grid */
+  /* -ms-overflow-style: none; */ /* Removed for grid */
   width: 100%;
-  cursor: grab;
-  scroll-behavior: smooth;
+  /* cursor: grab; */           /* Removed for grid */
+  /* scroll-behavior: smooth; */ /* Removed for grid */
 }
 
-.carousel-container:active {
-  cursor: grabbing;
-}
-
-.carousel-container::-webkit-scrollbar {
-  display: none;
-}
+/* Removed scrollbar hiding styles since we want default behavior or none if not scrolling */
+/* .carousel-container::-webkit-scrollbar { display: none; } */
 
 .carousel-track {
-  display: flex;
-  gap: 20px;
-  width: max-content;
+  display: grid;               /* CHANGED from flex to grid */
+  grid-template-columns: repeat(4, 1fr); /* 4 Columns per row */
+  gap: 24px;
+  width: 100%;                  /* Full width */
   padding: 4px 0 16px 0;
-  min-width: 100%;
+  /* min-width: 100%; */       /* Removed */
 }
 
+/* Update item width to fit grid */
 .carousel-item {
-  flex: 0 0 308px;
-  min-width: 308px;
+  /* flex: 0 0 308px; */       /* Removed flex sizing */
+  /* min-width: 308px; */      /* Removed min-width */
+  width: 100%;                 /* Fill grid cell */
   animation: cardSlideIn 0.5s cubic-bezier(0.2, 0, 0, 1) both;
 }
 
@@ -520,6 +518,13 @@
 }
 
 /* Responsive Design */
+/* Responsive Design */
+@media (max-width: 1440px) {
+    .carousel-track {
+      grid-template-columns: repeat(3, 1fr); /* 3 cards */
+    }
+}
+
 @media (max-width: 1128px) {
   .carousel-header,
   .list-header,
@@ -535,49 +540,17 @@
   .carousel-container {
     padding: 0 40px;
   }
-
-  .carousel-item {
-    flex: 0 0 280px;
-    min-width: 280px;
-  }
 }
 
-@media (max-width: 743px) {
-  .carousel-header,
-  .list-header,
-  .listing-types-section,
-  .category-section,
-  .experiences-section,
-  .services-section,
-  .load-more-section {
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-
-  .carousel-container {
-    padding: 0 24px;
-  }
-
-  .carousel-item {
-    flex: 0 0 260px;
-    min-width: 260px;
-  }
-
-  .header-content {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .header-controls {
-    align-items: flex-start;
-  }
-
-  .listing-types-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 950px) {
+    /* 2 cards on tabletish */
+    .carousel-track {
+      grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 550px) {
+   /* 1 card on mobile */
   .carousel-header,
   .list-header,
   .listing-types-section,
@@ -593,8 +566,7 @@
     padding: 0 16px;
   }
 
-  .carousel-item {
-    flex: 0 0 240px;
-    min-width: 240px;
+  .carousel-track {
+      grid-template-columns: 1fr;
   }
 }

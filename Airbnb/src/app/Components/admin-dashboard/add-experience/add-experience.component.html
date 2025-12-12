@@ -19,8 +19,19 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Price ($)</label>
-                    <input type="number" [(ngModel)]="newExperience.price" name="price" required>
+                    <label>Price</label>
+                    <div style="display: flex; gap: 8px;">
+                        <select [(ngModel)]="newExperience.currency" name="currency"
+                            style="width: 120px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                            <option value="SAR">SAR (SR)</option>
+                            <option value="EGP">EGP (E£)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                        <input type="number" [(ngModel)]="newExperience.price" name="price" required min="1"
+                            style="flex: 1;">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Max Participants</label>
@@ -49,11 +60,11 @@
             <div class="form-group">
                 <label>Cover Image</label>
                 <div class="file-upload">
-                    <input type="file" (change)="onFileSelected($event)" accept="image/*">
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*" multiple>
                     <p>Drag and drop or click to upload</p>
                 </div>
                 <div *ngIf="selectedFiles.length > 0" class="file-list">
-                    <span>{{ selectedFiles[0].name }}</span>
+                    <span *ngFor="let file of selectedFiles" style="display: block;">{{ file.name }}</span>
                 </div>
             </div>
 
@@ -64,11 +75,13 @@
                 <div class="activity-inputs">
                     <div class="form-row">
                         <div class="form-group" style="flex: 2;">
+                            <label>Activity Name</label>
                             <input type="text" [(ngModel)]="newActivity.name" name="actName"
                                 placeholder="Activity Name">
                         </div>
                         <div class="form-group" style="flex: 1;">
-                            <input type="number" [(ngModel)]="newActivity.timeMinute" name="actTime" placeholder="Mins">
+                            <label>Duration (min)</label>
+                            <input type="number" [(ngModel)]="newActivity.timeMinute" name="actTime" placeholder="60">
                         </div>
                     </div>
                     <div class="form-group">

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SearchComponent } from '../../Pages/search/search';
 
 
@@ -14,11 +14,22 @@ import { SearchComponent } from '../../Pages/search/search';
   styleUrl: './main-layout.css'
 })
 export class MainLayoutComponent {
+  showSearch = true;
+
   currentFilters = {
     location: 'anywhere',
     dates: 'any-week',
     guests: 'any-guests'
   };
+
+  constructor(private router: Router) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        const url = event.urlAfterRedirects;
+        this.showSearch = !url.includes('/auth') && !url.includes('/forget-password');
+      }
+    });
+  }
 
   onFiltersChange(filters: any) {
     this.currentFilters = { ...filters };

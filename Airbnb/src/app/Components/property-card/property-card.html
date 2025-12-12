@@ -35,6 +35,9 @@
     <!-- Property header with title and rating -->
     <div class="property-header">
       <h3 class="property-title">{{ property.name }}</h3>
+      <p class="property-host" *ngIf="property.host?.name">
+        <span class="host-by">Hosted by</span> {{ property.host?.name }}
+      </p>
       <div class="property-rating" *ngIf="property.rating">
         <span class="rating-star">★</span>
         <span class="rating-value">{{ property.rating }}</span>

@@ -20,7 +20,8 @@ export class AddExperienceComponent implements OnInit {
         expCatograyId: null,
         expSubCatograyId: null,
         imageUrl: '',
-        expActivities: [] as any[]
+        expActivities: [] as any[],
+        currency: 'USD'
     };
 
     newActivity = { name: '', describe: '', timeMinute: 60 };
@@ -78,19 +79,42 @@ export class AddExperienceComponent implements OnInit {
             return;
         }
 
+        if (this.newExperience.price <= 0) {
+            alert('Price must be greater than 0');
+            return;
+        }
+
         this.isLoading = true;
         const expPayload = {
-            name: this.newExperience.name,
-            description: this.newExperience.description,
-            price: Number(this.newExperience.price),
-            location: 'Default Location',
-            maxParticipants: Number(this.newExperience.maxParticipants),
-            expCatograyId: Number(this.newExperience.expCatograyId),
-            expSubCatograyId: Number(this.newExperience.expSubCatograyId),
-            imageUrl: '',
-            expActivities: this.newExperience.expActivities,
-            Status: 1 // Pending
+            Id: 0,
+            Name: this.newExperience.name, // Required by backend
+            ExpTitle: this.newExperience.name,
+            Title: this.newExperience.name, // Valid backup
+
+            ExpDescribe: this.newExperience.description,
+            Description: this.newExperience.description,
+
+            GuestPrice: Number(this.newExperience.price),
+            Price: Number(this.newExperience.price),
+            GroupPrice: Number(this.newExperience.price), // Fix: Database requires this field (NOT NULL)
+
+            Currency: this.newExperience.currency || 'USD',
+            Location: 'Default Location', // Consider adding a location input if needed
+
+            MaximumGuest: Math.max(1, Number(this.newExperience.maxParticipants) || 1), // Ensure min 1
+
+            ExpCatograyId: Number(this.newExperience.expCatograyId),
+            ExpSubCatograyId: Number(this.newExperience.expSubCatograyId),
+            Status: 1, // Published
+
+            ExpActivities: this.newExperience.expActivities.map(act => ({
+                Name: act.name,
+                Description: act.describe,
+                DurationMinutes: act.timeMinute
+            }))
         };
+
+        console.log('Creating Experience with Payload:', expPayload);
 
         this.adminService.createExperience(expPayload, this.selectedFiles).subscribe({
             next: () => {
@@ -99,8 +123,10 @@ export class AddExperienceComponent implements OnInit {
                 this.router.navigate(['/admin']);
             },
             error: (err) => {
-                console.error('Create Experience Error:', err);
-                alert(`Failed to create experience: ${err.message}`);
+                console.error('Create Experience Full Error:', err);
+                const validationErrors = err.error?.errors || err.error;
+                const errorMsg = JSON.stringify(validationErrors) || err.message;
+                alert(`Failed to create experience: ${errorMsg}`);
                 this.isLoading = false;
             }
         });
