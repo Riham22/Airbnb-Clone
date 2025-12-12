@@ -40,3 +40,9 @@ export interface ExperienceActivity {
   durationMinutes: number;
 }
 
+export interface ExperienceActivity {
+  id: number;
+  name: string;
+  description: string;
+  durationMinutes: number;
+}
