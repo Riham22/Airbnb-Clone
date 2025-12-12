@@ -27,6 +27,19 @@ export class Data {
   private servicesSubject = new BehaviorSubject<Service[]>([]);
   services$ = this.servicesSubject.asObservable();
 
+  private activeFiltersSubject = new BehaviorSubject<any>({});
+  activeFilters$ = this.activeFiltersSubject.asObservable();
+
+  updateFilters(filters: any) {
+    this.activeFiltersSubject.next(filters);
+  }
+
+  refreshData() {
+    this.loadProperties();
+    this.loadExperiences();
+    this.loadServices();
+  }
+
   constructor(private http: HttpClient) {
     console.log('🚀 DataService initialized');
 

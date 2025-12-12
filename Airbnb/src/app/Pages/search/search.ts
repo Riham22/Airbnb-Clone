@@ -162,6 +162,19 @@ export class SearchComponent implements OnInit {
     this.activeFiltersChange.emit(this.currentFilters);
   }
 
+  resetFilters(): void {
+    this.clearDates();
+    this.clearGuests();
+    this.selectLocation('');
+    this.selectPropertyType('all');
+    this.searchQuery = '';
+
+    // Ensure panels are closed
+    this.closeAllPanels();
+
+    console.log('Filters reset');
+  }
+
   selectLocation(location: string): void {
     this.currentFilters.location = location;
     this.locationFilter$.next(location);
