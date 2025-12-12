@@ -134,6 +134,13 @@
       </form>
     </div>
 
+    <!-- Stripe Checkout Pay Now button (only for demo/testing) -->
+    <div class="flex justify-end mb-4">
+      <button type="button" (click)="payWithStripeCheckout()" class="bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 shadow">
+        Pay with Card (Stripe)
+      </button>
+    </div>
+
     <!-- Payment Methods List -->
     <div class="payment-methods-list">
       <div *ngFor="let method of paymentMethods" class="payment-method-card">

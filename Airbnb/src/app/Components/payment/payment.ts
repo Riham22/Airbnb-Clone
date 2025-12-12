@@ -6,10 +6,10 @@ import { PaymentMethod } from '../../Models/PaymentMethod';
 import { Transaction } from '../../Models/Transaction';
 import { Payout } from '../../Models/Payout';
 import { PaymentService } from '../../Services/payment';
+import { HttpClient } from '@angular/common/http';
+declare var Stripe: any; // Stripe.js type
 
-
-
-
+const STRIPE_PUBLIC_KEY = 'pk_test_51HxxxxxxREPLACE_WITH_YOUR_KEY'; // Test key only, replace for prod!
 
 @Component({
   selector: 'app-payment',
@@ -34,10 +34,17 @@ export class PaymentComponent implements OnInit {
     name: ''
   };
 
-  constructor(private paymentService: PaymentService) {}
+  constructor(private paymentService: PaymentService, private http: HttpClient) {}
 
   public ngOnInit(): void {
     this.loadPaymentData();
+    // Optionally, load Stripe.js dynamically if not in index.html
+    if (!(window as any).Stripe) {
+      const script = document.createElement('script');
+      script.src = 'https://js.stripe.com/v3/';
+      script.async = true;
+      document.body.appendChild(script);
+    }
   }
 
   private loadPaymentData(): void {
@@ -164,5 +171,28 @@ export class PaymentComponent implements OnInit {
     if (cardNumber.startsWith('34') || cardNumber.startsWith('37')) return 'American Express';
     if (cardNumber.startsWith('6')) return 'Discover';
     return 'Card';
+  }
+
+  payWithStripeCheckout() {
+    // Example payment data—replace with real data as needed
+    const bookingId = 1; // Replace with selected booking
+    const amount = 100; // Replace with real amount
+    const currency = 'usd'; // Should match booking/payment currency
+    this.paymentService.createCheckoutSession({
+      bookingId,
+      amount,
+      currency
+    }).subscribe({
+      next: async (res) => {
+        const sessionId = res.sessionId;
+        const stripe = (window as any).Stripe
+            ? (window as any).Stripe(STRIPE_PUBLIC_KEY)
+            : Stripe(STRIPE_PUBLIC_KEY);
+        await stripe.redirectToCheckout({ sessionId });
+      },
+      error: (err) => {
+        alert('Payment failed to initialize: ' + (err?.error?.message || err.message));
+      }
+    });
   }
 }

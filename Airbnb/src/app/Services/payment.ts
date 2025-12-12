@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { PaymentMethod } from '../Models/PaymentMethod';
 import { Transaction } from '../Models/Transaction';
 import { Payout } from '../Models/Payout';
+import { HttpClient } from '@angular/common/http';
 
 
 @Injectable({
@@ -14,7 +15,7 @@ export class PaymentService {
   private transactionsSubject = new BehaviorSubject<Transaction[]>(this.getMockTransactions());
   private payoutsSubject = new BehaviorSubject<Payout[]>(this.getMockPayouts());
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   getPaymentMethods(): Observable<PaymentMethod[]> {
     return this.paymentMethodsSubject.asObservable();
@@ -60,6 +61,14 @@ export class PaymentService {
       status: 'pending'
     };
     this.payoutsSubject.next([newPayout, ...payouts]);
+  }
+
+  /**
+   * Create a Stripe Checkout session.
+   * Returns an observable with { sessionId: string }
+   */
+  createCheckoutSession(paymentData: any) {
+    return this.http.post<any>('https://localhost:7020/api/Payment/create-checkout-session', paymentData);
   }
 
   private getMockPaymentMethods(): PaymentMethod[] {

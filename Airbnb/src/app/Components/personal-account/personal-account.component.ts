@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { UserService } from '../../Services/user.service';
 import { AuthService } from '../../Services/auth';
 import { User } from '../../Models/User';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-personal-account',
@@ -18,11 +19,15 @@ export class PersonalAccountComponent implements OnInit {
     loading = false;
     successMessage = '';
     errorMessage = '';
+    photoPreview: string | ArrayBuffer | null = null; // for previewing image
+    photoFile: File | null = null; // hold selected photo
+    showDeleteModal = false;
 
     constructor(
         private fb: FormBuilder,
         private userService: UserService,
-        private authService: AuthService
+        private authService: AuthService,
+        private router: Router
     ) {
         this.profileForm = this.fb.group({
             firstName: ['', Validators.required],
@@ -53,6 +58,7 @@ export class PersonalAccountComponent implements OnInit {
                 next: (user) => {
                     this.currentUser = user;
                     this.patchForm(user);
+                    this.photoPreview = user.photoURL || null;
                     this.loading = false;
                 },
                 error: (err) => {
@@ -88,19 +94,40 @@ export class PersonalAccountComponent implements OnInit {
         });
     }
 
+    onPhotoFileChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files[0]) {
+            this.photoFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.photoPreview = e.target?.result;
+                // Also update form value so on submit we'll send base64 string if new file
+                this.profileForm.patchValue({ photoURL: this.photoPreview });
+            };
+            reader.readAsDataURL(this.photoFile);
+        }
+    }
+
     onSubmit() {
         if (this.profileForm.valid && this.currentUser) {
             this.loading = true;
             this.successMessage = '';
             this.errorMessage = '';
+            let updatedData = this.profileForm.getRawValue();
 
-            const updatedData = this.profileForm.getRawValue();
+            // If photoFile set and photoPreview is a base64 string, send it
+            if (this.photoFile && this.photoPreview && typeof this.photoPreview === 'string' && this.photoPreview.startsWith('data:image')) {
+                updatedData.photoURL = this.photoPreview;
+            } else if (this.currentUser.photoURL && !updatedData.photoURL) {
+                // If no new file selected, preserve the original photoURL
+                updatedData.photoURL = this.currentUser.photoURL;
+            }
 
             this.userService.updateUser(this.currentUser.id, updatedData).subscribe({
                 next: (res) => {
                     this.successMessage = 'Profile updated successfully';
                     this.loading = false;
-                    // Update local auth state if necessary
+                    // Update local auth state or profile as needed
                 },
                 error: (err) => {
                     console.error('Error updating profile', err);
@@ -109,5 +136,37 @@ export class PersonalAccountComponent implements OnInit {
                 }
             });
         }
+    }
+
+    deleteAccount() {
+        this.showDeleteModal = true;
+    }
+
+    confirmDeleteAccount() {
+        if (!this.currentUser) return;
+        this.loading = true;
+        this.userService.deleteUser(this.currentUser.id).subscribe({
+            next: (res) => {
+                this.successMessage = 'Account deleted successfully.';
+                this.errorMessage = '';
+                this.loading = false;
+                this.currentUser = null;
+                this.profileForm.reset();
+                this.showDeleteModal = false;
+                setTimeout(() => {
+                    this.router.navigate(['/auth']);
+                }, 1200); // Give user short feedback
+            },
+            error: (err) => {
+                this.successMessage = '';
+                this.loading = false;
+                this.showDeleteModal = false;
+                this.errorMessage = 'Failed to delete account.';
+            }
+        });
+    }
+
+    cancelDelete() {
+        this.showDeleteModal = false;
     }
 }

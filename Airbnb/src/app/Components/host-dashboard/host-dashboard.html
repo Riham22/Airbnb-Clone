@@ -1,4 +1,13 @@
 <div class="host-dashboard">
+  <!-- Error/Success Messages -->
+  <div *ngIf="errorMessage" class="alert alert-error" style="margin: 1rem; padding: 1rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c00;">
+    {{ errorMessage }}
+    <button (click)="errorMessage = ''" style="float: right; background: none; border: none; cursor: pointer;">×</button>
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success" style="margin: 1rem; padding: 1rem; background: #efe; border: 1px solid #cfc; border-radius: 4px; color: #0c0;">
+    {{ successMessage }}
+    <button (click)="successMessage = ''" style="float: right; background: none; border: none; cursor: pointer;">×</button>
+  </div>
   <!-- Header -->
   <header class="dashboard-header">
     <div class="header-content">
@@ -23,43 +32,74 @@
         <button class="close-btn" (click)="toggleCreateListing()">×</button>
       </div>
       <div class="modal-body">
-        <form class="listing-form">
+        <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+        <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+        <form class="listing-form" (ngSubmit)="createListing()">
           <div class="form-section">
             <h3>Basic Information</h3>
             <div class="form-row">
               <div class="form-group">
-                <label for="title">Listing Title</label>
-                <input type="text" id="title" placeholder="Cozy apartment in city center">
+                <label for="title">Listing Title *</label>
+                <input type="text" id="title" [(ngModel)]="newListing.title" name="title" placeholder="Cozy apartment in city center" required>
               </div>
               <div class="form-group">
-                <label for="type">Property Type</label>
-                <select id="type">
-                  <option value="">Select property type</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="house">House</option>
-                  <option value="condo">Condo</option>
-                </select>
+                <label for="price">Price per night ($) *</label>
+                <input type="number" id="price" [(ngModel)]="newListing.price" name="price" placeholder="100" min="0" required>
               </div>
             </div>
             <div class="form-group">
               <label for="description">Description</label>
-              <textarea id="description" rows="4" placeholder="Describe your space..."></textarea>
+              <textarea id="description" rows="4" [(ngModel)]="newListing.description" name="description" placeholder="Describe your space..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" [(ngModel)]="newListing.city" name="city" placeholder="New York">
+              </div>
+              <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" [(ngModel)]="newListing.country" name="country" placeholder="USA">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="address">Address</label>
+              <input type="text" id="address" [(ngModel)]="newListing.address" name="address" placeholder="123 Main St">
             </div>
           </div>
 
           <div class="form-section">
-            <h3>Pricing</h3>
+            <h3>Property Details</h3>
             <div class="form-row">
               <div class="form-group">
-                <label for="price">Price per night ($)</label>
-                <input type="number" id="price" placeholder="100">
+                <label for="maxGuests">Max Guests</label>
+                <input type="number" id="maxGuests" [(ngModel)]="newListing.maxGuests" name="maxGuests" min="1" value="1">
               </div>
+              <div class="form-group">
+                <label for="bedrooms">Bedrooms</label>
+                <input type="number" id="bedrooms" [(ngModel)]="newListing.bedrooms" name="bedrooms" min="1" value="1">
+              </div>
+              <div class="form-group">
+                <label for="beds">Beds</label>
+                <input type="number" id="beds" [(ngModel)]="newListing.beds" name="beds" min="1" value="1">
+              </div>
+              <div class="form-group">
+                <label for="bathrooms">Bathrooms</label>
+                <input type="number" id="bathrooms" [(ngModel)]="newListing.bathrooms" name="bathrooms" min="1" value="1">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="newListing.allowsPets" name="allowsPets">
+                Allows Pets
+              </label>
             </div>
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-secondary" (click)="toggleCreateListing()">Cancel</button>
-            <button type="submit" class="btn-primary">Create Listing</button>
+            <button type="button" class="btn-secondary" (click)="toggleCreateListing()" [disabled]="loading">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="loading">
+              {{ loading ? 'Creating...' : 'Create Listing' }}
+            </button>
           </div>
         </form>
       </div>
