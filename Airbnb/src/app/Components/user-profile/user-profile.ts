@@ -48,11 +48,12 @@ export class UserProfile implements OnInit {
       this.user = user;
     });
 
-    this.loadUserStats();
+    // this.loadUserStats();
   }
 
   userStats: any = { tripsCount: 0, wishlistsCount: 0, reviewsCount: 0 };
 
+  /*
   loadUserStats(): void {
     this.userService.getUserStats().subscribe({
       next: (stats) => {
@@ -63,6 +64,7 @@ export class UserProfile implements OnInit {
       }
     });
   }
+  */
 
   loadUserData(): void {
     this.loading = true;
@@ -142,38 +144,40 @@ export class UserProfile implements OnInit {
     const file = event.target.files[0];
     if (file) {
       this.isUploadingPhoto = true;
-      this.userService.uploadPhoto(file).subscribe({
-        next: (res: any) => {
-          console.log('Photo uploaded:', res);
-          this.isUploadingPhoto = false;
+      if (this.user && this.user.id) {
+        this.userService.uploadPhoto(this.user.id, file).subscribe({
+          next: (res: any) => {
+            console.log('Photo uploaded:', res);
+            this.isUploadingPhoto = false;
 
-          // Initial path depends on backend return.
-          // If returns partial path "images/profiles/...", we need to prepend base URL or handle static serving
-          // Assuming base URL is 'https://localhost:7020/'
+            // Initial path depends on backend return.
+            // If returns partial path "images/profiles/...", we need to prepend base URL or handle static serving
+            // Assuming base URL is 'https://localhost:7020/'
 
-          // Update user photo locally
-          const photoUrl = `https://localhost:7020/${res.photoUrl}`;
+            // Update user photo locally
+            const photoUrl = `https://localhost:7020/${res.photoUrl}`;
 
-          // Update both main user and edit buffer (if relevant)
-          if (this.user) this.user.photoURL = photoUrl;
+            // Update both main user and edit buffer (if relevant)
+            if (this.user) this.user.photoURL = photoUrl;
 
-          // Also update AuthService local storage
-          // this.authService.updateCurrentUser(this.user);
+            // Also update AuthService local storage
+            // this.authService.updateCurrentUser(this.user);
 
-          alert('Photo updated successfully!');
-        },
-        error: (err) => {
-          console.error('Photo upload failed:', err);
-          this.isUploadingPhoto = false;
+            alert('Photo updated successfully!');
+          },
+          error: (err: any) => {
+            console.error('Photo upload failed:', err);
+            this.isUploadingPhoto = false;
 
-          let msg = 'Failed to upload photo.';
-          if (err.status) msg += ` Status: ${err.status} ${err.statusText}`;
-          if (err.error && typeof err.error === 'string') msg += ` - ${err.error}`;
-          else if (err.error && err.error.message) msg += ` - ${err.error.message}`;
+            let msg = 'Failed to upload photo.';
+            if (err.status) msg += ` Status: ${err.status} ${err.statusText}`;
+            if (err.error && typeof err.error === 'string') msg += ` - ${err.error}`;
+            else if (err.error && err.error.message) msg += ` - ${err.error.message}`;
 
-          alert(msg);
-        }
-      });
+            alert(msg);
+          }
+        });
+      }
     }
   }
 
@@ -191,8 +195,8 @@ export class UserProfile implements OnInit {
 
     this.isSaving = true;
 
-    // Use UserService.updateCurrentUser() - this uses AuthService.updateUserProfile()
-    this.userService.updateCurrentUser(this.editUser).subscribe({
+    // Use UserService.updateUser()
+    this.userService.updateUser(userId, this.editUser).subscribe({
       next: (res: any) => {
         this.isSaving = false;
         this.isEditMode = false;
@@ -229,9 +233,19 @@ export class UserProfile implements OnInit {
 
   // In UserProfile component, update the deleteAccount method:
   deleteAccount(): void {
+    const userId = this.getUserProperty('id', 'userId') ||
+      this.user?.Id ||
+      this.user?.user_id ||
+      this.user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+
+    if (!userId) {
+      alert('Cannot delete: No user ID found');
+      return;
+    }
+
     this.isDeleting = true;
 
-    this.userService.deleteUser().subscribe({
+    this.userService.deleteUser(userId).subscribe({
       next: () => {
         this.isDeleting = false;
         this.showDeleteModal = false;

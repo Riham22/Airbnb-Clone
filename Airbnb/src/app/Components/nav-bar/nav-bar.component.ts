@@ -438,18 +438,7 @@ export class NavBarComponent implements OnInit {
   };
 
   // Location options for search bar
-  locationOptions = [
-    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' },
-    { value: 'new_york', label: 'New York', icon: '🏙️', description: 'Big Apple adventures' },
-    { value: 'los_angeles', label: 'Los Angeles', icon: '🌴', description: 'Sunny California' },
-    { value: 'miami', label: 'Miami', icon: '🏖️', description: 'Beachfront escapes' },
-    { value: 'chicago', label: 'Chicago', icon: '🏙️', description: 'Windy City stays' },
-    { value: 'las_vegas', label: 'Las Vegas', icon: '🎰', description: 'Entertainment capital' },
-    { value: 'san_francisco', label: 'San Francisco', icon: '🌉', description: 'Golden Gate views' },
-    { value: 'seattle', label: 'Seattle', icon: '🌧️', description: 'Pacific Northwest' },
-    { value: 'austin', label: 'Austin', icon: '🎸', description: 'Live music capital' },
-    { value: 'boston', label: 'Boston', icon: '🎓', description: 'Historic charm' }
-  ];
+  locationOptions: any[] = [];
 
   // Auth state
   isAuthenticated = false;
@@ -461,15 +450,49 @@ export class NavBarComponent implements OnInit {
 
   constructor(
     private dataService: Data,
-    public router: Router, // جعلها public للاستخدام في HTML
+    public router: Router,
     private authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.loadAllData();
+    this.loadLocations();
     this.checkMobileView();
     this.setupFilterObservables();
     this.setupAuthObservables();
+  }
+
+  private loadLocations(): void {
+    this.dataService.getUniqueLocations().subscribe(locations => {
+      this.locationOptions = locations.map(loc => {
+        return {
+          value: loc,
+          label: loc,
+          icon: this.getLocationIcon(loc),
+          description: 'Explore this destination'
+        };
+      });
+
+      // Add "Flexible" option at the beginning
+      this.locationOptions.unshift({
+        value: 'flexible',
+        label: "I'm flexible",
+        icon: '🌍',
+        description: 'Discover unique stays'
+      });
+    });
+  }
+
+  private getLocationIcon(location: string): string {
+    const loc = location.toLowerCase();
+    if (loc.includes('beach') || loc.includes('coast') || loc.includes('ocean')) return '🏖️';
+    if (loc.includes('city') || loc.includes('york') || loc.includes('london') || loc.includes('paris')) return '🏙️';
+    if (loc.includes('mountain') || loc.includes('alp') || loc.includes('ski')) return '🏔️';
+    if (loc.includes('lake') || loc.includes('river')) return '🌊';
+    if (loc.includes('forest') || loc.includes('park') || loc.includes('camp')) return '🌲';
+    if (loc.includes('island')) return '🏝️';
+    if (loc.includes('desert')) return '🌵';
+    return '📍'; // Default icon
   }
 
   // ========== PROPERTY TYPE METHODS ==========
@@ -481,7 +504,7 @@ export class NavBarComponent implements OnInit {
 
   // دالة للحصول على أيقونات الـ property types
   getPropertyTypeIcon(type: string): string {
-    switch(type) {
+    switch (type) {
       case 'all':
         return `<svg class="type-icon" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>

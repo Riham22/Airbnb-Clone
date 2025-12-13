@@ -5,35 +5,32 @@ import { BehaviorSubject, Observable, catchError, map, tap, throwError } from 'r
 import { PaymentMethod } from '../Models/PaymentMethod';
 import { Transaction } from '../Models/Transaction';
 import { Payout } from '../Models/Payout';
-import { HttpClient } from '@angular/common/http';
-
-
+import { PaymentApiResponse, PaymentIntentRequest, PaymentIntentResponse, ConfirmPaymentRequest } from '../Models/PaymentInterfaces';
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
   private baseUrl = '/api/Payment';
-  
+
   // Subjects for reactive updates
   private paymentMethodsSubject = new BehaviorSubject<PaymentMethod[]>([]);
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   private payoutsSubject = new BehaviorSubject<Payout[]>([]);
 
-  constructor(private http: HttpClient) {}
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ================ PAYMENT METHODS ================
-  
+
   // Get all payment methods from my-payments endpoint
   getPaymentMethods(): Observable<PaymentMethod[]> {
     return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
       map(responses => {
         // Filter and transform API responses to PaymentMethod objects
         const methods = responses
-          .filter(response => 
+          .filter(response =>
             // Identify payment methods: has provider or lastFour, or no amount
-            response.provider || 
-            response.lastFour || 
+            response.provider ||
+            response.lastFour ||
             (!response.amount && !response.bookingId)
           )
           .map(response => ({
@@ -45,11 +42,11 @@ export class PaymentService {
             isDefault: response.isDefault || false,
             cardHolderName: response.description
           } as PaymentMethod));
-        
+
         this.paymentMethodsSubject.next(methods);
         return methods;
       }),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching payment methods:', error);
         return throwError(() => error);
       })
@@ -69,7 +66,7 @@ export class PaymentService {
   // Create payment intent - EXACT ENDPOINT: POST /api/Payment/create-payment-intent
   createPaymentIntent(data: PaymentIntentRequest): Observable<PaymentIntentResponse> {
     return this.http.post<PaymentIntentResponse>(`${this.baseUrl}/create-payment-intent`, data).pipe(
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error creating payment intent:', error);
         return throwError(() => error);
       })
@@ -79,7 +76,7 @@ export class PaymentService {
   // Confirm payment - EXACT ENDPOINT: POST /api/Payment/confirm
   confirmPayment(data: ConfirmPaymentRequest): Observable<any> {
     return this.http.post(`${this.baseUrl}/confirm`, data).pipe(
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error confirming payment:', error);
         return throwError(() => error);
       })
@@ -91,14 +88,14 @@ export class PaymentService {
     // Note: This endpoint doesn't exist in your API
     // You might need to create it or use a different approach
     console.warn('Endpoint /api/Payment/{id}/set-default may not exist');
-    
+
     // Simulating the update locally for now
     const methods = this.paymentMethodsSubject.value.map(method => ({
       ...method,
       isDefault: method.id === methodId
     }));
     this.paymentMethodsSubject.next(methods);
-    
+
     return new Observable(subscriber => {
       subscriber.next({ success: true });
       subscriber.complete();
@@ -113,7 +110,7 @@ export class PaymentService {
         const methods = this.paymentMethodsSubject.value.filter(m => m.id !== methodId);
         this.paymentMethodsSubject.next(methods);
       }),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error removing payment method:', error);
         return throwError(() => error);
       })
@@ -121,16 +118,16 @@ export class PaymentService {
   }
 
   // ================ TRANSACTIONS ================
-  
+
   // Get all transactions from my-payments endpoint
   getTransactions(): Observable<Transaction[]> {
     return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
       map(responses => {
         // Filter and transform API responses to Transaction objects
         const transactions = responses
-          .filter(response => 
+          .filter(response =>
             // Identify transactions: has amount and bookingId or description
-            response.amount && 
+            response.amount &&
             (response.bookingId || response.description)
           )
           .map(response => ({
@@ -139,15 +136,15 @@ export class PaymentService {
             amount: response.amount || 0,
             description: response.description || 'Transaction',
             date: response.date ? new Date(response.date) : new Date(),
-            status: response.status || 'completed',
+            status: (response.status as any) || 'completed',
             bookingId: response.bookingId,
             paymentMethodId: response.paymentMethodId
           } as Transaction));
-        
+
         this.transactionsSubject.next(transactions);
         return transactions;
       }),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching transactions:', error);
         return throwError(() => error);
       })
@@ -174,11 +171,11 @@ export class PaymentService {
         amount: response.amount || 0,
         description: response.description || 'Transaction',
         date: response.date ? new Date(response.date) : new Date(),
-        status: response.status || 'completed',
+        status: (response.status as any) || 'completed',
         bookingId: response.bookingId,
         paymentMethodId: response.paymentMethodId
       } as Transaction)),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching transaction:', error);
         return throwError(() => error);
       })
@@ -194,11 +191,11 @@ export class PaymentService {
         amount: response.amount || 0,
         description: response.description || 'Booking Payment',
         date: response.date ? new Date(response.date) : new Date(),
-        status: response.status || 'completed',
+        status: (response.status as any) || 'completed',
         bookingId: response.bookingId,
         paymentMethodId: response.paymentMethodId
       } as Transaction))),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching booking transactions:', error);
         return throwError(() => error);
       })
@@ -214,12 +211,12 @@ export class PaymentService {
         amount: response.amount || 0,
         description: response.description || 'User Transaction',
         date: response.date ? new Date(response.date) : new Date(),
-        status: response.status || 'completed',
+        status: (response.status as any) || 'completed',
         bookingId: response.bookingId,
         paymentMethodId: response.paymentMethodId,
         userId: response.userId
       } as Transaction))),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching user transactions:', error);
         return throwError(() => error);
       })
@@ -235,11 +232,11 @@ export class PaymentService {
         amount: response.amount || 0,
         description: response.description || 'Transaction',
         date: response.date ? new Date(response.date) : new Date(),
-        status: response.status || status,
+        status: (response.status as any) || (status as any),
         bookingId: response.bookingId,
         paymentMethodId: response.paymentMethodId
       } as Transaction))),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching transactions by status:', error);
         return throwError(() => error);
       })
@@ -247,16 +244,16 @@ export class PaymentService {
   }
 
   // ================ PAYOUTS ================
-  
+
   // Get all payouts from my-payments endpoint
   getPayouts(): Observable<Payout[]> {
     return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
       map(responses => {
         // Filter and transform API responses to Payout objects
         const payouts = responses
-          .filter(response => 
+          .filter(response =>
             // Identify payouts: has method (bank transfer, etc.) or type is payout
-            response.method || 
+            response.method ||
             response.type === 'payout'
           )
           .map(response => ({
@@ -264,15 +261,15 @@ export class PaymentService {
             amount: response.amount || 0,
             date: response.date ? new Date(response.date) : new Date(),
             method: response.method || 'Bank Transfer',
-            status: response.status || 'pending',
+            status: (response.status as any) || 'pending',
             description: response.description || 'Payout',
             userId: response.userId
           } as Payout));
-        
+
         this.payoutsSubject.next(payouts);
         return payouts;
       }),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error fetching payouts:', error);
         return throwError(() => error);
       })
@@ -323,7 +320,7 @@ export class PaymentService {
   }
 
   // ================ UTILITY METHODS ================
-  
+
   // Load all payment data at once (for initial load)
   loadAllPaymentData(): Observable<{
     methods: PaymentMethod[],
@@ -358,7 +355,7 @@ export class PaymentService {
               amount: response.amount || 0,
               description: response.description || 'Transaction',
               date: response.date ? new Date(response.date) : new Date(),
-              status: response.status || 'completed',
+              status: (response.status as any) || 'completed',
               bookingId: response.bookingId,
               paymentMethodId: response.paymentMethodId
             });
@@ -369,7 +366,7 @@ export class PaymentService {
               amount: response.amount || 0,
               date: response.date ? new Date(response.date) : new Date(),
               method: response.method || 'Bank Transfer',
-              status: response.status || 'pending',
+              status: (response.status as any) || 'pending',
               description: response.description || 'Payout'
             });
           }
@@ -382,7 +379,7 @@ export class PaymentService {
 
         return { methods, transactions, payouts };
       }),
-      catchError(error => {
+      catchError((error: any) => {
         console.error('Error loading all payment data:', error);
         return throwError(() => error);
       })

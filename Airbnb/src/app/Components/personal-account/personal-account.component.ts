@@ -65,7 +65,7 @@ export class PersonalAccountComponent implements OnInit {
                     this.photoPreview = user.photoURL || null;
                     this.loading = false;
                 },
-                error: (err) => {
+                error: (err: any) => {
                     console.error('Error fetching user', err);
                     this.errorMessage = 'Failed to load user data';
                     this.loading = false;
@@ -133,7 +133,7 @@ export class PersonalAccountComponent implements OnInit {
                     this.loading = false;
                     // Update local auth state or profile as needed
                 },
-                error: (err) => {
+                error: (err: any) => {
                     console.error('Error updating profile', err);
                     this.errorMessage = 'Failed to update profile';
                     this.loading = false;
@@ -161,7 +161,7 @@ export class PersonalAccountComponent implements OnInit {
                     this.router.navigate(['/auth']);
                 }, 1200); // Give user short feedback
             },
-            error: (err) => {
+            error: (err: any) => {
                 this.successMessage = '';
                 this.loading = false;
                 this.showDeleteModal = false;

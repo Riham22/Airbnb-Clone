@@ -92,7 +92,7 @@ export class PersonalInfoComponent implements OnInit {
         }
 
         // Use UserService to update
-        this.userService.updateCurrentUser(updateData).subscribe({
+        this.userService.updateUser(userId, updateData).subscribe({
             next: (res) => {
                 console.log('Field updated successfully:', field, res);
 
@@ -114,7 +114,7 @@ export class PersonalInfoComponent implements OnInit {
                 // this.authService.updateCurrentUser(this.user);
                 alert('Profile updated successfully'); // Feedback for user
             },
-            error: (err) => {
+            error: (err: any) => {
                 console.error('Error updating field', field, err);
                 // alert('Note: Profile update feature might not be available on this server. Changes saved locally only.');
                 alert(`Failed to update profile: ${err.message || 'Unknown error'}`);

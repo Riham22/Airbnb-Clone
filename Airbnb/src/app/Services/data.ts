@@ -2,7 +2,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, tap } from 'rxjs';
+import { BehaviorSubject, tap, combineLatest, map, Observable } from 'rxjs';
 import { RentalProperty } from '../Models/rental-property';
 import { Experience } from '../Models/experience';
 import { Service } from '../Models/service';
@@ -749,5 +749,25 @@ export class Data {
 
   updateWishlist(propertyId: number, isWishlisted: boolean) {
     return this.toggleWishlist('Property', propertyId);
+  }
+
+  getUniqueLocations(): Observable<string[]> {
+    return combineLatest([
+      this.properties$,
+      this.experiences$,
+      this.services$
+    ]).pipe(
+      map(([properties, experiences, services]) => {
+        const allLocations = [
+          ...properties.map(p => p.location),
+          ...experiences.map(e => e.location),
+          ...services.map(s => s.location)
+        ];
+
+        // Filter out empty/null locations and get unique values
+        const uniqueLocations = [...new Set(allLocations.filter(loc => loc && loc.trim() !== ''))];
+        return uniqueLocations.sort();
+      })
+    );
   }
 }

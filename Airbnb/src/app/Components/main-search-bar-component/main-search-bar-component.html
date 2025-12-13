@@ -1,6 +1,6 @@
 <!-- Main search bar container -->
 <div class="main-search-container">
- 
+
   <div class="search-bar">
     <!-- Where -->
     <div class="search-section" [class.active]="activePanel === 'location'" (click)="openPanel('location')">
@@ -20,11 +20,14 @@
       <div class="search-value">{{ getGuestsDisplay() }}</div>
     </div>
   </div>
-   <!-- Filter Button -->
+  <!-- Filter Button -->
   <div class="filter-button-container">
     <button class="filter-button" (click)="onOpenFilters()">
-      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false">
-        <path d="M5 8a3 3 0 0 1 2.83 2H14v2H7.83A3 3 0 1 1 5 8zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm6-8a3 3 0 1 1-2.83 4H2V4h6.17A3 3 0 0 1 11 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path>
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+        focusable="false">
+        <path
+          d="M5 8a3 3 0 0 1 2.83 2H14v2H7.83A3 3 0 1 1 5 8zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm6-8a3 3 0 1 1-2.83 4H2V4h6.17A3 3 0 0 1 11 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z">
+        </path>
       </svg>
       <span>F</span>
     </button>
@@ -35,7 +38,8 @@
 <!-- Only render panels when activePanel is set -->
 
 <!-- Location Panel -->
-<div *ngIf="activePanel === 'location'" class="filter-panel" [class.active]="activePanel === 'location'" style="z-index: 3000;">
+<div *ngIf="activePanel === 'location'" class="filter-panel" [class.active]="activePanel === 'location'"
+  style="z-index: 3000;">
   <div class="filter-header">
     <h2 class="filter-title">Where to?</h2>
     <button class="close-filter" (click)="closePanel()">×</button>
@@ -54,13 +58,14 @@
 </div>
 
 <!-- Dates Panel -->
-<div *ngIf="activePanel === 'dates'" class="filter-panel" [class.active]="activePanel === 'dates'" style="z-index: 3000;">
+<div *ngIf="activePanel === 'dates'" class="filter-panel" [class.active]="activePanel === 'dates'"
+  style="z-index: 3000;">
   <div class="filter-header">
     <h2 class="filter-title">When's your trip?</h2>
     <button class="close-filter" (click)="closePanel()">×</button>
   </div>
 
-  <div class="dates-content " >
+  <div class="dates-content ">
     <!-- Selected dates display -->
     <div class="selected-dates" *ngIf="dateSelection.start || dateSelection.end">
       <div class="date-range">
@@ -74,16 +79,16 @@
     <!-- Quick Actions -->
     <div class="quick-actions">
       <button class="quick-action-btn" (click)="goToCurrentMonth()">
-         Today
+        Today
       </button>
       <button class="quick-action-btn" (click)="selectNextWeekend()">
-         Next weekend
+        Next weekend
       </button>
       <button class="quick-action-btn" (click)="selectNextWeek()">
-         Next week
+        Next week
       </button>
       <button class="quick-action-btn" (click)="selectNextMonth()">
-         Next month
+        Next month
       </button>
     </div>
 
@@ -95,28 +100,6 @@
             (click)="canNavigatePrev() && navigateYear(-1)" title="Previous year">
             ‹‹
           </button>
-          <button class="nav-button nav-month" [class.disabled]="!canNavigatePrev()"
-            (click)="canNavigatePrev() && navigateMonth(-1)" title="Previous month">
-            ‹
-          </button>
-        </div>
-
-        <div class="view-controls">
-          <button class="view-button" [class.active]="calendarView === 'month'" (click)="switchToMonthView()">
-            📅 {{ getMonthYearDisplay() }}
-          </button>
-          <button class="view-button" [class.active]="calendarView === 'year'" (click)="switchToYearView()">
-            🗓️ {{ currentMonth.getFullYear() }}
-          </button>
-          <button class="view-button" [class.active]="calendarView === 'decade'" (click)="switchToDecadeView()">
-            📊 {{ getCurrentDecade() }}s
-          </button>
-        </div>
-
-        <div class="nav-controls">
-          <button class="nav-button nav-month" [class.disabled]="!canNavigateNext()"
-            (click)="canNavigateNext() && navigateMonth(1)" title="Next month">
-            ›
           </button>
           <button class="nav-button nav-year" [class.disabled]="!canNavigateNext()"
             (click)="canNavigateNext() && navigateYear(1)" title="Next year">
@@ -171,7 +154,8 @@
 </div>
 
 <!-- Guests Panel -->
-<div *ngIf="activePanel === 'guests'" class="filter-panel" [class.active]="activePanel === 'guests'"  style="z-index: 3000;">
+<div *ngIf="activePanel === 'guests'" class="filter-panel" [class.active]="activePanel === 'guests'"
+  style="z-index: 3000;">
   <div class="filter-header">
     <h2 class="filter-title">Who's coming?</h2>
     <button class="close-filter" (click)="closePanel()">×</button>

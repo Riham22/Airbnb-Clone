@@ -1,6 +1,6 @@
 <!-- components/payment/payment.component.html -->
 <div class="payment-container">
-  
+
   <!-- Loading Overlay -->
   <!-- <div *ngIf="isLoading" class="loading-overlay">
     <div class="loading-spinner"></div>
@@ -11,7 +11,8 @@
   <div *ngIf="errorMessage" class="alert alert-error">
     <div class="alert-content">
       <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <p class="alert-message">{{ errorMessage }}</p>
       <button type="button" (click)="retryLoad()" class="btn-secondary btn-sm">Retry</button>
@@ -22,7 +23,8 @@
   <div *ngIf="successMessage" class="alert alert-success">
     <div class="alert-content">
       <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <p class="alert-message">{{ successMessage }}</p>
     </div>
@@ -50,33 +52,25 @@
 
   <!-- Navigation Tabs -->
   <nav class="payment-tabs">
-    <button
-      type="button"
-      [class.active]="activeTab === 'methods'"
-      (click)="setActiveTab('methods')"
-      class="tab-button">
+    <button type="button" [class.active]="activeTab === 'methods'" (click)="setActiveTab('methods')" class="tab-button">
       <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
       </svg>
       Payment Methods
     </button>
-    <button
-      type="button"
-      [class.active]="activeTab === 'transactions'"
-      (click)="setActiveTab('transactions')"
+    <button type="button" [class.active]="activeTab === 'transactions'" (click)="setActiveTab('transactions')"
       class="tab-button">
       <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
       Transactions
     </button>
-    <button
-      type="button"
-      [class.active]="activeTab === 'payouts'"
-      (click)="setActiveTab('payouts')"
-      class="tab-button">
+    <button type="button" [class.active]="activeTab === 'payouts'" (click)="setActiveTab('payouts')" class="tab-button">
       <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
       </svg>
       Payouts
     </button>
@@ -89,11 +83,7 @@
         <h2 class="section-title">Your Payment Methods</h2>
         <p class="section-description">Manage how you pay and get paid</p>
       </div>
-      <button
-        type="button"
-        (click)="showAddCard = true"
-        class="btn-primary"
-        *ngIf="!showAddCard">
+      <button type="button" (click)="showAddCard = true" class="btn-primary" *ngIf="!showAddCard">
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -108,11 +98,7 @@
           <h3 class="form-title">Add Credit Card</h3>
           <p class="form-subtitle">Your payment information is encrypted and secure</p>
         </div>
-        <button
-          type="button"
-          (click)="showAddCard = false; resetCardForm()"
-          class="close-btn"
-          aria-label="Close form">
+        <button type="button" (click)="showAddCard = false; resetCardForm()" class="close-btn" aria-label="Close form">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -121,58 +107,9 @@
 
       <form (ngSubmit)="addCard()" class="card-form" #cardForm="ngForm">
         <div class="form-group">
-          <label for="cardNumber" class="form-label">Card Number</label>
-          <div class="input-with-icon">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-            <input
-              type="text"
-              id="cardNumber"
-              [(ngModel)]="newCard.number"
-              name="cardNumber"
-              placeholder="1234 5678 9012 3456"
-              maxlength="16"
-              class="form-input"
-              required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="expiryDate" class="form-label">Expiry Date</label>
-            <div class="input-with-icon">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <input
-                type="text"
-                id="expiryDate"
-                [(ngModel)]="newCard.expiry"
-                name="expiryDate"
-                placeholder="MM/YY"
-                maxlength="5"
-                class="form-input"
-                required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="cvc" class="form-label">CVC</label>
-            <div class="input-with-icon">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <input
-                type="text"
-                id="cvc"
-                [(ngModel)]="newCard.cvc"
-                name="cvc"
-                placeholder="123"
-                maxlength="3"
-                class="form-input"
-                required>
-            </div>
+          <label class="form-label">Card Details</label>
+          <div class="stripe-card-container">
+            <ngx-stripe-card [options]="cardOptions" [elementsOptions]="elementsOptions"></ngx-stripe-card>
           </div>
         </div>
 
@@ -180,16 +117,11 @@
           <label for="cardName" class="form-label">Name on Card</label>
           <div class="input-with-icon">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <input
-              type="text"
-              id="cardName"
-              [(ngModel)]="newCard.name"
-              name="cardName"
-              placeholder="John Doe"
-              class="form-input"
-              required>
+            <input type="text" id="cardName" [(ngModel)]="newCard.name" name="cardName" placeholder="John Doe"
+              class="form-input" required>
           </div>
         </div>
 
@@ -197,42 +129,26 @@
           <label for="zipCode" class="form-label">ZIP Code (Optional)</label>
           <div class="input-with-icon">
             <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <input
-              type="text"
-              id="zipCode"
-              [(ngModel)]="newCard.zipCode"
-              name="zipCode"
-              placeholder="12345"
+            <input type="text" id="zipCode" [(ngModel)]="newCard.zipCode" name="zipCode" placeholder="12345"
               class="form-input">
           </div>
         </div>
 
         <div class="form-actions">
-          <button
-            type="button"
-            (click)="showAddCard = false; resetCardForm()"
-            class="btn-secondary">
+          <button type="button" (click)="showAddCard = false; resetCardForm()" class="btn-secondary">
             Cancel
           </button>
-          <button
-            type="submit"
-            class="btn-primary mx-1.5"
-            [disabled]="!validateCard()">
+          <button type="submit" class="btn-primary mx-1.5" [disabled]="!cardForm.form.valid || isLoading">
             <span *ngIf="!isLoading">Add Card</span>
             <span *ngIf="isLoading">Processing...</span>
           </button>
         </div>
       </form>
-    </div>
-
-    <!-- Stripe Checkout Pay Now button (only for demo/testing) -->
-    <div class="flex justify-end mb-4">
-      <button type="button" (click)="payWithStripeCheckout()" class="bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 shadow">
-        Pay with Card (Stripe)
-      </button>
     </div>
 
     <!-- Payment Methods List -->
@@ -241,13 +157,16 @@
         <div class="method-info">
           <div class="method-icon" [class]="method.type">
             <svg *ngIf="method.type === 'card'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
             <svg *ngIf="method.type === 'paypal'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
             </svg>
             <svg *ngIf="method.type === 'bank_transfer'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
             </svg>
           </div>
 
@@ -260,7 +179,8 @@
             <div class="method-status">
               <span *ngIf="method.isDefault" class="default-badge">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Default
               </span>
@@ -269,22 +189,17 @@
         </div>
 
         <div class="method-actions">
-          <button
-            type="button"
-            *ngIf="!method.isDefault"
-            (click)="setDefaultMethod(method.id)"
-            class="btn-outline">
+          <button type="button" *ngIf="!method.isDefault" (click)="setDefaultMethod(method.id)" class="btn-outline">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Set as Default
           </button>
-          <button
-            type="button"
-            (click)="removePaymentMethod(method.id)"
-            class="btn-text danger">
+          <button type="button" (click)="removePaymentMethod(method.id)" class="btn-text danger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             Remove
           </button>
@@ -295,15 +210,13 @@
       <div *ngIf="paymentMethods.length === 0 && !showAddCard" class="empty-state">
         <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
           </svg>
         </div>
         <h3 class="empty-title">No payment methods</h3>
         <p class="empty-description">Add a payment method to start booking and receiving payments</p>
-        <button
-          type="button"
-          (click)="showAddCard = true"
-          class="btn-primary">
+        <button type="button" (click)="showAddCard = true" class="btn-primary">
           Add Payment Method
         </button>
       </div>
@@ -318,7 +231,8 @@
         <p class="section-description">Track all your earnings and payments</p>
       </div>
       <div class="filter-options">
-        <select title="transactionFilter" [(ngModel)]="transactionFilter" (change)="filterTransactions(transactionFilter)" class="filter-select">
+        <select title="transactionFilter" [(ngModel)]="transactionFilter"
+          (change)="filterTransactions(transactionFilter)" class="filter-select">
           <option value="all">All Transactions</option>
           <option value="earning">Earnings</option>
           <option value="payout">Payouts</option>
@@ -331,13 +245,16 @@
       <div *ngFor="let transaction of transactions" class="transaction-item">
         <div class="transaction-icon" [class]="transaction.type">
           <svg *ngIf="transaction.type === 'earning'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <svg *ngIf="transaction.type === 'payout'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           <svg *ngIf="transaction.type === 'refund'" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </div>
 
@@ -368,7 +285,8 @@
       <div *ngIf="transactions.length === 0" class="empty-state">
         <div class="empty-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
         <h3 class="empty-title">No transactions yet</h3>
@@ -389,20 +307,11 @@
         <div class="payout-input-group">
           <div class="currency-input">
             <span class="currency-symbol">$</span>
-            <input
-              type="number"
-              [(ngModel)]="payoutAmount"
-              [max]="availableBalance"
-              min="1"
-              step="0.01"
-              placeholder="0.00"
-              class="payout-amount-input">
+            <input type="number" [(ngModel)]="payoutAmount" [max]="availableBalance" min="1" step="0.01"
+              placeholder="0.00" class="payout-amount-input">
           </div>
-          <button
-            type="button"
-            (click)="requestPayout()"
-            [disabled]="payoutAmount <= 0 || payoutAmount > availableBalance || isLoading"
-            class="btn-primary">
+          <button type="button" (click)="requestPayout()"
+            [disabled]="payoutAmount <= 0 || payoutAmount > availableBalance || isLoading" class="btn-primary">
             <span *ngIf="!isLoading">Request Payout</span>
             <span *ngIf="isLoading">Processing...</span>
           </button>
@@ -420,7 +329,8 @@
         <div class="method-info">
           <div class="method-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
             </svg>
           </div>
           <div class="method-details">
@@ -457,7 +367,8 @@
         <div *ngIf="payouts.length === 0" class="empty-state">
           <div class="empty-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
           <h3 class="empty-title">No payouts yet</h3>

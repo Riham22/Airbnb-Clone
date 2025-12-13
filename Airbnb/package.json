@@ -34,8 +34,10 @@
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@stripe/stripe-js": "^8.5.3",
     "@tailwindcss/postcss": "^4.1.17",
     "flowbite": "^4.0.0",
+    "ngx-stripe": "^21.8.0",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.17",
     "tslib": "^2.3.0"
