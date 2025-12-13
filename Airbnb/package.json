@@ -37,6 +37,7 @@
     "@stripe/stripe-js": "^8.5.3",
     "@tailwindcss/postcss": "^4.1.17",
     "flowbite": "^4.0.0",
+    "ngx-paypal": "^11.0.0",
     "ngx-stripe": "^21.8.0",
     "rxjs": "~7.8.0",
     "tailwindcss": "^4.1.17",

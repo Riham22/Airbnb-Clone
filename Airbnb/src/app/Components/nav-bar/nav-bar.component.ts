@@ -577,6 +577,14 @@ export class NavBarComponent implements OnInit {
     return '👤';
   }
 
+  isAdmin(): boolean {
+    return this.authService.isAdmin();
+  }
+
+  isHost(): boolean {
+    return this.authService.isHost();
+  }
+
   // ========== PRIVATE HELPER METHODS ==========
   private setupFilterObservables(): void {
     combineLatest([

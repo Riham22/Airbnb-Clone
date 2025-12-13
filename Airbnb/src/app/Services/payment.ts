@@ -5,7 +5,8 @@ import { BehaviorSubject, Observable, catchError, map, tap, throwError } from 'r
 import { PaymentMethod } from '../Models/PaymentMethod';
 import { Transaction } from '../Models/Transaction';
 import { Payout } from '../Models/Payout';
-import { PaymentApiResponse, PaymentIntentRequest, PaymentIntentResponse, ConfirmPaymentRequest } from '../Models/PaymentInterfaces';
+import { CardData } from '../Models/CardData';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,84 +18,124 @@ export class PaymentService {
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   private payoutsSubject = new BehaviorSubject<Payout[]>([]);
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+    this.loadSavedCards();
+  }
 
   // ================ PAYMENT METHODS ================
 
-  // Get all payment methods from my-payments endpoint
+  /**
+   * Get all saved payment methods
+   */
   getPaymentMethods(): Observable<PaymentMethod[]> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
-      map(responses => {
-        // Filter and transform API responses to PaymentMethod objects
-        const methods = responses
-          .filter(response =>
-            // Identify payment methods: has provider or lastFour, or no amount
-            response.provider ||
-            response.lastFour ||
-            (!response.amount && !response.bookingId)
-          )
-          .map(response => ({
-            id: response.id,
-            type: this.determinePaymentMethodType(response),
-            provider: response.provider || 'Card',
-            lastFour: response.lastFour,
-            expiryDate: response.expiryDate,
-            isDefault: response.isDefault || false,
-            cardHolderName: response.description
-          } as PaymentMethod));
-
-        this.paymentMethodsSubject.next(methods);
-        return methods;
-      }),
-      catchError((error: any) => {
-        console.error('Error fetching payment methods:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  private determinePaymentMethodType(response: PaymentApiResponse): PaymentMethod['type'] {
-    if (response.provider?.toLowerCase().includes('paypal')) return 'paypal';
-    if (response.provider?.toLowerCase().includes('bank')) return 'bank_transfer';
-    return 'card';
-  }
-
-  getPaymentMethodsObservable(): Observable<PaymentMethod[]> {
     return this.paymentMethodsSubject.asObservable();
   }
 
-  // Create payment intent - EXACT ENDPOINT: POST /api/Payment/create-payment-intent
-  createPaymentIntent(data: PaymentIntentRequest): Observable<PaymentIntentResponse> {
-    return this.http.post<PaymentIntentResponse>(`${this.baseUrl}/create-payment-intent`, data).pipe(
-      catchError((error: any) => {
-        console.error('Error creating payment intent:', error);
-        return throwError(() => error);
-      })
-    );
+  /**
+   * Save card details (mocked - in production, send to backend)
+   */
+  saveCardDetails(cardData: CardData): Observable<any> {
+    // Mock implementation - add to local payment methods
+    const newCard: PaymentMethod = {
+      id: Date.now().toString(),
+      type: 'card',
+      provider: this.detectCardProvider(cardData.cardNumber),
+      lastFour: cardData.cardNumber.slice(-4),
+      expiryDate: cardData.expiryDate,
+      isDefault: this.paymentMethodsSubject.value.length === 0, // First card is default
+      cardHolderName: cardData.cardHolderName
+    };
+
+    const currentMethods = this.paymentMethodsSubject.value;
+    const updatedMethods = [...currentMethods, newCard];
+    this.paymentMethodsSubject.next(updatedMethods);
+
+    // Save to localStorage
+    this.saveCardsToStorage(updatedMethods);
+
+    // In production, send to backend:
+    // return this.http.post(`${this.baseUrl}/save-card`, cardData);
+    return new Observable(subscriber => {
+      subscriber.next({ success: true, card: newCard });
+      subscriber.complete();
+    });
   }
 
-  // Confirm payment - EXACT ENDPOINT: POST /api/Payment/confirm
-  confirmPayment(data: ConfirmPaymentRequest): Observable<any> {
-    return this.http.post(`${this.baseUrl}/confirm`, data).pipe(
-      catchError((error: any) => {
-        console.error('Error confirming payment:', error);
-        return throwError(() => error);
-      })
-    );
+  /**
+   * Process card payment
+   */
+  processCardPayment(cardData: CardData, amount: number): Observable<any> {
+    // Mock implementation - in production, send to payment processor
+    console.log('Processing card payment:', { cardData, amount });
+
+    // In production, send to backend:
+    // return this.http.post(`${this.baseUrl}/process-card-payment`, { cardData, amount });
+    return new Observable(subscriber => {
+      setTimeout(() => {
+        const transaction: Transaction = {
+          id: Date.now().toString(),
+          type: 'payment',
+          amount: amount,
+          description: 'Card Payment',
+          date: new Date(),
+          status: 'completed',
+          paymentMethodId: 'card-' + cardData.cardNumber.slice(-4)
+        };
+
+        // Add to transactions
+        const currentTransactions = this.transactionsSubject.value;
+        this.transactionsSubject.next([transaction, ...currentTransactions]);
+
+        subscriber.next({
+          success: true,
+          transactionId: transaction.id,
+          message: 'Payment processed successfully'
+        });
+        subscriber.complete();
+      }, 1000);
+    });
   }
 
-  // Set default payment method - Custom endpoint needed
+  /**
+   * Process PayPal payment (handled by PayPal SDK on client side)
+   */
+  processPayPalPayment(paypalData: any): Observable<any> {
+    // PayPal payments are handled by the PayPal SDK
+    // This method can be used to record the transaction on the backend
+    console.log('Recording PayPal payment:', paypalData);
+
+    const transaction: Transaction = {
+      id: paypalData.orderID || Date.now().toString(),
+      type: 'payment',
+      amount: paypalData.amount || 0,
+      description: 'PayPal Payment',
+      date: new Date(),
+      status: 'completed',
+      paymentMethodId: 'paypal'
+    };
+
+    // Add to transactions
+    const currentTransactions = this.transactionsSubject.value;
+    this.transactionsSubject.next([transaction, ...currentTransactions]);
+
+    // In production, send to backend:
+    // return this.http.post(`${this.baseUrl}/process-paypal-payment`, paypalData);
+    return new Observable(subscriber => {
+      subscriber.next({ success: true, transactionId: transaction.id });
+      subscriber.complete();
+    });
+  }
+
+  /**
+   * Set default payment method
+   */
   setDefaultPaymentMethod(methodId: string): Observable<any> {
-    // Note: This endpoint doesn't exist in your API
-    // You might need to create it or use a different approach
-    console.warn('Endpoint /api/Payment/{id}/set-default may not exist');
-
-    // Simulating the update locally for now
     const methods = this.paymentMethodsSubject.value.map(method => ({
       ...method,
       isDefault: method.id === methodId
     }));
     this.paymentMethodsSubject.next(methods);
+    this.saveCardsToStorage(methods);
 
     return new Observable(subscriber => {
       subscriber.next({ success: true });
@@ -102,184 +143,50 @@ export class PaymentService {
     });
   }
 
-  // Remove payment method - EXACT ENDPOINT: DELETE /api/Payment/{id}
+  /**
+   * Remove payment method
+   */
   removePaymentMethod(methodId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${methodId}`).pipe(
-      tap(() => {
-        // Update local state
-        const methods = this.paymentMethodsSubject.value.filter(m => m.id !== methodId);
-        this.paymentMethodsSubject.next(methods);
-      }),
-      catchError((error: any) => {
-        console.error('Error removing payment method:', error);
-        return throwError(() => error);
-      })
-    );
+    const methods = this.paymentMethodsSubject.value.filter(m => m.id !== methodId);
+    this.paymentMethodsSubject.next(methods);
+    this.saveCardsToStorage(methods);
+
+    return new Observable(subscriber => {
+      subscriber.next({ success: true });
+      subscriber.complete();
+    });
   }
 
   // ================ TRANSACTIONS ================
 
-  // Get all transactions from my-payments endpoint
+  /**
+   * Get all transactions
+   */
   getTransactions(): Observable<Transaction[]> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
-      map(responses => {
-        // Filter and transform API responses to Transaction objects
-        const transactions = responses
-          .filter(response =>
-            // Identify transactions: has amount and bookingId or description
-            response.amount &&
-            (response.bookingId || response.description)
-          )
-          .map(response => ({
-            id: response.id,
-            type: this.determineTransactionType(response),
-            amount: response.amount || 0,
-            description: response.description || 'Transaction',
-            date: response.date ? new Date(response.date) : new Date(),
-            status: (response.status as any) || 'completed',
-            bookingId: response.bookingId,
-            paymentMethodId: response.paymentMethodId
-          } as Transaction));
-
-        this.transactionsSubject.next(transactions);
-        return transactions;
-      }),
-      catchError((error: any) => {
-        console.error('Error fetching transactions:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  private determineTransactionType(response: PaymentApiResponse): Transaction['type'] {
-    if (response.type === 'earning' || response.description?.toLowerCase().includes('booking')) return 'earning';
-    if (response.type === 'refund' || response.description?.toLowerCase().includes('refund')) return 'refund';
-    if (response.type === 'payout' || response.description?.toLowerCase().includes('payout')) return 'payout';
-    return 'payment';
-  }
-
-  getTransactionsObservable(): Observable<Transaction[]> {
     return this.transactionsSubject.asObservable();
   }
 
-  // Get transaction by ID - EXACT ENDPOINT: GET /api/Payment/{id}
-  getTransactionById(id: string): Observable<Transaction> {
-    return this.http.get<PaymentApiResponse>(`${this.baseUrl}/${id}`).pipe(
-      map(response => ({
-        id: response.id,
-        type: this.determineTransactionType(response),
-        amount: response.amount || 0,
-        description: response.description || 'Transaction',
-        date: response.date ? new Date(response.date) : new Date(),
-        status: (response.status as any) || 'completed',
-        bookingId: response.bookingId,
-        paymentMethodId: response.paymentMethodId
-      } as Transaction)),
-      catchError((error: any) => {
-        console.error('Error fetching transaction:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Get transactions by booking - EXACT ENDPOINT: GET /api/Payment/hooking/{bookingId}
-  getTransactionsByBooking(bookingId: string): Observable<Transaction[]> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/hooking/${bookingId}`).pipe(
-      map(responses => responses.map(response => ({
-        id: response.id,
-        type: this.determineTransactionType(response),
-        amount: response.amount || 0,
-        description: response.description || 'Booking Payment',
-        date: response.date ? new Date(response.date) : new Date(),
-        status: (response.status as any) || 'completed',
-        bookingId: response.bookingId,
-        paymentMethodId: response.paymentMethodId
-      } as Transaction))),
-      catchError((error: any) => {
-        console.error('Error fetching booking transactions:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Get transactions by user - EXACT ENDPOINT: GET /api/Payment/user/{userId}
-  getTransactionsByUser(userId: string): Observable<Transaction[]> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/user/${userId}`).pipe(
-      map(responses => responses.map(response => ({
-        id: response.id,
-        type: this.determineTransactionType(response),
-        amount: response.amount || 0,
-        description: response.description || 'User Transaction',
-        date: response.date ? new Date(response.date) : new Date(),
-        status: (response.status as any) || 'completed',
-        bookingId: response.bookingId,
-        paymentMethodId: response.paymentMethodId,
-        userId: response.userId
-      } as Transaction))),
-      catchError((error: any) => {
-        console.error('Error fetching user transactions:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  // Get transactions by status - EXACT ENDPOINT: GET /api/Payment/status/{status}
-  getTransactionsByStatus(status: string): Observable<Transaction[]> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/status/${status}`).pipe(
-      map(responses => responses.map(response => ({
-        id: response.id,
-        type: this.determineTransactionType(response),
-        amount: response.amount || 0,
-        description: response.description || 'Transaction',
-        date: response.date ? new Date(response.date) : new Date(),
-        status: (response.status as any) || (status as any),
-        bookingId: response.bookingId,
-        paymentMethodId: response.paymentMethodId
-      } as Transaction))),
-      catchError((error: any) => {
-        console.error('Error fetching transactions by status:', error);
-        return throwError(() => error);
-      })
+  /**
+   * Get transaction by ID
+   */
+  getTransactionById(id: string): Observable<Transaction | undefined> {
+    return this.transactionsSubject.pipe(
+      map(transactions => transactions.find(t => t.id === id))
     );
   }
 
   // ================ PAYOUTS ================
 
-  // Get all payouts from my-payments endpoint
+  /**
+   * Get all payouts
+   */
   getPayouts(): Observable<Payout[]> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
-      map(responses => {
-        // Filter and transform API responses to Payout objects
-        const payouts = responses
-          .filter(response =>
-            // Identify payouts: has method (bank transfer, etc.) or type is payout
-            response.method ||
-            response.type === 'payout'
-          )
-          .map(response => ({
-            id: response.id,
-            amount: response.amount || 0,
-            date: response.date ? new Date(response.date) : new Date(),
-            method: response.method || 'Bank Transfer',
-            status: (response.status as any) || 'pending',
-            description: response.description || 'Payout',
-            userId: response.userId
-          } as Payout));
-
-        this.payoutsSubject.next(payouts);
-        return payouts;
-      }),
-      catchError((error: any) => {
-        console.error('Error fetching payouts:', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-  getPayoutsObservable(): Observable<Payout[]> {
     return this.payoutsSubject.asObservable();
   }
 
+  /**
+   * Request payout
+   */
   requestPayout(amount: number): void {
     const payouts = this.payoutsSubject.value;
     const newPayout: Payout = {
@@ -292,97 +199,45 @@ export class PaymentService {
     this.payoutsSubject.next([newPayout, ...payouts]);
   }
 
+  // ================ HELPER METHODS ================
+
   /**
-   * Create a Stripe Checkout session.
-   * Returns an observable with { sessionId: string }
+   * Detect card provider from card number
    */
-  createCheckoutSession(paymentData: any) {
-    return this.http.post<any>('https://localhost:7020/api/Payment/create-checkout-session', paymentData);
+  private detectCardProvider(cardNumber: string): string {
+    const cleaned = cardNumber.replace(/\s/g, '');
+
+    if (/^4/.test(cleaned)) return 'Visa';
+    if (/^5[1-5]/.test(cleaned)) return 'Mastercard';
+    if (/^3[47]/.test(cleaned)) return 'American Express';
+    if (/^6(?:011|5)/.test(cleaned)) return 'Discover';
+
+    return 'Card';
   }
 
-  private getMockPaymentMethods(): PaymentMethod[] {
-    return [
-      {
-        id: '1',
-        type: 'card',
-        lastFour: '4242',
-        expiryDate: '12/25',
-        isDefault: true,
-        provider: 'Visa'
-      },
-      {
-        id: '2',
-        type: 'paypal',
-        isDefault: false,
-        provider: 'PayPal'
+  /**
+   * Load saved cards from localStorage
+   */
+  private loadSavedCards(): void {
+    try {
+      const saved = localStorage.getItem('savedCards');
+      if (saved) {
+        const cards = JSON.parse(saved);
+        this.paymentMethodsSubject.next(cards);
       }
-    ];
+    } catch (error) {
+      console.error('Error loading saved cards:', error);
+    }
   }
 
-  // ================ UTILITY METHODS ================
-
-  // Load all payment data at once (for initial load)
-  loadAllPaymentData(): Observable<{
-    methods: PaymentMethod[],
-    transactions: Transaction[],
-    payouts: Payout[]
-  }> {
-    return this.http.get<PaymentApiResponse[]>(`${this.baseUrl}/my-payments`).pipe(
-      map(responses => {
-        // Process all data from the single endpoint
-        const methods: PaymentMethod[] = [];
-        const transactions: Transaction[] = [];
-        const payouts: Payout[] = [];
-
-        responses.forEach(response => {
-          // Determine type and categorize
-          if (response.provider || response.lastFour || (!response.amount && !response.bookingId)) {
-            // Payment Method
-            methods.push({
-              id: response.id,
-              type: this.determinePaymentMethodType(response),
-              provider: response.provider || 'Card',
-              lastFour: response.lastFour,
-              expiryDate: response.expiryDate,
-              isDefault: response.isDefault || false,
-              cardHolderName: response.description
-            });
-          } else if (response.amount && (response.bookingId || response.description)) {
-            // Transaction
-            transactions.push({
-              id: response.id,
-              type: this.determineTransactionType(response),
-              amount: response.amount || 0,
-              description: response.description || 'Transaction',
-              date: response.date ? new Date(response.date) : new Date(),
-              status: (response.status as any) || 'completed',
-              bookingId: response.bookingId,
-              paymentMethodId: response.paymentMethodId
-            });
-          } else if (response.method || response.type === 'payout') {
-            // Payout
-            payouts.push({
-              id: response.id,
-              amount: response.amount || 0,
-              date: response.date ? new Date(response.date) : new Date(),
-              method: response.method || 'Bank Transfer',
-              status: (response.status as any) || 'pending',
-              description: response.description || 'Payout'
-            });
-          }
-        });
-
-        // Update subjects
-        this.paymentMethodsSubject.next(methods);
-        this.transactionsSubject.next(transactions);
-        this.payoutsSubject.next(payouts);
-
-        return { methods, transactions, payouts };
-      }),
-      catchError((error: any) => {
-        console.error('Error loading all payment data:', error);
-        return throwError(() => error);
-      })
-    );
+  /**
+   * Save cards to localStorage
+   */
+  private saveCardsToStorage(cards: PaymentMethod[]): void {
+    try {
+      localStorage.setItem('savedCards', JSON.stringify(cards));
+    } catch (error) {
+      console.error('Error saving cards:', error);
+    }
   }
 }

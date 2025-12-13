@@ -12,40 +12,47 @@
     <div class="property-type-bar">
       <div class="property-type-filters">
         <!-- All -->
-        <div class="property-type-option" [class.active]="selectedPropertyType === 'all'" (click)="selectPropertyType('all')">
+        <div class="property-type-option" [class.active]="selectedPropertyType === 'all'"
+          (click)="selectPropertyType('all')">
           <span class="type-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
           </span>
           All
         </div>
 
         <!-- Property -->
-        <div class="property-type-option" [class.active]="selectedPropertyType === 'property'" (click)="selectPropertyType('property')">
+        <div class="property-type-option" [class.active]="selectedPropertyType === 'property'"
+          (click)="selectPropertyType('property')">
           <span class="type-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H6V4h12v16zM8 6h8v2H8zm0 4h8v2H8zm0 4h8v2H8z"/>
+              <path
+                d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H6V4h12v16zM8 6h8v2H8zm0 4h8v2H8zm0 4h8v2H8z" />
             </svg>
           </span>
           Property
         </div>
 
         <!-- Service -->
-        <div class="property-type-option" [class.active]="selectedPropertyType === 'service'" (click)="selectPropertyType('service')">
+        <div class="property-type-option" [class.active]="selectedPropertyType === 'service'"
+          (click)="selectPropertyType('service')">
           <span class="type-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z"/>
+              <path
+                d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29l-1.43-1.43z" />
             </svg>
           </span>
           Service
         </div>
 
         <!-- Experience -->
-        <div class="property-type-option" [class.active]="selectedPropertyType === 'experience'" (click)="selectPropertyType('experience')">
+        <div class="property-type-option" [class.active]="selectedPropertyType === 'experience'"
+          (click)="selectPropertyType('experience')">
           <span class="type-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
           </span>
           Experience
@@ -58,7 +65,8 @@
       <!-- My Trips Direct Link -->
       <div class="nav-icon" routerLink="/trips" title="My Trips" *ngIf="isAuthenticated">
         <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-.5L13 19v-5.5l8 2.5z"/>
+          <path
+            d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-.5L13 19v-5.5l8 2.5z" />
         </svg>
       </div>
 
@@ -110,190 +118,241 @@
 
   <!-- Menu Panel -->
   <!-- Menu Panel -->
-<div *ngIf="showMenuPanel" class="menu-panel scrollable" [class.active]="showMenuPanel">
-  <div class="panel-header">
-    <h3 class="panel-title">Menu</h3>
-    <button class="close-panel" (click)="toggleMenuPanel()">×</button>
-  </div>
-
-  <div class="menu-list">
-    <!-- User info section (للمستخدم المسجل فقط) -->
-    <div class="user-section" *ngIf="isAuthenticated && currentUser">
-      <div class="user-avatar-large">
-        {{ getUserInitials() }}
-      </div>
-      <div class="user-details">
-        <h3 class="user-fullname">{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
-        <p class="user-email">{{ currentUser.email }}</p>
-      </div>
+  <div *ngIf="showMenuPanel" class="menu-panel scrollable" [class.active]="showMenuPanel">
+    <div class="panel-header">
+      <h3 class="panel-title">Menu</h3>
+      <button class="close-panel" (click)="toggleMenuPanel()">×</button>
     </div>
 
-    <!-- Menu for logged in users -->
-    <div *ngIf="isAuthenticated">
-      <!-- My Trips -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/trips'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-.5L13 19v-5.5l8 2.5z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">My Trips</span>
+    <div class="menu-list">
+      <!-- User info section (للمستخدم المسجل فقط) -->
+      <div class="user-section" *ngIf="isAuthenticated && currentUser">
+        <div class="user-avatar-large">
+          {{ getUserInitials() }}
+        </div>
+        <div class="user-details">
+          <h3 class="user-fullname">{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
+          <p class="user-email">{{ currentUser.email }}</p>
         </div>
       </div>
 
-      <!-- Wishlists -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/wishlists'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Wishlists</span>
-        </div>
-      </div>
-
-      <!-- Messages -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/messages'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Messages</span>
-        </div>
-      </div>
-
-      <!-- Notifications -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/notifications'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Notifications</span>
-        </div>
-      </div>
-
-      <div class="menu-separator"></div>
-
-      <!-- Host your home -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Host your home</span>
-        </div>
-      </div>
-
-      <!-- Host an experience -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/host/experience'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Host an experience</span>
-        </div>
-      </div>
-
-      <!-- Account settings -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/account/settings'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Account settings</span>
-        </div>
-      </div>
-
-      <!-- Help Center -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/help'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Help Center</span>
-        </div>
-      </div>
-
-      <!-- Logout section -->
-      <div class="logout-section">
-        <div class="menu-separator"></div>
-        <button class="logout-btn styled" (click)="logout()">
-          <span class="logout-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+      <!-- Menu for logged in users -->
+      <div *ngIf="isAuthenticated">
+        <!-- My Trips -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/trips'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-.5L13 19v-5.5l8 2.5z" />
             </svg>
           </span>
-          <span class="logout-label">Log out</span>
-        </button>
-      </div>
-    </div>
+          <div class="menu-content">
+            <span class="menu-label">My Trips</span>
+          </div>
+        </div>
 
-    <!-- Menu for guests (غير مسجل دخول) -->
-    <div *ngIf="!isAuthenticated">
-      <!-- Become a Host -->
-      <div class="menu-option highlighted" (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF385C">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label host-label">Become a Host</span>
+        <!-- Wishlists -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/wishlists'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Wishlists</span>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/messages'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Messages</span>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/notifications'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Notifications</span>
+          </div>
+        </div>
+
+        <div class="menu-separator"></div>
+
+        <!-- Personal Account (for all authenticated users) -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/personal-account'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Personal Account</span>
+          </div>
+        </div>
+
+        <!-- Admin Dashboard (only for admin role) -->
+        <div class="menu-option" *ngIf="isAdmin()"
+          (click)="showMenuPanel = false; router.navigate(['/admin-dashboard'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Admin Dashboard</span>
+          </div>
+        </div>
+
+        <!-- Host Dashboard (for host or admin role) -->
+        <div class="menu-option" *ngIf="isHost()" (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Host Dashboard</span>
+          </div>
+        </div>
+
+        <div class="menu-separator"></div>
+
+        <!-- Host your home -->
+        <div class="menu-option" *ngIf="!isHost()"
+          (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Host your home</span>
+          </div>
+        </div>
+
+        <!-- Host an experience -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/host/experience'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Host an experience</span>
+          </div>
+        </div>
+
+        <!-- Account settings -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/account/settings'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Account settings</span>
+          </div>
+        </div>
+
+        <!-- Help Center -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/help'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#D70466">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Help Center</span>
+          </div>
+        </div>
+
+        <!-- Logout section -->
+        <div class="logout-section">
+          <div class="menu-separator"></div>
+          <button class="logout-btn styled" (click)="logout()">
+            <span class="logout-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                <path
+                  d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+              </svg>
+            </span>
+            <span class="logout-label">Log out</span>
+          </button>
         </div>
       </div>
 
-      <div class="menu-separator"></div>
-
-      <!-- Login Button -->
-      <div class="menu-option auth-option" (click)="showMenuPanel = false; router.navigate(['/login'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
-            <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label auth-label">Login</span>
+      <!-- Menu for guests (غير مسجل دخول) -->
+      <div *ngIf="!isAuthenticated">
+        <!-- Become a Host -->
+        <div class="menu-option highlighted" (click)="showMenuPanel = false; router.navigate(['/host/dashboard'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF385C">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label host-label">Become a Host</span>
+          </div>
         </div>
-      </div>
 
-      <!-- Signup Button -->
-      <div class="menu-option auth-option" (click)="showMenuPanel = false; router.navigate(['/signup'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
-            <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label auth-label">Sign Up</span>
+        <div class="menu-separator"></div>
+
+        <!-- Login Button -->
+        <div class="menu-option auth-option" (click)="showMenuPanel = false; router.navigate(['/login'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+              <path
+                d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label auth-label">Login</span>
+          </div>
         </div>
-      </div>
 
-      <!-- Help Center -->
-      <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/help'])">
-        <span class="menu-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-          </svg>
-        </span>
-        <div class="menu-content">
-          <span class="menu-label">Help Center</span>
+        <!-- Signup Button -->
+        <div class="menu-option auth-option" (click)="showMenuPanel = false; router.navigate(['/signup'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+              <path
+                d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label auth-label">Sign Up</span>
+          </div>
+        </div>
+
+        <!-- Help Center -->
+        <div class="menu-option" (click)="showMenuPanel = false; router.navigate(['/help'])">
+          <span class="menu-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#000000">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
+            </svg>
+          </span>
+          <div class="menu-content">
+            <span class="menu-label">Help Center</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </nav>

@@ -234,4 +234,19 @@ export class AuthService {
 
     return role.toLowerCase() === 'admin';
   }
+
+  isHost(): boolean {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+
+    const role = user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+      user.role || user.Role;
+
+    console.log('Checking host status - Role:', role);
+
+    if (!role) return false;
+
+    const roleLower = role.toLowerCase();
+    return roleLower === 'host' || roleLower === 'admin';
+  }
 }
