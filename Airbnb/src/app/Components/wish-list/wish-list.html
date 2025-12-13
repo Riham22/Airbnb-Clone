@@ -27,7 +27,7 @@
     <div *ngIf="!loading && wishlists.length > 0" class="wishlists-grid">
       <div *ngFor="let list of wishlists" class="wishlist-card" (click)="openWishlist(list)">
         <div class="card-cover">
-          <img [src]="list.coverImage" [alt]="list.name" class="cover-img">
+          <img src="../../../assets/wishlist-card.jpg" [alt]="list.name" class="cover-img">
         </div>
         <div class="card-details">
           <h3>{{ list.name }}</h3>

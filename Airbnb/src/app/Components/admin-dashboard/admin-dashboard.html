@@ -35,6 +35,12 @@
     <button [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')" class="tab-button">
       🏄 Experiences
     </button>
+    <button [class.active]="activeTab === 'categories'" (click)="setActiveTab('categories')" class="tab-button">
+      📂 Categories
+    </button>
+    <button [class.active]="activeTab === 'amenities'" (click)="setActiveTab('amenities')" class="tab-button">
+      🛀 Amenities
+    </button>
 
     <!-- <button [class.active]="activeTab === 'analytics'" (click)="setActiveTab('analytics')" class="tab-button">
       📈 Analytics
@@ -466,7 +472,51 @@
   <section *ngIf="activeTab === 'categories'" class="tab-content">
     <div class="section-header">
       <h2>Category Management</h2>
-      <p>Manage experience categories and subcategories</p>
+      <p>Manage all category types from one place</p>
+    </div>
+
+    <!-- Property Categories -->
+    <div class="management-section">
+      <div class="section-title">
+        <h3>Property Categories</h3>
+        <button class="btn-primary" (click)="openAddCategoryModal('property')">+ Add Property Category</button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let category of getPaginatedPropertyCategories()">
+            <td>{{ category.id }}</td>
+            <td>{{ category.name }}</td>
+            <td>{{ category.description || '-' }}</td>
+            <td class="actions">
+              <button class="btn-edit" (click)="openEditCategoryModal(category, 'property')">Edit</button>
+              <button class="btn-delete" (click)="deletePropertyCategory(category.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Property Categories Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('propcats') > 1">
+        <button class="btn-secondary" [disabled]="currentPagePropCats === 1"
+          (click)="changePage('propcats', currentPagePropCats - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPagePropCats}} of {{getTotalPages('propcats')}}</span>
+        <button class="btn-secondary" [disabled]="currentPagePropCats === getTotalPages('propcats')"
+          (click)="changePage('propcats', currentPagePropCats + 1)">Next</button>
+      </div>
+
+      <div *ngIf="propertyCategories.length === 0" class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No property categories found</h3>
+      </div>
     </div>
 
     <!-- Service Categories -->
@@ -486,7 +536,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let category of serviceCategories">
+          <tr *ngFor="let category of getPaginatedServiceCategories()">
             <td>{{ category.id }}</td>
             <td>{{ category.name }}</td>
             <td>{{ category.description || '-' }}</td>
@@ -497,6 +547,15 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Service Categories Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('servicecats') > 1">
+        <button class="btn-secondary" [disabled]="currentPageServiceCats === 1"
+          (click)="changePage('servicecats', currentPageServiceCats - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageServiceCats}} of {{getTotalPages('servicecats')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageServiceCats === getTotalPages('servicecats')"
+          (click)="changePage('servicecats', currentPageServiceCats + 1)">Next</button>
+      </div>
 
       <div *ngIf="serviceCategories.length === 0" class="empty-state">
         <div class="empty-icon">📂</div>
@@ -521,7 +580,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let category of experienceCategories">
+          <tr *ngFor="let category of getPaginatedExperienceCategories()">
             <td>{{ category.id }}</td>
             <td>{{ category.name }}</td>
             <td>{{ category.vat }}%</td>
@@ -532,6 +591,15 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Experience Categories Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('expcats') > 1">
+        <button class="btn-secondary" [disabled]="currentPageExpCats === 1"
+          (click)="changePage('expcats', currentPageExpCats - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageExpCats}} of {{getTotalPages('expcats')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageExpCats === getTotalPages('expcats')"
+          (click)="changePage('expcats', currentPageExpCats + 1)">Next</button>
+      </div>
 
       <div *ngIf="experienceCategories.length === 0" class="empty-state">
         <div class="empty-icon">📂</div>
@@ -556,7 +624,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let subcategory of experienceSubCategories">
+          <tr *ngFor="let subcategory of getPaginatedExperienceSubCategories()">
             <td>{{ subcategory.id }}</td>
             <td>{{ subcategory.name }}</td>
             <td>{{ getCategoryName(subcategory.expCatograyId) }}</td>
@@ -568,9 +636,70 @@
         </tbody>
       </table>
 
+      <!-- Experience Subcategories Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('expsubcats') > 1">
+        <button class="btn-secondary" [disabled]="currentPageExpSubCats === 1"
+          (click)="changePage('expsubcats', currentPageExpSubCats - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageExpSubCats}} of {{getTotalPages('expsubcats')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageExpSubCats === getTotalPages('expsubcats')"
+          (click)="changePage('expsubcats', currentPageExpSubCats + 1)">Next</button>
+      </div>
+
       <div *ngIf="experienceSubCategories.length === 0" class="empty-state">
         <div class="empty-icon">📂</div>
         <h3>No subcategories found</h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- Amenities Tab -->
+  <section *ngIf="activeTab === 'amenities'" class="tab-content">
+    <div class="section-header">
+      <h2>Amenity Management</h2>
+      <div class="table-actions">
+        <button class="btn-primary" (click)="openAddAmenityModal()">+ Add Amenity</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Icon</th>
+            <th>Category</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let amenity of getPaginatedAmenities()">
+            <td>{{ amenity.id }}</td>
+            <td>{{ amenity.name }}</td>
+            <td><i [class]="amenity.icon"></i> {{ amenity.icon }}</td>
+            <td>{{ amenity.category || 'General' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button (click)="openEditAmenityModal(amenity)" class="btn-secondary" title="Edit Amenity">Edit</button>
+                <button (click)="deleteAmenity(amenity.id)" class="btn-danger" title="Delete Amenity">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Amenities Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('amenities') > 1">
+        <button class="btn-secondary" [disabled]="currentPageAmenities === 1"
+          (click)="changePage('amenities', currentPageAmenities - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageAmenities}} of {{getTotalPages('amenities')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageAmenities === getTotalPages('amenities')"
+          (click)="changePage('amenities', currentPageAmenities + 1)">Next</button>
+      </div>
+
+      <div *ngIf="amenityList.length === 0" class="empty-state">
+        <div class="empty-icon">🛀</div>
+        <h3>No amenities found</h3>
       </div>
     </div>
   </section>

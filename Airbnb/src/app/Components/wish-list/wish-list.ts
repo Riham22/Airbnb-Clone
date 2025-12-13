@@ -82,7 +82,7 @@ export class WishlistComponent implements OnInit, OnDestroy {
             itemPrice: item.itemPrice || item.price || item.Price || 0,
             itemRating: item.itemRating || item.rating || item.Rating || 0,
             itemReviewCount: item.itemReviewCount || item.reviewsCount || item.ReviewsCount || 0,
-            itemImageUrl: item.itemImageUrl || item.coverImage || item.CoverImage || '',
+            itemImageUrl: this.dataService.processImageUrl(item.itemImageUrl || item.coverImage || item.CoverImage || ''),
             addedAt: item.addedAt || item.CreatedAt || new Date().toISOString()
           })) : [];
 
@@ -94,7 +94,7 @@ export class WishlistComponent implements OnInit, OnDestroy {
             this.wishlists = [{
               id: 1,
               name: 'My favorites',
-              coverImage: items[0].itemImageUrl,
+              coverImage: '/assets/wishlist-card.jpg',
               itemCount: items.length,
               listings: items
             }];

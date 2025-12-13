@@ -292,16 +292,25 @@ export class PropertyDetailsComponent implements OnInit {
     this.showAllAmenities = !this.showAllAmenities;
   }
 
-  calculateTotalPrice(): number {
-    if (!this.property || !this.checkInDate || !this.checkOutDate) {
-      return this.property ? this.property.price : 0;
-    }
-
+  get nights(): number {
+    if (!this.checkInDate || !this.checkOutDate) return 5;
     const start = new Date(this.checkInDate);
     const end = new Date(this.checkOutDate);
-    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 5;
+  }
 
-    return (this.property.price * nights) + 80; // + cleaning and service fees
+  get cleaningFee(): number {
+    return 50;
+  }
+
+  get serviceFee(): number {
+    return 30 * this.guests;
+  }
+
+  calculateTotalPrice(): number {
+    if (!this.property) return 0;
+    return (this.property.price * this.nights) + this.cleaningFee + this.serviceFee;
   }
 
   // Helper method to format dates for API

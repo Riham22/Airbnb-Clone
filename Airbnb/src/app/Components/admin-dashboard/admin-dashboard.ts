@@ -35,7 +35,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   serviceSearchTerm: string = '';
   experienceSearchTerm: string = '';
   loading = false;
-  activeTab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'analytics' = 'overview';
+  activeTab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'amenities' | 'analytics' = 'overview';
 
   // Category Data
   propertyTypes: any[] = [];
@@ -112,6 +112,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   // Amenity Modal States
   showAmenityModal = false;
+  amenityModalMode: 'create' | 'edit' = 'create';
+  selectedAmenity: any = null;
   newAmenity: any = { name: '', icon: '', category: 'Basic' };
   amenityList: any[] = []; // Stores available amenities
 
@@ -121,6 +123,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   currentPageListings = 1;
   currentPageServices = 1;
   currentPageExperiences = 1;
+  currentPagePropCats = 1;
+  currentPageServiceCats = 1;
+  currentPageExpCats = 1;
+  currentPageExpSubCats = 1;
+  currentPageAmenities = 1;
 
   private subscriptions: Subscription = new Subscription();
 
@@ -150,19 +157,54 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     return this.filteredExperiences.slice(startIndex, startIndex + this.pageSize);
   }
 
-  changePage(type: 'users' | 'listings' | 'services' | 'experiences', page: number): void {
+  getPaginatedPropertyCategories(): any[] {
+    const startIndex = (this.currentPagePropCats - 1) * this.pageSize;
+    return this.propertyCategories.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedServiceCategories(): any[] {
+    const startIndex = (this.currentPageServiceCats - 1) * this.pageSize;
+    return this.serviceCategories.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedExperienceCategories(): any[] {
+    const startIndex = (this.currentPageExpCats - 1) * this.pageSize;
+    return this.experienceCategories.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedExperienceSubCategories(): any[] {
+    const startIndex = (this.currentPageExpSubCats - 1) * this.pageSize;
+    return this.experienceSubCategories.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedAmenities(): any[] {
+    const startIndex = (this.currentPageAmenities - 1) * this.pageSize;
+    return this.amenityList.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  changePage(type: 'users' | 'listings' | 'services' | 'experiences' | 'propcats' | 'servicecats' | 'expcats' | 'expsubcats' | 'amenities', page: number): void {
     if (type === 'users') this.currentPageUsers = page;
     if (type === 'listings') this.currentPageListings = page;
     if (type === 'services') this.currentPageServices = page;
     if (type === 'experiences') this.currentPageExperiences = page;
+    if (type === 'propcats') this.currentPagePropCats = page;
+    if (type === 'servicecats') this.currentPageServiceCats = page;
+    if (type === 'expcats') this.currentPageExpCats = page;
+    if (type === 'expsubcats') this.currentPageExpSubCats = page;
+    if (type === 'amenities') this.currentPageAmenities = page;
   }
 
-  getTotalPages(type: 'users' | 'listings' | 'services' | 'experiences'): number {
+  getTotalPages(type: 'users' | 'listings' | 'services' | 'experiences' | 'propcats' | 'servicecats' | 'expcats' | 'expsubcats' | 'amenities'): number {
     let totalItems = 0;
     if (type === 'users') totalItems = this.filteredUsers.length;
     if (type === 'listings') totalItems = this.filteredListings.length;
     if (type === 'services') totalItems = this.filteredServices.length;
     if (type === 'experiences') totalItems = this.filteredExperiences.length;
+    if (type === 'propcats') totalItems = this.propertyCategories.length;
+    if (type === 'servicecats') totalItems = this.serviceCategories.length;
+    if (type === 'expcats') totalItems = this.experienceCategories.length;
+    if (type === 'expsubcats') totalItems = this.experienceSubCategories.length;
+    if (type === 'amenities') totalItems = this.amenityList.length;
     return Math.ceil(totalItems / this.pageSize);
   }
 
@@ -307,7 +349,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  setActiveTab(tab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'analytics'): void {
+  setActiveTab(tab: 'overview' | 'users' | 'listings' | 'services' | 'experiences' | 'categories' | 'amenities' | 'analytics'): void {
     this.activeTab = tab;
   }
 
@@ -1199,7 +1241,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           })
         );
       } else {
-        alert('Update Property Category not implemented yet');
+        this.subscriptions.add(
+          this.adminService.updatePropertyCategory(this.selectedCategory.id, this.newCategory).subscribe({
+            next: () => {
+              alert('Property Category updated successfully');
+              this.closeAddCategoryModal();
+              this.loadCategories(); // Refresh property categories
+            },
+            error: (error) => {
+              console.error('Error updating property category:', error);
+              alert(`Failed to update category: ${error.message}`);
+            }
+          })
+        );
       }
     } else {
       // Service Category Logic
@@ -1294,6 +1348,23 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  deletePropertyCategory(categoryId: number): void {
+    if (confirm('Are you sure you want to delete this property category?')) {
+      this.subscriptions.add(
+        this.adminService.deletePropertyCategory(categoryId).subscribe({
+          next: () => {
+            alert('Property Category deleted successfully');
+            this.loadCategories(); // Refresh list
+          },
+          error: (error) => {
+            console.error('Error deleting property category:', error);
+            alert(`Failed to delete category: ${error.message}`);
+          }
+        })
+      );
+    }
+  }
+
   // Experience Subcategory Methods
   openAddSubcategoryModal(): void {
     this.subcategoryModalMode = 'create';
@@ -1303,28 +1374,71 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   // Amenity Methods
   openAddAmenityModal(): void {
+    this.amenityModalMode = 'create';
     this.newAmenity = { name: '', icon: '', category: 'Basic' };
+    this.showAmenityModal = true;
+  }
+
+  openEditAmenityModal(amenity: any): void {
+    this.amenityModalMode = 'edit';
+    this.selectedAmenity = amenity;
+    this.newAmenity = { ...amenity };
     this.showAmenityModal = true;
   }
 
   closeAmenityModal(): void {
     this.showAmenityModal = false;
+    this.selectedAmenity = null;
+    this.newAmenity = { name: '', icon: '', category: 'Basic' };
   }
 
   saveAmenity(): void {
-    this.subscriptions.add(
-      this.adminService.createAmenity(this.newAmenity).subscribe({
-        next: () => {
-          this.closeAmenityModal();
-          this.loadAmenities(); // Refresh list
-          // alert('Amenity created successfully');
-        },
-        error: (error) => {
-          console.error('Error creating amenity:', error);
-          alert(`Failed to create amenity: ${error.message}`);
-        }
-      })
-    );
+    if (this.amenityModalMode === 'create') {
+      this.subscriptions.add(
+        this.adminService.createAmenity(this.newAmenity).subscribe({
+          next: () => {
+            this.closeAmenityModal();
+            this.loadAmenities(); // Refresh list
+            alert('Amenity created successfully');
+          },
+          error: (error) => {
+            console.error('Error creating amenity:', error);
+            alert(`Failed to create amenity: ${error.message}`);
+          }
+        })
+      );
+    } else {
+      this.subscriptions.add(
+        this.adminService.updateAmenity(this.selectedAmenity.id, this.newAmenity).subscribe({
+          next: () => {
+            this.closeAmenityModal();
+            this.loadAmenities(); // Refresh list
+            alert('Amenity updated successfully');
+          },
+          error: (error) => {
+            console.error('Error updating amenity:', error);
+            alert(`Failed to update amenity: ${error.message}`);
+          }
+        })
+      );
+    }
+  }
+
+  deleteAmenity(amenityId: number): void {
+    if (confirm('Are you sure you want to delete this amenity? Property listings using it may be affected.')) {
+      this.subscriptions.add(
+        this.adminService.deleteAmenity(amenityId).subscribe({
+          next: () => {
+            alert('Amenity deleted successfully');
+            this.loadAmenities();
+          },
+          error: (error) => {
+            console.error('Error deleting amenity:', error);
+            alert(`Failed to delete amenity: ${error.message}`);
+          }
+        })
+      );
+    }
   }
 
   loadAmenities(): void {

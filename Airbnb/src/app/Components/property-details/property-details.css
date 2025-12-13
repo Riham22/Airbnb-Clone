@@ -380,11 +380,12 @@
   margin: 20px 0;
 }
 
-.host-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
+.host-avatar-icon {
+  font-size: 64px;
+  color: #717171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .host-badge {

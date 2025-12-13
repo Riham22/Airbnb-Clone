@@ -184,8 +184,7 @@
       <div class="host-section" *ngIf="property.host">
         <h2>Hosted by {{ property.host.name }}</h2>
         <div class="host-info">
-          <img alt="" [src]="property.host.avatar || 'assets/images/placeholder-user.png'" [alt]="property.host.name"
-            class="host-avatar">
+          <i class="fas fa-user-circle host-avatar-icon"></i>
           <div class="host-details">
             <div class="host-badge" *ngIf="property.host.isSuperhost">
               <i class="fas fa-medal"></i> Superhost
@@ -226,20 +225,20 @@
 
       <div class="price-breakdown">
         <div class="price-item">
-          <span>${{ property.price }} x 5 nights</span>
-          <span>${{ property.price * 5 }}</span>
+          <span>${{ property.price }} x {{ nights }} nights</span>
+          <span>${{ property.price * nights }}</span>
         </div>
         <div class="price-item">
           <span>Cleaning fee</span>
-          <span>$50</span>
+          <span>${{ cleaningFee }}</span>
         </div>
         <div class="price-item">
           <span>Service fee</span>
-          <span>$30</span>
+          <span>${{ serviceFee }}</span>
         </div>
         <div class="price-total">
           <strong>Total</strong>
-          <strong>${{ property.price * 5 + 80 }}</strong>
+          <strong>${{ calculateTotalPrice() }}</strong>
         </div>
       </div>
     </div>

@@ -1080,6 +1080,32 @@ export class AdminService {
     );
   }
 
+  updateAmenity(id: number, amenityData: any): Observable<any> {
+    const payload = {
+      Id: id,
+      Name: amenityData.name,
+      Icon: amenityData.icon || 'default-icon',
+      Category: amenityData.category || 'Basic'
+    };
+    return this.http.put<any>(`${this.apiUrl}/Amenity/${id}`, payload).pipe(
+      tap(() => console.log('Amenity updated')),
+      catchError(err => {
+        console.error('updateAmenity error', err);
+        throw err;
+      })
+    );
+  }
+
+  deleteAmenity(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/Amenity/${id}`).pipe(
+      tap(() => console.log('Amenity deleted')),
+      catchError(err => {
+        console.error('deleteAmenity error', err);
+        throw err;
+      })
+    );
+  }
+
   createPropertyCategory(categoryData: any): Observable<any> {
     const payload = {
       Name: categoryData.name,
@@ -1089,6 +1115,29 @@ export class AdminService {
       tap(() => this.getPropertyCategories().subscribe()), // Optional: trigger refresh if cached
       catchError(err => {
         console.error('createPropertyCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  updatePropertyCategory(id: number, categoryData: any): Observable<any> {
+    const payload = {
+      Id: id,
+      Name: categoryData.name,
+      Description: categoryData.description || ''
+    };
+    return this.http.put<any>(`${this.apiUrl}/PropertyCategories/${id}`, payload).pipe(
+      catchError(err => {
+        console.error('updatePropertyCategory error', err);
+        throw err;
+      })
+    );
+  }
+
+  deletePropertyCategory(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/PropertyCategories/${id}`).pipe(
+      catchError(err => {
+        console.error('deletePropertyCategory error', err);
         throw err;
       })
     );
