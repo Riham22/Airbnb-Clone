@@ -30,7 +30,8 @@ export class MainLayoutComponent {
           !url.includes('/forget-password') &&
           !url.match(/\/property\/\d+/) &&
           !url.match(/\/experience\/\d+/) &&
-          !url.match(/\/service\/\d+/);
+          !url.match(/\/service\/\d+/) &&
+          !url.includes('/wishlists');
       }
     });
   }

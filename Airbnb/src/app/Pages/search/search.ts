@@ -76,17 +76,9 @@ export class SearchComponent implements OnInit {
   // Constants
   readonly minDate: Date = new Date(2024, 0, 1);
   readonly maxDate: Date = new Date(2070, 11, 31);
-  readonly locationOptions = [
-    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' },
-    { value: 'new_york', label: 'New York', icon: '🏙️', description: 'Big Apple adventures' },
-    { value: 'los_angeles', label: 'Los Angeles', icon: '🌴', description: 'Sunny California' },
-    { value: 'miami', label: 'Miami', icon: '🏖️', description: 'Beachfront escapes' },
-    { value: 'chicago', label: 'Chicago', icon: '🏙️', description: 'Windy City stays' },
-    { value: 'las_vegas', label: 'Las Vegas', icon: '🎰', description: 'Entertainment capital' },
-    { value: 'san_francisco', label: 'San Francisco', icon: '🌉', description: 'Golden Gate views' },
-    { value: 'seattle', label: 'Seattle', icon: '🌧️', description: 'Pacific Northwest' },
-    { value: 'austin', label: 'Austin', icon: '🎸', description: 'Live music capital' },
-    { value: 'boston', label: 'Boston', icon: '🎓', description: 'Historic charm' }
+  // Dynamic location/category options
+  locationOptions: any[] = [
+    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' }
   ];
 
   // Auth state
@@ -151,6 +143,43 @@ export class SearchComponent implements OnInit {
     this.checkMobileView();
     this.setupFilterObservables();
     this.setupAuthObservables();
+
+    // Subscribe to property categories for dynamic "Where" options
+    this.dataService.propertyCategories$.subscribe(categories => {
+      if (categories && categories.length > 0) {
+        this.updateLocationOptions(categories);
+      }
+    });
+  }
+
+  updateLocationOptions(categories: any[]) {
+    const baseOptions = [
+      { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' }
+    ];
+
+    const mappedCategories = categories.map(cat => ({
+      value: cat.name.toLowerCase(), // Use name as value for filtering
+      label: cat.name,
+      icon: this.getCategoryIcon(cat.name),
+      description: cat.description || 'Explore this category'
+    }));
+
+    this.locationOptions = [...baseOptions, ...mappedCategories];
+  }
+
+  getCategoryIcon(name: string): string {
+    const n = name.toLowerCase();
+    if (n.includes('beach')) return '🏖️';
+    if (n.includes('city') || n.includes('urban')) return '🏙️';
+    if (n.includes('country') || n.includes('farm')) return '🚜';
+    if (n.includes('lake')) return '🛶';
+    if (n.includes('pool')) return '🏊';
+    if (n.includes('camp')) return '⛺';
+    if (n.includes('cabin')) return '🛖';
+    if (n.includes('mansion')) return '🏰';
+    if (n.includes('island')) return '🏝️';
+    if (n.includes('trending')) return '🔥';
+    return '🏡';
   }
 
   // ========== FILTER METHODS ==========
@@ -250,7 +279,7 @@ export class SearchComponent implements OnInit {
   updateGuests(type: 'adults' | 'children' | 'infants' | 'pets', change: number): void {
     const newValue = this.guestSelection[type] + change;
     if (newValue >= 0) {
-      if (type === 'adults' && newValue === 0 && this.getTotalGuests() > 0) return;
+      // Allow 0 guests (reset)
       this.guestSelection[type] = newValue;
       this.currentFilters.guests = { ...this.guestSelection };
       const guestCounts: GuestCounts = {
@@ -660,6 +689,23 @@ export class SearchComponent implements OnInit {
   }
 
   private isListingInLocation(listing: any, location: string): boolean {
+    const loc = location.toLowerCase();
+
+    // Check property category first (Dynamic Categories)
+    if (listing.type === 'property' && listing.propertyCategory) {
+      if (listing.propertyCategory.toLowerCase() === loc) {
+        return true;
+      }
+    }
+
+    // Also check mapped propertyType
+    if (listing.type === 'property' && listing.propertyType) {
+      if (listing.propertyType.toLowerCase() === loc) {
+        return true;
+      }
+    }
+
+    // Fallback to location checks (Existing logic)
     const locationMap: { [key: string]: string[] } = {
       'new_york': ['New York', 'NY', 'New York City'],
       'los_angeles': ['Los Angeles', 'LA', 'California', 'Malibu'],

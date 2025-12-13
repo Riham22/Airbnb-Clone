@@ -12,6 +12,8 @@ export interface RentalProperty {
   images: string[];
   type: string;
   propertyType: string;
+  propertyCategoryId?: number;
+  propertyCategory?: string;
   maxGuests: number;
   bedrooms: number;
   beds: number;

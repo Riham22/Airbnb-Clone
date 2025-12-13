@@ -69,32 +69,23 @@ export class HomeComponent implements OnInit {
 
   // Handle search results from SearchComponent
   onFilteredPropertiesChange(properties: RentalProperty[]) {
-    console.log("Received from search:", properties.length);
-    // When search component filters, we trust it, BUT we must ensure we don't lose our type context
-    // Actually, SearchComponent also has the correct logic now, so we can use it.
-    // But if SearchComponent emits an array, we use it.
-    if (properties.length === 0) {
-      // If search returns 0, and we have active filters, keep it 0.
-      // Only reset if NO search query? 
-      // For now, let's just use what Search gave us, unless it's initial load quirk.
-      // If filters propertyType is set, verify we aren't showing 0 falsely?
-      // Let's rely on applyComplexFilters to coordinate.
-    }
-
-    // Instead of replacing blindly, let's update local 'this.filteredProperties' 
-    // BUT we also have 'applyComplexFilters' which runs on 'activeFiltersChange'.
-    // Typically SearchComponent emits 'filteredProperties' AND 'activeFilters'.
-    // We should prioritize 'activeFilters' to re-run strictly local logic if needed.
-    // But SearchComponent also does filtering.
-    // Let's use the properties passed, but verifying type match.
-
-    this.filteredProperties = properties;
+    // We ignore the list from search because Home component applies its own filters 
+    // based on 'activeFilters' received from 'onActiveFiltersChange'.
+    // This prevents race conditions where Search emits an unfiltered list or slightly different list.
   }
 
   // Handle active filters from SearchComponent
   onActiveFiltersChange(filters: any) {
-    console.log('Filters received:', filters);
+    // console.log('Filters received:', filters);
     this.activeFilters = filters;
+    this.applyComplexFilters();
+  }
+
+  // Handle filter clearing from PropertyList
+  onFiltersChange(filters: any) {
+    console.log('Clearing filters from PropertyList');
+    this.activeFilters = filters || {};
+    this.selectedCategory = 'All';
     this.applyComplexFilters();
   }
 
@@ -183,21 +174,9 @@ export class HomeComponent implements OnInit {
 
   // Wishlist handler
   onWishlistChange(event: any) {
-    console.log("Wish changed:", event);
-    const { propertyId, isWishlisted, itemType } = event;
-
-    // Check which type of item this is (property, experience, or service)
-    const type = itemType || 'Property'; // Default to Property if not specified
-
-    // Use the toggleWishlist method from Data service
-    this.dataService.toggleWishlist(type, propertyId).subscribe({
-      next: (response) => {
-        console.log('Wishlist updated:', response);
-      },
-      error: (err) => {
-        console.error('Failed to update wishlist:', err);
-      }
-    });
+    console.log("Wish changed event received in Home (handled by component):", event);
+    // No need to call API here, PropertyCard already does it.
+    // Also DataService subscription handles the list update.
   }
 
   getResultsTitle(): string {

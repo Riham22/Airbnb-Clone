@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { RentalProperty } from '../../Models/rental-property';
 import { Router } from '@angular/router';
 import { Data } from '../../Services/data';
@@ -11,7 +11,8 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './property-card.html',
-  styleUrl: './property-card.css'
+  styleUrl: './property-card.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PropertyCardComponent implements OnInit, OnChanges {
   @Input() property!: RentalProperty;
@@ -70,7 +71,8 @@ export class PropertyCardComponent implements OnInit, OnChanges {
   }
 
   toggleWishlist(event: MouseEvent) {
-    event.stopPropagation();
+    event.preventDefault(); // Prevent any default browser action
+    event.stopPropagation(); // Stop bubbling to card click
 
     console.log('❤️ Toggling wishlist for property:', this.property.id);
 
@@ -78,8 +80,16 @@ export class PropertyCardComponent implements OnInit, OnChanges {
     const newState = !this.isWishlisted;
     this.isWishlisted = newState;
 
+    // Determine item type
+    let itemType = 'Property';
+    if (this.property.type) {
+      const typeLower = this.property.type.toLowerCase();
+      if (typeLower === 'experience') itemType = 'Experience';
+      else if (typeLower === 'service') itemType = 'Service';
+    }
+
     // Call backend API
-    this.dataService.toggleWishlist('Property', this.property.id).subscribe({
+    this.dataService.toggleWishlist(itemType, this.property.id).subscribe({
       next: (response: any) => {
         // Update to actual state from server (in case it differs)
         this.isWishlisted = response.wishlisted;

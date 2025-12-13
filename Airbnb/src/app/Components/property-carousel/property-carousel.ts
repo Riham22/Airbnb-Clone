@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, ViewChild, AfterViewInit, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, ElementRef, ViewChild, AfterViewInit, Output, EventEmitter, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RentalProperty } from '../../Models/rental-property';
 import { PropertyCardComponent } from '../property-card/property-card';
@@ -8,7 +8,8 @@ import { PropertyCardComponent } from '../property-card/property-card';
   standalone: true,
   imports: [CommonModule, PropertyCardComponent],
   templateUrl: './property-carousel.html',
-  styleUrls: ['./property-carousel.css']   // ← كانت styleUrl (خطأ) — صلّحتها
+  styleUrls: ['./property-carousel.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PropertyCarousel implements OnChanges {
   @Input({ required: true }) properties: RentalProperty[] = [];

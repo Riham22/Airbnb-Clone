@@ -12,36 +12,19 @@
           [class.active]="selectedPropertyType === type.value" (click)="selectPropertyType(type.value)">
           <span class="type-icon" [ngSwitch]="type.value">
             <!-- All -->
-            <svg *ngSwitchCase="'all'" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-              role="presentation" focusable="false"
-              style="display: block; height: 16px; width: 16px; fill: currentcolor;">
-              <path
-                d="M16 1a15 15 0 1 1 0 30 15 15 0 0 1 0-30zm0 2a13 13 0 1 0 0 26 13 13 0 0 0 0-26zm0 13a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm12 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z">
-              </path>
-            </svg>
+            <img *ngSwitchCase="'all'" src="/assets/default-listing.jpg" alt="All"
+              style="display: block; height: 60px; width: 60px; object-fit: cover; border-radius: 50%;">
             <!-- Properties (Home) -->
-            <svg *ngSwitchCase="'property'" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-              role="presentation" focusable="false"
-              style="display: block; height: 16px; width: 16px; fill: currentcolor;">
-              <path d="M16 1L1 16h3v15h9V20h6v11h9V16h3L16 1zm0 2.83L25.17 13H25v16h-5V18h-8v11H7V13h-.17L16 3.83z">
-              </path>
-            </svg>
+            <img *ngSwitchCase="'property'" src="/assets/icon-properties.png" alt="Properties"
+              style="display: block; height: 60px; width: 60px; object-fit: contain;">
+
             <!-- Experiences (Ticket/Activity) -->
-            <svg *ngSwitchCase="'experience'" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-              role="presentation" focusable="false"
-              style="display: block; height: 16px; width: 16px; fill: currentcolor;">
-              <path
-                d="M26 4.5A2.5 2.5 0 0 0 23.5 7v1H22V6.5a2.5 2.5 0 0 0-5 0V8h-2V6.5a2.5 2.5 0 0 0-5 0V8H8.5A2.5 2.5 0 0 0 6 10.5V26a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V10.5A2.5 2.5 0 0 0 23.5 8H22a2.5 2.5 0 0 0 1.5-2.25V4.5zM12 6.5a.5.5 0 0 1 1 0V8h-1V6.5zm5 0a.5.5 0 0 1 1 0V8h-1V6.5zm5 .5V8h-1V7a.5.5 0 0 1 1 0zM24 26a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V10.5a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 .5.5V26z">
-              </path>
-            </svg>
+            <img *ngSwitchCase="'experience'" src="/assets/icon-experiences.png" alt="Experiences"
+              style="display: block; height: 60px; width: 60px; object-fit: contain;">
+
             <!-- Services (Tools) -->
-            <svg *ngSwitchCase="'service'" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-              role="presentation" focusable="false"
-              style="display: block; height: 16px; width: 16px; fill: currentcolor;">
-              <path
-                d="M23.5 13.5l-4-4L22 7l-2-2-2.5 2.5-4-4L12 5l2.5 2.5L10 12l-7 7 5 5 7-7 4.5 4.5 1.5-1.5-4-4 2.5-2.5 2-2 1.5 2.5zM8.5 22.5l-2-2 7-7 2 2-7 7z">
-              </path>
-            </svg>
+            <img *ngSwitchCase="'service'" src="/assets/icon-services.png" alt="Services"
+              style="display: block; height: 60px; width: 60px; object-fit: contain;">
           </span>
           {{ type.label }}
         </div>
@@ -335,58 +318,17 @@
 
   <div class="guests-content">
     <!-- Adults -->
+    <!-- Single Guest Counter -->
     <div class="guest-type">
       <div class="guest-info">
-        <h3>Adults</h3>
-        <p>Ages 13 or above</p>
+        <h3>Guests</h3>
+        <p>Add guests</p>
       </div>
       <div class="guest-counter">
         <button class="counter-btn" [class.disabled]="guestSelection.adults === 0"
           (click)="updateGuests('adults', -1)">−</button>
         <span class="counter-value">{{ guestSelection.adults }}</span>
         <button class="counter-btn" (click)="updateGuests('adults', 1)">+</button>
-      </div>
-    </div>
-
-    <!-- Children -->
-    <div class="guest-type">
-      <div class="guest-info">
-        <h3>Children</h3>
-        <p>Ages 2–12</p>
-      </div>
-      <div class="guest-counter">
-        <button class="counter-btn" [class.disabled]="guestSelection.children === 0"
-          (click)="updateGuests('children', -1)">−</button>
-        <span class="counter-value">{{ guestSelection.children }}</span>
-        <button class="counter-btn" (click)="updateGuests('children', 1)">+</button>
-      </div>
-    </div>
-
-    <!-- Infants -->
-    <div class="guest-type">
-      <div class="guest-info">
-        <h3>Infants</h3>
-        <p>Under 2</p>
-      </div>
-      <div class="guest-counter">
-        <button class="counter-btn" [class.disabled]="guestSelection.infants === 0"
-          (click)="updateGuests('infants', -1)">−</button>
-        <span class="counter-value">{{ guestSelection.infants }}</span>
-        <button class="counter-btn" (click)="updateGuests('infants', 1)">+</button>
-      </div>
-    </div>
-
-    <!-- Pets -->
-    <div class="guest-type">
-      <div class="guest-info">
-        <h3>Pets</h3>
-        <p>Bringing a service animal?</p>
-      </div>
-      <div class="guest-counter">
-        <button class="counter-btn" [class.disabled]="guestSelection.pets === 0"
-          (click)="updateGuests('pets', -1)">−</button>
-        <span class="counter-value">{{ guestSelection.pets }}</span>
-        <button class="counter-btn" (click)="updateGuests('pets', 1)">+</button>
       </div>
     </div>
 

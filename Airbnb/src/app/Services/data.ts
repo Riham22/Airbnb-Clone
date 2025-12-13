@@ -27,6 +27,9 @@ export class Data {
   private servicesSubject = new BehaviorSubject<Service[]>([]);
   services$ = this.servicesSubject.asObservable();
 
+  private propertyCategoriesSubject = new BehaviorSubject<any[]>([]);
+  propertyCategories$ = this.propertyCategoriesSubject.asObservable();
+
   constructor(private http: HttpClient) {
     console.log('🚀 DataService initialized');
 
@@ -37,7 +40,10 @@ export class Data {
     setTimeout(() => {
       this.loadProperties();
       this.loadExperiences();
+      this.loadProperties();
+      this.loadExperiences();
       this.loadServices();
+      this.loadPropertyCategories();
     }, 100);
   }
 
@@ -95,6 +101,10 @@ export class Data {
           this.propertiesSubject.next([]);
           return;
         }
+
+        // Filter out non-published properties
+        data = data.filter(p => p.isPublished === true || p.IsPublished === true);
+
 
         const mappedProperties: RentalProperty[] = data.map(p => {
           console.log('=== Mapping property ===');
@@ -159,6 +169,8 @@ export class Data {
               : [],
             type: 'property',
             propertyType: categoryForUI,
+            propertyCategoryId: p.propertyCategoryId || p.PropertyCategoryId,
+            propertyCategory: categoryName,
             maxGuests: maxGuests || 2,
             bedrooms: bedrooms || 1,
             beds: beds || 1,
@@ -269,6 +281,15 @@ export class Data {
           return;
         }
 
+        // Filter out non-published experiences (Status 3 = Published)
+        data = data.filter(e => {
+          const s = e.status || e.Status;
+          // Accept 3 or 'Published' or 'published' or 'Active' (just in case)
+          // Based on AdminService it is 3 or 'Published'
+          return s === 3 || s === 'Published';
+        });
+
+
         const mappedExperiences: Experience[] = data.map(exp => {
           console.log('🔍 Raw Experience Data:', exp.id, exp.name || exp.title, exp.ExpActivity, exp.expActivity);
 
@@ -356,6 +377,10 @@ export class Data {
           this.servicesSubject.next([]);
           return;
         }
+
+        // Filter out non-published services
+        data = data.filter(s => s.isPublished === true || s.IsPublished === true);
+
 
         try {
           const mappedServices: Service[] = data.map(svc => {
@@ -569,6 +594,32 @@ export class Data {
     }
 
     return properties;
+  }
+
+  loadPropertyCategories() {
+    this.http.get<any[]>('https://localhost:7020/api/PropertyCategories').subscribe({
+      next: (categories) => {
+        console.log('✅ Loaded property categories:', categories);
+        this.propertyCategoriesSubject.next(categories);
+      },
+      error: (err) => {
+        console.warn('⚠️ Failed to load property categories, using fallback', err);
+        // Fallback categories matching AdminService
+        const categories = [
+          { id: 1, name: 'Beachfront', description: 'Properties right on the beach' },
+          { id: 2, name: 'City', description: 'Urban apartments and lofts' },
+          { id: 3, name: 'Countryside', description: 'Peaceful countryside retreats' },
+          { id: 4, name: 'Lakefront', description: 'Properties by the lake' },
+          { id: 5, name: 'Mansions', description: 'Luxury mansions' },
+          { id: 6, name: 'Castles', description: 'Historic castles' },
+          { id: 7, name: 'Islands', description: 'Private islands' },
+          { id: 8, name: 'Camping', description: 'Camping and glamping spots' },
+          { id: 9, name: 'Trending', description: 'Highly rated and popular properties' },
+          { id: 10, name: 'Cabins', description: 'Cozy cabins in nature' }
+        ];
+        this.propertyCategoriesSubject.next(categories);
+      }
+    });
   }
 
   toggleWishlist(itemType: string, itemId: number) {

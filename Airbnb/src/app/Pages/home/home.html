@@ -1,10 +1,9 @@
 <!-- home.html -->
 <div class="home-container">
   <!-- Search Bar with Filter Button -->
-  <app-search-bar
-    (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
-    (activeFiltersChange)="onActiveFiltersChange($event)"
-    (openFilters)="onOpenFilters()"> <!-- Add this event binding -->
+  <app-search-bar (filteredPropertiesChange)="onFilteredPropertiesChange($event)"
+    (activeFiltersChange)="onActiveFiltersChange($event)" (openFilters)="onOpenFilters()">
+    <!-- Add this event binding -->
   </app-search-bar>
 
   <!-- Main Content -->
@@ -16,18 +15,13 @@
     </div>
 
     <!-- Property List -->
-    <app-property-list
-      [properties]="filteredProperties"
-      [filters]="activeFilters"
-      (propertyClick)="onPropertyClick($event)"
-      (wishlistChange)="onWishlistChange($event)">
+    <app-property-list [properties]="filteredProperties" [filters]="activeFilters"
+      (propertyClick)="onPropertyClick($event)" (wishlistChange)="onWishlistChange($event)"
+      (filtersChange)="onFiltersChange($event)"> <!-- Handle clear filters -->
     </app-property-list>
   </main>
 
   <!-- Filter Modal -->
-  <app-filter-modal
-    [isOpen]="isFilterModalOpen"
-    (close)="closeFilters()"
-    (applyFilters)="onApplyFilters($event)">
+  <app-filter-modal [isOpen]="isFilterModalOpen" (close)="closeFilters()" (applyFilters)="onApplyFilters($event)">
   </app-filter-modal>
 </div>

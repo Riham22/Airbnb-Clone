@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PropertyCarousel } from '../property-carousel/property-carousel';
 import { Data } from '../../Services/data';
@@ -8,7 +8,8 @@ import { Data } from '../../Services/data';
   standalone: true,
   imports: [CommonModule, PropertyCarousel],
   templateUrl: './property-list.html',
-  styleUrls: ['./property-list.css']
+  styleUrls: ['./property-list.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PropertyList implements OnInit, OnChanges {
   @Input() properties: any[] = [];
