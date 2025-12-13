@@ -75,9 +75,23 @@ export class AddServiceComponent implements OnInit {
         console.log('Component Submitting Service Payload:', servicePayload);
 
         this.adminService.createService(servicePayload, this.selectedFiles).subscribe({
-            next: () => {
-                alert('Service created successfully');
+            next: (res: any) => {
                 this.isLoading = false;
+
+                // Case 1: Uploads attempted but failed (partial/total logic failure)
+                if (res.uploads && res.uploads.uploaded === 0 && this.selectedFiles.length > 0) {
+                    const failures = res.uploads.failedFiles ? res.uploads.failedFiles.join('\n') : 'Unknown error';
+                    alert(`Service created, BUT images failed to upload:\n${failures}`);
+                }
+                // Case 2: Upload request failed (HTTP error, e.g. 500, 404)
+                else if (res.imageError) {
+                    console.error('Image Upload Error:', res.imageError);
+                    alert(`Service created, BUT image upload crashed: ${res.imageError.statusText || res.imageError.message}`);
+                }
+                // Case 3: Success
+                else {
+                    alert('Service and images created successfully!');
+                }
                 this.router.navigate(['/admin']);
             },
             error: (err) => {

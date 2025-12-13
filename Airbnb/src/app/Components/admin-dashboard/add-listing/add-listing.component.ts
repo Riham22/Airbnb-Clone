@@ -24,11 +24,13 @@ export class AddListingComponent implements OnInit {
         propertyTypeId: null,
         propertyCategoryId: null,
         imageUrl: '',
-        currency: 'USD'
+        currency: 'USD',
+        amenityIds: [] as number[]
     };
 
     propertyTypes: any[] = [];
     propertyCategories: any[] = [];
+    amenityList: any[] = [];
     selectedFiles: File[] = [];
     isLoading = false;
 
@@ -44,11 +46,25 @@ export class AddListingComponent implements OnInit {
     loadMetadata() {
         this.adminService.getPropertyTypes().subscribe(types => this.propertyTypes = types);
         this.adminService.getPropertyCategories().subscribe(cats => this.propertyCategories = cats);
+        this.adminService.getAmenities().subscribe(amenities => this.amenityList = amenities);
     }
 
     onFileSelected(event: any) {
         if (event.target.files && event.target.files.length > 0) {
             this.selectedFiles = Array.from(event.target.files);
+        }
+    }
+
+    toggleAmenitySelection(amenityId: number, event: any): void {
+        const currentIds = this.newListing.amenityIds as number[] || [];
+        const checked = event.target.checked;
+
+        if (checked) {
+            if (!currentIds.includes(amenityId)) {
+                this.newListing.amenityIds = [...currentIds, amenityId];
+            }
+        } else {
+            this.newListing.amenityIds = currentIds.filter(id => id !== amenityId);
         }
     }
 
@@ -89,7 +105,7 @@ export class AddListingComponent implements OnInit {
             propertyTypeId: Number(this.newListing.propertyTypeId),
             propertyCategoryId: Number(this.newListing.propertyCategoryId),
             subCategoryId: null,
-            amenityIds: [],
+            amenityIds: this.newListing.amenityIds || [],
             imageUrl: '',
             isPublished: false
         };

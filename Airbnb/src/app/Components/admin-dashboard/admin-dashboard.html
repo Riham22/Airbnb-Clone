@@ -35,9 +35,7 @@
     <button [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')" class="tab-button">
       🏄 Experiences
     </button>
-    <button [class.active]="activeTab === 'categories'" (click)="setActiveTab('categories')" class="tab-button">
-      📂 Categories
-    </button>
+
     <!-- <button [class.active]="activeTab === 'analytics'" (click)="setActiveTab('analytics')" class="tab-button">
       📈 Analytics
     </button> -->
@@ -141,7 +139,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of filteredUsers">
+          <tr *ngFor="let user of getPaginatedUsers()">
             <td class="user-cell">
               <div class="user-avatar">
                 <img alt="" [src]="user.avatar || '/assets/default-avatar.png'" [alt]="user.firstName">
@@ -188,6 +186,15 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Users Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('users') > 1">
+        <button class="btn-secondary" [disabled]="currentPageUsers === 1"
+          (click)="changePage('users', currentPageUsers - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageUsers}} of {{getTotalPages('users')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageUsers === getTotalPages('users')"
+          (click)="changePage('users', currentPageUsers + 1)">Next</button>
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -205,6 +212,7 @@
       <div class="table-actions">
         <button class="btn-primary" [routerLink]="['/admin/add-listing']">+ Add Listing</button>
         <button class="btn-primary" (click)="openAddCategoryModal('property')">+ Property Category</button>
+        <button class="btn-primary" (click)="openAddAmenityModal()">+ Amenity</button>
         <input type="text" placeholder="Search listings..." class="search-input" [(ngModel)]="listingSearchTerm"
           (input)="filterListings()">
         <select title="k" class="filter-select" [(ngModel)]="listingStatusFilter" (change)="filterListings()">
@@ -230,7 +238,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let listing of filteredListings">
+          <tr *ngFor="let listing of getPaginatedListings()">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
@@ -270,6 +278,15 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Listings Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('listings') > 1">
+        <button class="btn-secondary" [disabled]="currentPageListings === 1"
+          (click)="changePage('listings', currentPageListings - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageListings}} of {{getTotalPages('listings')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageListings === getTotalPages('listings')"
+          (click)="changePage('listings', currentPageListings + 1)">Next</button>
+      </div>
     </div>
 
     <div *ngIf="listings.length === 0" class="empty-state">
@@ -284,6 +301,7 @@
       <h2>Service Management</h2>
       <div class="table-actions">
         <button class="btn-primary" [routerLink]="['/admin/add-service']">+ Add Service</button>
+        <button class="btn-primary" (click)="openAddCategoryModal('service')">+ Service Category</button>
         <input type="text" placeholder="Search services..." class="search-input" [(ngModel)]="serviceSearchTerm"
           (input)="filterServices()">
       </div>
@@ -303,7 +321,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let service of filteredServices">
+          <tr *ngFor="let service of getPaginatedServices()">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="service.imageUrl || service.images?.[0] || '/assets/default-service.jpg'" alt="">
@@ -343,6 +361,15 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Services Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('services') > 1">
+        <button class="btn-secondary" [disabled]="currentPageServices === 1"
+          (click)="changePage('services', currentPageServices - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageServices}} of {{getTotalPages('services')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageServices === getTotalPages('services')"
+          (click)="changePage('services', currentPageServices + 1)">Next</button>
+      </div>
     </div>
 
     <div *ngIf="services.length === 0" class="empty-state">
@@ -357,6 +384,8 @@
       <h2>Experiences Management</h2>
       <div class="table-actions">
         <button class="btn-primary" [routerLink]="['/admin/add-experience']">+ Add Experience</button>
+        <button class="btn-primary" (click)="openAddCategoryModal('experience')">+ Experience Category</button>
+        <button class="btn-primary" (click)="openAddSubcategoryModal()">+ Subcategory</button>
         <input type="text" placeholder="Search experiences..." class="search-input" [(ngModel)]="experienceSearchTerm"
           (input)="filterExperiences()">
       </div>
@@ -376,7 +405,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let experience of filteredExperiences">
+          <tr *ngFor="let experience of getPaginatedExperiences()">
             <td class="listing-cell">
               <div class="listing-image">
                 <img [src]="experience.imageUrl || experience.images?.[0] || '/assets/default-experience.jpg'" alt="">
@@ -416,6 +445,15 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- Experiences Pagination -->
+      <div class="pagination-controls" *ngIf="getTotalPages('experiences') > 1">
+        <button class="btn-secondary" [disabled]="currentPageExperiences === 1"
+          (click)="changePage('experiences', currentPageExperiences - 1)">Previous</button>
+        <span class="pagination-info">Page {{currentPageExperiences}} of {{getTotalPages('experiences')}}</span>
+        <button class="btn-secondary" [disabled]="currentPageExperiences === getTotalPages('experiences')"
+          (click)="changePage('experiences', currentPageExperiences + 1)">Next</button>
+      </div>
     </div>
 
     <div *ngIf="experiences.length === 0" class="empty-state">
@@ -673,10 +711,27 @@
           <label>Bathrooms</label>
           <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms" required>
         </div>
+
+        <div class="form-group">
+          <label>Amenities</label>
+          <div
+            style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+            <div *ngFor="let amenity of amenityList" style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" [value]="amenity.id" [checked]="newListing.amenityIds?.includes(amenity.id)"
+                (change)="toggleAmenitySelection(amenity.id, $event)">
+              <span>{{ amenity.name }}</span>
+            </div>
+          </div>
+          <p *ngIf="amenityList.length === 0" style="font-size: 0.9em; color: #666; font-style: italic;">
+            No amenities found. <a href="javascript:void(0)" (click)="openAddAmenityModal()">Create one?</a>
+          </p>
+        </div>
         <div class="form-group">
           <label>Images</label>
           <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
-          <small class="text-muted">Select one or more images</small>
+          <small class="text-muted" *ngIf="selectedFiles.length === 0">Select one or more images</small>
+          <small class="text-success" *ngIf="selectedFiles.length > 0">{{ selectedFiles.length }} images
+            selected</small>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddListingModal()">Cancel</button>
@@ -722,7 +777,9 @@
         <div class="form-group">
           <label>Images</label>
           <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
-          <small class="text-muted">Select one or more images</small>
+          <small class="text-muted" *ngIf="selectedFiles.length === 0">Select one or more images</small>
+          <small class="text-success" *ngIf="selectedFiles.length > 0">{{ selectedFiles.length }} images
+            selected</small>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-secondary" (click)="closeAddServiceModal()">Cancel</button>
@@ -821,6 +878,9 @@
         <div class="form-group">
           <label>Images (optional)</label>
           <input type="file" (change)="onFileSelected($event)" multiple accept="image/*" class="form-control">
+          <small class="text-muted" *ngIf="selectedFiles.length === 0">Select one or more images</small>
+          <small class="text-success" *ngIf="selectedFiles.length > 0">{{ selectedFiles.length }} images
+            selected</small>
         </div>
 
         <div class="modal-actions">
@@ -890,4 +950,43 @@
     </div>
   </div>
 
+  <div *ngIf="showAmenityModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add Amenity</h2>
+        <button class="close-btn" (click)="closeAmenityModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="saveAmenity()">
+          <div class="form-group">
+            <label>Amenity Name</label>
+            <input type="text" [(ngModel)]="newAmenity.name" name="name" required class="form-control"
+              placeholder="e.g. WiFi, Pool">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select [(ngModel)]="newAmenity.category" name="category" class="form-control">
+              <option value="Basic">Basic</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Features">Features</option>
+              <option value="Internet">Internet</option>
+              <option value="Location">Location</option>
+              <option value="Outdoors">Outdoors</option>
+              <option value="Safety">Safety</option>
+              <option value="Services">Services</option>
+              <option value="Utilities">Utilities</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Icon Class (Optional)</label>
+            <input type="text" [(ngModel)]="newAmenity.icon" name="icon" class="form-control" placeholder="bi bi-wifi">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeAmenityModal()">Cancel</button>
+            <button type="submit" class="btn-primary">Save Amenity</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>

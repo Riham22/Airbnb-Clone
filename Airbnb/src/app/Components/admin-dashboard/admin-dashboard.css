@@ -1374,3 +1374,33 @@
 .action-buttons .btn-danger:hover {
   box-shadow: 0 2px 8px rgba(255, 94, 98, 0.4);
 }
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 0;
+  margin-top: 16px;
+  border-top: 1px solid #ebebeb;
+}
+
+.pagination-controls .btn-secondary {
+  min-width: 100px;
+  justify-content: center;
+}
+
+.pagination-controls .pagination-info {
+  font-size: 14px;
+  font-weight: 600;
+  color: #717171;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f7f7f7;
+  color: #dddddd;
+  border-color: #ebebeb;
+}
+

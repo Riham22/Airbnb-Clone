@@ -499,12 +499,69 @@ export class AdminService {
           this.listingsSubject.next(adminListings);
 
           // 3. Process Services
-          const rawServices = Array.isArray(services) ? services : (services as any)?.data || [];
-          this.servicesSubject.next(rawServices); // Keep raw for now or map if needed
+          const rawServicesData = Array.isArray(services) ? services : (services as any)?.data || [];
+          const mappedServices = rawServicesData.map((s: any) => {
+            const provider = s.provider || s.Provider;
+            const category = s.category || s.Category;
+            const city = s.city || s.City;
+            const country = s.country || s.Country;
+            const images = s.images || s.Images;
+
+            return {
+              id: (s.id || s.Id)?.toString() || '',
+              name: s.title || s.Title || s.name || s.Name || 'Unnamed Service',
+              description: s.description || s.Description,
+              price: s.price || s.Price,
+              currency: s.currency || s.Currency,
+              location: city && country ? `${city}, ${country}` : (city || country || 'Unknown'),
+              provider: {
+                name: provider ? `${provider.firstName || provider.FirstName} ${provider.lastName || provider.LastName}` : (s.providerName || s.ProviderName || 'Unknown')
+              },
+              category: category?.name || category?.Name || s.categoryName || s.CategoryName || 'Uncategorized',
+              rating: s.averageRating || s.AverageRating || 0,
+              reviewCount: s.reviews?.length || s.Reviews?.length || 0,
+              status: (s.isPublished || s.IsPublished) ? 'active' : 'pending',
+              imageUrl: images?.[0]?.imageUrl || images?.[0]?.ImageUrl || s.imageUrl || s.ImageUrl || 'assets/default-service.jpg',
+              images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || [],
+              serviceCategoryId: s.serviceCategoryId || s.ServiceCategoryId,
+              duration: s.duration || s.Duration
+            };
+          });
+          this.servicesSubject.next(mappedServices);
 
           // 4. Process Experiences
-          const rawExperiences = Array.isArray(experiences) ? experiences : (experiences as any)?.data || [];
-          this.experiencesSubject.next(rawExperiences);
+          const rawExperiencesData = Array.isArray(experiences) ? experiences : (experiences as any)?.data || [];
+          const mappedExperiences = rawExperiencesData.map((e: any) => {
+            const host = e.host || e.Host;
+            const category = e.category || e.Category || e.expCatogray || e.ExpCatogray;
+            const city = e.city || e.City;
+            const country = e.country || e.Country;
+            const images = e.images || e.Images;
+            const rawStatus = e.status || e.Status;
+            const isActive = rawStatus === 3 || rawStatus === 'Published';
+
+            return {
+              id: (e.id || e.Id)?.toString() || '',
+              name: e.title || e.Title || e.name || e.Name || e.expTitle || e.ExpTitle || 'Unnamed Experience',
+              description: e.description || e.Description || e.expDescribe || e.ExpDescribe,
+              location: e.location || e.Location || (city && country ? `${city}, ${country}` : 'Unknown'),
+              price: e.price || e.Price || e.guestPrice || e.GuestPrice,
+              host: {
+                name: host ? `${host.firstName || host.FirstName} ${host.lastName || host.LastName}` : (e.hostName || e.HostName || 'Unknown Host')
+              },
+              category: category?.name || category?.Name || 'Uncategorized',
+              rating: e.averageRating || e.AverageRating || 0,
+              reviewCount: e.reviews?.length || e.Reviews?.length || 0,
+              status: isActive ? 'active' : 'pending',
+              imageUrl: images?.[0]?.imageUrl || images?.[0]?.ImageUrl || e.imageUrl || e.ImageUrl || 'assets/default-experience.jpg',
+              images: images?.map((i: any) => i.imageUrl || i.ImageUrl) || [],
+              expCatograyId: e.expCatograyId || e.ExpCatograyId,
+              expSubCatograyId: e.expSubCatograyId || e.ExpSubCatograyId,
+              maxParticipants: e.maximumGuest || e.MaximumGuest || 10,
+              expActivities: e.expActivities || e.ExpActivities || []
+            };
+          });
+          this.experiencesSubject.next(mappedExperiences);
 
           // 5. Calculate Stats
           const rawBookings = Array.isArray(bookings) ? bookings : (bookings as any)?.data || [];
@@ -520,12 +577,12 @@ export class AdminService {
             monthlyGrowth: 0,
             weeklyRevenue: 0,
             activeBookings: rawBookings.length,
-            totalServices: rawServices.length,
-            totalExperiences: rawExperiences.length
+            totalServices: mappedServices.length,
+            totalExperiences: mappedExperiences.length
           };
           this.statsSubject.next(stats);
 
-          return { stats, users: adminUsers, listings: adminListings, services: rawServices, experiences: rawExperiences };
+          return { stats, users: adminUsers, listings: adminListings, services: mappedServices, experiences: mappedExperiences };
         }),
         finalize(() => this.decreaseLoading())
       );
@@ -999,9 +1056,42 @@ export class AdminService {
     );
   }
 
+  getAmenities(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/Amenity`).pipe(
+      catchError(err => {
+        console.warn('Amenity endpoint failed', err);
+        return of([]);
+      })
+    );
+  }
+
+  createAmenity(amenityData: any): Observable<any> {
+    const payload = {
+      Name: amenityData.name,
+      Icon: amenityData.icon || 'default-icon',
+      Category: amenityData.category || 'Basic'
+    };
+    return this.http.post<any>(`${this.apiUrl}/Amenity`, payload).pipe(
+      tap(() => console.log('Amenity created')),
+      catchError(err => {
+        console.error('createAmenity error', err);
+        throw err;
+      })
+    );
+  }
+
   createPropertyCategory(categoryData: any): Observable<any> {
-    // Mock implementation maintained for now
-    return of({ id: Math.floor(Math.random() * 1000) + 11, ...categoryData });
+    const payload = {
+      Name: categoryData.name,
+      Description: categoryData.description || ''
+    };
+    return this.http.post<any>(`${this.apiUrl}/PropertyCategories`, payload).pipe(
+      tap(() => this.getPropertyCategories().subscribe()), // Optional: trigger refresh if cached
+      catchError(err => {
+        console.error('createPropertyCategory error', err);
+        throw err;
+      })
+    );
   }
 
   // ============================================

@@ -328,33 +328,7 @@ export class Data {
           };
         });
 
-        // INJECT DEBUG DUMMY EXPERIENCE (Updated)
-        mappedExperiences.push({
-          id: 88888,
-          type: 'experience',
-          name: 'DEBUG EXPERIENCE',
-          location: 'Debug City, Testland',
-          price: 150,
-          rating: 4.8,
-          reviewCount: 5,
-          imageUrl: 'assets/default-experience.jpg',
-          images: [],
-          category: 'food-drink',
-          duration: '2 hours',
-          maxParticipants: 10,
-          maxGuests: 10,
-          host: { name: 'Debug Host', joinedDate: '2024', isSuperhost: false, avatar: '' },
-          description: 'This is a test experience.',
-          highlights: [],
-          includes: [],
-          requirements: [],
-          amenities: [],
-          meetingPoint: 'Central Station',
-          languages: ['English'],
-          reviews: [],
-          isWishlisted: false,
-          activities: []
-        });
+        // Debug experience removed
 
         console.log('✅ Mapped experiences:', mappedExperiences.length);
         this.experiencesSubject.next(mappedExperiences);
@@ -425,28 +399,7 @@ export class Data {
             };
           });
 
-          // INJECT DEBUG DUMMY SERVICE
-          mappedServices.push({
-            id: 99999,
-            type: 'service',
-            name: 'DEBUG SERVICE',
-            location: 'Debug City, Testland',
-            price: 100,
-            rating: 5,
-            reviewCount: 10,
-            imageUrl: 'assets/default-listing.jpg',
-            images: [],
-            category: 'cleaning',
-            duration: '1 hour',
-            maxGuests: 4,
-            host: { name: 'Debug Host', joinedDate: '2024', isSuperhost: true, avatar: '' },
-            description: 'This is a test service to verify UI rendering.',
-            highlights: [],
-            includes: [],
-            requirements: [],
-            reviews: [],
-            isWishlisted: false
-          });
+          // Debug service removed
 
           console.log('✅ Mapped services:', mappedServices.length);
           this.servicesSubject.next(mappedServices);

@@ -26,7 +26,11 @@ export class MainLayoutComponent {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const url = event.urlAfterRedirects;
-        this.showSearch = !url.includes('/auth') && !url.includes('/forget-password');
+        this.showSearch = !url.includes('/auth') &&
+          !url.includes('/forget-password') &&
+          !url.match(/\/property\/\d+/) &&
+          !url.match(/\/experience\/\d+/) &&
+          !url.match(/\/service\/\d+/);
       }
     });
   }

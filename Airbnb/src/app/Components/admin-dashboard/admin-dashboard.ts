@@ -110,19 +110,72 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   selectedFile: File | null = null;
 
+  // Amenity Modal States
+  showAmenityModal = false;
+  newAmenity: any = { name: '', icon: '', category: 'Basic' };
+  amenityList: any[] = []; // Stores available amenities
+
+  // Pagination State
+  pageSize = 7;
+  currentPageUsers = 1;
+  currentPageListings = 1;
+  currentPageServices = 1;
+  currentPageExperiences = 1;
+
   private subscriptions: Subscription = new Subscription();
-
-
 
   constructor(
     private adminService: AdminService,
     private cdr: ChangeDetectorRef
   ) { }
 
+  // Pagination Helpers
+  getPaginatedUsers(): AdminUser[] {
+    const startIndex = (this.currentPageUsers - 1) * this.pageSize;
+    return this.filteredUsers.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedListings(): AdminListing[] {
+    const startIndex = (this.currentPageListings - 1) * this.pageSize;
+    return this.filteredListings.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedServices(): any[] {
+    const startIndex = (this.currentPageServices - 1) * this.pageSize;
+    return this.filteredServices.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  getPaginatedExperiences(): any[] {
+    const startIndex = (this.currentPageExperiences - 1) * this.pageSize;
+    return this.filteredExperiences.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  changePage(type: 'users' | 'listings' | 'services' | 'experiences', page: number): void {
+    if (type === 'users') this.currentPageUsers = page;
+    if (type === 'listings') this.currentPageListings = page;
+    if (type === 'services') this.currentPageServices = page;
+    if (type === 'experiences') this.currentPageExperiences = page;
+  }
+
+  getTotalPages(type: 'users' | 'listings' | 'services' | 'experiences'): number {
+    let totalItems = 0;
+    if (type === 'users') totalItems = this.filteredUsers.length;
+    if (type === 'listings') totalItems = this.filteredListings.length;
+    if (type === 'services') totalItems = this.filteredServices.length;
+    if (type === 'experiences') totalItems = this.filteredExperiences.length;
+    return Math.ceil(totalItems / this.pageSize);
+  }
+
+  getPageArray(type: 'users' | 'listings' | 'services' | 'experiences'): number[] {
+    const totalPages = this.getTotalPages(type);
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
   ngOnInit() {
     console.log('🏁 Admin Dashboard Initialized');
     this.loadDashboardData();
     this.loadCategories();
+    this.loadAmenities();
     this.loadCategoryData(); // Load category management data
 
     // Subscribe to loading state
@@ -387,7 +440,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.showAddListingModal = true;
     this.newListing = {
       name: '', description: '', price: 0, location: '', maxGuests: 2,
-      bedrooms: 1, beds: 1, bathrooms: 1, propertyTypeId: null, propertyCategoryId: null
+      bedrooms: 1, beds: 1, bathrooms: 1, propertyTypeId: null, propertyCategoryId: null,
+      amenityIds: []
     };
     this.selectedFiles = [];
   }
@@ -407,7 +461,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       bathrooms: listing.bathrooms,
       propertyTypeId: listing.propertyTypeId,
       propertyCategoryId: listing.propertyCategoryId,
-      imageUrl: listing.imageUrl
+      imageUrl: listing.imageUrl,
+      amenityIds: listing.amenities ? listing.amenities.map((a: any) => a.id) : []
     };
     this.selectedFiles = [];
   }
@@ -833,12 +888,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   approveListing(listingId: string): void {
     this.subscriptions.add(
       this.adminService.updateListingStatus(listingId, 'active').subscribe({
-        next: (updatedListing) => {
-          console.log('Listing approved:', updatedListing);
-          this.listings = this.listings.map(listing =>
-            listing.id === listingId ? updatedListing : listing
-          );
-          this.filterListings();
+        next: () => {
+          // console.log('Listing approved');
+          alert('Listing approved successfully');
+          this.loadDashboardData();
         },
         error: (error) => {
           console.error('Error approving listing:', error);
@@ -851,12 +904,10 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   suspendListing(listingId: string): void {
     this.subscriptions.add(
       this.adminService.updateListingStatus(listingId, 'suspended').subscribe({
-        next: (updatedListing) => {
-          console.log('Listing suspended:', updatedListing);
-          this.listings = this.listings.map(listing =>
-            listing.id === listingId ? updatedListing : listing
-          );
-          this.filterListings();
+        next: () => {
+          // console.log('Listing suspended');
+          alert('Listing suspended successfully');
+          this.loadDashboardData();
         },
         error: (error) => {
           console.error('Error suspending listing:', error);
@@ -879,7 +930,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error deleting listing:', error);
-            alert('Failed to delete listing. Please try again.');
+            const errorMessage = error.error?.message || error.message || 'Failed to delete listing. Please try again.';
+            alert(errorMessage);
           }
         })
       );
@@ -927,7 +979,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error('Error deleting service:', error);
-            alert('Failed to delete service');
+            const errorMessage = error.error?.message || error.message || 'Failed to delete service';
+            alert(errorMessage);
           }
         })
       );
@@ -1084,7 +1137,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       );
       if (existing) isUnique = false;
     } else {
-      // Experience Category Uniqueness (optional, but good practice)
+      // Experience Category Uniqueness
       const existing = this.experienceCategories.find(c =>
         c.name.toLowerCase() === this.newCategory.name.toLowerCase() &&
         (this.categoryModalMode === 'create' || c.id !== this.selectedCategory?.id)
@@ -1102,7 +1155,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.add(
           this.adminService.createExperienceCategory(this.newCategory).subscribe({
             next: () => {
-              // alert('Experience Category created successfully');
+              alert('Experience Category created successfully');
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1117,6 +1170,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.adminService.updateExperienceCategory(this.selectedCategory.id, this.newCategory).subscribe({
             next: () => {
               // alert('Experience Category updated successfully'); // Removed for auto-close
+              alert('Experience Category updated successfully');
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1133,7 +1187,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.add(
           this.adminService.createPropertyCategory(this.newCategory).subscribe({
             next: () => {
-              alert('Property Category created successfully (Mock)');
+              // alert('Property Category created successfully');
+              alert('Property Category created successfully');
               this.closeAddCategoryModal();
               this.loadCategories(); // Refresh property categories
             },
@@ -1152,7 +1207,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.subscriptions.add(
           this.adminService.createServiceCategory(this.newCategory).subscribe({
             next: () => {
-              // alert('Service Category created successfully'); // Removed for auto-close
+              alert('Service Category created successfully');
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1167,6 +1222,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           this.adminService.updateServiceCategory(this.selectedCategory.id, this.newCategory).subscribe({
             next: () => {
               // alert('Service Category updated successfully'); // Removed for auto-close
+              alert('Service Category updated successfully');
               this.closeAddCategoryModal();
               this.loadCategoryData();
             },
@@ -1176,6 +1232,22 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             }
           })
         );
+      }
+    }
+  }
+
+
+  toggleAmenitySelection(amenityId: number, event: any): void {
+    if (!this.newListing.amenityIds) {
+      this.newListing.amenityIds = [];
+    }
+    const checked = event.target.checked;
+    if (checked) {
+      this.newListing.amenityIds.push(amenityId);
+    } else {
+      const index = this.newListing.amenityIds.indexOf(amenityId);
+      if (index > -1) {
+        this.newListing.amenityIds.splice(index, 1);
       }
     }
   }
@@ -1229,6 +1301,45 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.showSubcategoryModal = true;
   }
 
+  // Amenity Methods
+  openAddAmenityModal(): void {
+    this.newAmenity = { name: '', icon: '', category: 'Basic' };
+    this.showAmenityModal = true;
+  }
+
+  closeAmenityModal(): void {
+    this.showAmenityModal = false;
+  }
+
+  saveAmenity(): void {
+    this.subscriptions.add(
+      this.adminService.createAmenity(this.newAmenity).subscribe({
+        next: () => {
+          this.closeAmenityModal();
+          this.loadAmenities(); // Refresh list
+          // alert('Amenity created successfully');
+        },
+        error: (error) => {
+          console.error('Error creating amenity:', error);
+          alert(`Failed to create amenity: ${error.message}`);
+        }
+      })
+    );
+  }
+
+  loadAmenities(): void {
+    this.subscriptions.add(
+      this.adminService.getAmenities().subscribe({
+        next: (amenities) => {
+          this.amenityList = amenities;
+          console.log('Loaded amenities:', amenities);
+        },
+        error: (err) => console.error('Error loading amenities:', err)
+      })
+    );
+  }
+
+
   openEditSubcategoryModal(subcategory: any): void {
     this.subcategoryModalMode = 'edit';
     this.selectedSubcategory = subcategory;
@@ -1243,6 +1354,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   saveSubcategory(): void {
+    const existing = this.experienceSubCategories.find(s =>
+      s.name.toLowerCase() === this.newSubcategory.name.toLowerCase() &&
+      (this.subcategoryModalMode === 'create' || s.id !== this.selectedSubcategory?.id)
+    );
+
+    if (existing) {
+      alert(`Subcategory "${this.newSubcategory.name}" already exists.`);
+      return;
+    }
+
     if (this.subcategoryModalMode === 'create') {
       this.subscriptions.add(
         this.adminService.createExperienceSubcategory(this.newSubcategory).subscribe({
