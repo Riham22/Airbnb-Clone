@@ -651,7 +651,7 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
     if (!url) return 'assets/default-listing.jpg';
     if (url.startsWith('http')) return url;
     if (url.includes('uploads') || url.includes('images')) {
-      return `https://localhost:7020/${url}`;
+      return `http://localhost:5034/${url}`;
     }
     return 'assets/default-listing.jpg';
   }

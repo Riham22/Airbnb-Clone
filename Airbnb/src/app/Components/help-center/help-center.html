@@ -7,7 +7,7 @@
       <div class="search-container">
         <div class="search-box">
           <span class="search-icon">
-            <fa-icon [icon]="faSearch"></fa-icon>
+            <!-- <fa-icon [icon]="faSearch"></fa-icon> -->
           </span>
           <input
             type="text"
@@ -31,7 +31,7 @@
       <!-- Popular Articles -->
       <section *ngIf="!selectedCategory && !selectedArticle && !searchQuery" class="popular-section">
         <h2 class="section-title">
-          <fa-icon [icon]="faStar" class="section-icon"></fa-icon>
+          <!-- <fa-icon [icon]="faStar" class="section-icon"></fa-icon> -->
           Popular help topics
         </h2>
         <div class="popular-grid">
@@ -40,10 +40,10 @@
             (click)="selectArticle(article)"
             class="popular-card">
             <span class="article-icon">
-              <fa-icon [icon]="article.icon"></fa-icon>
+              <!-- <fa-icon [icon]="article.icon"></fa-icon> -->
             </span>
             <span class="article-title">{{ article.title }}</span>
-            <fa-icon [icon]="faArrowRight" class="arrow-icon"></fa-icon>
+            <!-- <fa-icon [icon]="faArrowRight" class="arrow-icon"></fa-icon> -->
           </button>
         </div>
       </section>
@@ -51,7 +51,7 @@
       <!-- Categories Grid -->
       <section *ngIf="!selectedCategory && !selectedArticle" class="categories-section">
         <h2 class="section-title">
-          <fa-icon [icon]="faBook" class="section-icon"></fa-icon>
+          <!-- <fa-icon [icon]="faBook" class="section-icon"></fa-icon> -->
           Browse help categories
         </h2>
         <div class="categories-grid">
@@ -60,12 +60,12 @@
             (click)="selectCategory(category)"
             class="category-card">
             <div class="category-icon">
-              <fa-icon [icon]="category.icon"></fa-icon>
+              <!-- <fa-icon [icon]="category.icon"></fa-icon> -->
             </div>
             <h3 class="category-title">{{ category.title }}</h3>
             <p class="category-description">{{ category.description }}</p>
             <span class="article-count">
-              <fa-icon [icon]="faBook" class="count-icon"></fa-icon>
+              <!-- <fa-icon [icon]="faBook" class="count-icon"></fa-icon> -->
               {{ category.articles.length }} articles
             </span>
           </div>
@@ -76,11 +76,11 @@
       <section *ngIf="selectedCategory && !selectedArticle" class="articles-section">
         <div class="section-header">
           <button (click)="backToCategories()" class="back-button">
-            <fa-icon [icon]="faArrowLeft"></fa-icon>
+            <!-- <fa-icon [icon]="faArrowLeft"></fa-icon> -->
             Back to categories
           </button>
           <h2 class="section-title">
-            <fa-icon [icon]="selectedCategory.icon" class="section-icon"></fa-icon>
+            <!-- <fa-icon [icon]="selectedCategory.icon" class="section-icon"></fa-icon> -->
             {{ selectedCategory.title }}
           </h2>
         </div>
@@ -91,17 +91,17 @@
             class="article-item">
             <div class="article-info">
               <div class="article-icon-small">
-                <fa-icon [icon]="article.icon"></fa-icon>
+                <!-- <fa-icon [icon]="article.icon"></fa-icon> -->
               </div>
               <div class="article-details">
                 <h3 class="article-title">{{ article.title }}</h3>
                 <span *ngIf="article.popular" class="popular-badge">
-                  <fa-icon [icon]="faStar"></fa-icon>
+                  <!-- <fa-icon [icon]="faStar"></fa-icon> -->
                   Popular
                 </span>
               </div>
             </div>
-            <fa-icon [icon]="faArrowRight" class="arrow"></fa-icon>
+            <!-- <fa-icon [icon]="faArrowRight" class="arrow"></fa-icon> -->
           </div>
         </div>
       </section>
@@ -110,7 +110,7 @@
       <section *ngIf="selectedArticle" class="article-detail">
         <div class="section-header">
           <button (click)="backToArticles()" class="back-button">
-            <fa-icon [icon]="faArrowLeft"></fa-icon>
+            <!-- <fa-icon [icon]="faArrowLeft"></fa-icon> -->
             Back to articles
           </button>
         </div>
@@ -118,15 +118,15 @@
         <article class="article-content">
           <div class="article-header">
             <div class="article-icon-large">
-              <fa-icon [icon]="selectedArticle.icon"></fa-icon>
+              <!-- <fa-icon [icon]="selectedArticle.icon"></fa-icon> -->
             </div>
             <h1 class="article-title">{{ selectedArticle.title }}</h1>
             <span *ngIf="selectedArticle.popular" class="popular-badge large">
-              <fa-icon [icon]="faStar"></fa-icon>
+              <!-- <fa-icon [icon]="faStar"></fa-icon> -->
               Popular Article
             </span>
           </div>
-          
+
           <div class="article-body">
             <p>{{ selectedArticle.content }}</p>
           </div>
@@ -134,7 +134,7 @@
           <div class="article-actions">
             <div class="support-options">
               <button (click)="becomeAHost()" class="btn-primary">
-                <fa-icon [icon]="faComments"></fa-icon>
+                <!-- <fa-icon [icon]="faComments"></fa-icon> -->
                 Become a host
               </button>
               <!-- <button class="btn-secondary">
@@ -142,18 +142,18 @@
                 Call Support
               </button> -->
             </div>
-            
+
             <div class="feedback-section">
               <h4>Was this article helpful?</h4>
               <div class="feedback-buttons">
-                <button class="btn-feedback yes" (click)="submitFeedback(true)">
+                <!-- <button class="btn-feedback yes" (click)="submitFeedback(true)">
                   <fa-icon [icon]="faCheck"></fa-icon>
                   Yes
                 </button>
                 <button class="btn-feedback no" (click)="submitFeedback(false)">
                   <fa-icon [icon]="faTimes"></fa-icon>
                   No
-                </button>
+                </button> -->
               </div>
             </div>
           </div>
@@ -163,7 +163,7 @@
       <!-- No Results -->
       <div *ngIf="filteredCategories.length === 0 && searchQuery" class="no-results">
         <div class="no-results-icon">
-          <fa-icon [icon]="faQuestionCircle"></fa-icon>
+          <!-- <fa-icon [icon]="faQuestionCircle"></fa-icon> -->
         </div>
         <h3>No results found for "{{ searchQuery }}"</h3>
         <p>Try different keywords or contact our support team</p>
@@ -171,8 +171,8 @@
           <button (click)="searchQuery = ''; showSearchResults = false" class="btn-secondary">
             Clear Search
           </button>
-         
-          
+
+
         </div>
       </div>
     </div>

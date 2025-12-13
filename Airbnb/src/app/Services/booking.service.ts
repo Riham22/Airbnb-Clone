@@ -42,7 +42,7 @@ export interface BookingDetailsDto extends BookingListDto {
     providedIn: 'root'
 })
 export class BookingService {
-    private apiUrl = 'https://localhost:7020/api/Booking';
+    private apiUrl = 'http://localhost:5034/api/Booking';
 
     constructor(private http: HttpClient) { }
 
@@ -98,12 +98,12 @@ export class BookingService {
 
     // Service Bookings
     createServiceBooking(data: CreateServiceBookingDto): Observable<any> {
-        return this.http.post('https://localhost:7020/api/ServiceBooking', data);
+        return this.http.post('http://localhost:5034/api/ServiceBooking', data);
     }
 
     // Experience Reservations
     createExperienceBooking(data: AddReservationDto): Observable<any> {
-        return this.http.post('https://localhost:7020/api/Reservation', data);
+        return this.http.post('http://localhost:5034/api/Reservation', data);
     }
 }
 

@@ -47,3 +47,70 @@ textarea {
 .focus\:ring-rose-500:focus {
   ring-color: #f43f5e;
 }
+
+
+
+/* personal-account.component.css */
+:host {
+  display: block;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+/* Form field styles */
+input[readonly], textarea[readonly] {
+  background-color: #f9fafb;
+  cursor: default;
+}
+
+input:disabled, textarea:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* Button transitions */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Form sections */
+.form-section {
+  transition: all 0.3s ease;
+}
+
+.form-section:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Error states */
+.border-red-500 {
+  border-color: #ef4444;
+}
+
+/* Success states */
+.text-green-600 {
+  color: #059669;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -149,10 +149,10 @@ export class UserProfile implements OnInit {
 
           // Initial path depends on backend return.
           // If returns partial path "images/profiles/...", we need to prepend base URL or handle static serving
-          // Assuming base URL is 'https://localhost:7020/'
+          // Assuming base URL is 'http://localhost:5034/'
 
           // Update user photo locally
-          const photoUrl = `https://localhost:7020/${res.photoUrl}`;
+          const photoUrl = `http://localhost:5034/${res.photoUrl}`;
 
           // Update both main user and edit buffer (if relevant)
           if (this.user) this.user.photoURL = photoUrl;

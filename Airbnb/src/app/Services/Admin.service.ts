@@ -12,7 +12,7 @@ import { AdminListing } from '../Models/AdminListing';
   providedIn: 'root'
 })
 export class AdminService {
-  private apiUrl = 'https://localhost:7020/api';
+  private apiUrl = 'http://localhost:5034/api';
   private statsSubject = new BehaviorSubject<AdminStats>(this.getInitialStats());
   private usersSubject = new BehaviorSubject<AdminUser[]>([]);
   private listingsSubject = new BehaviorSubject<AdminListing[]>([]);

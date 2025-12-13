@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserService } from '../../Services/user.service';
 import { AuthService } from '../../Services/auth';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
 
 @Component({
     selector: 'app-personal-account',
@@ -17,21 +18,27 @@ export class PersonalAccountComponent implements OnInit {
     profileForm: FormGroup;
     currentUser: any = null;
     loading = false;
+    isEditing = false;
     successMessage = '';
     errorMessage = '';
     showDebugInfo = false;
+    maxDate: string;
 
     constructor(
         private fb: FormBuilder,
         public userService: UserService,
         private authService: AuthService,
-        private router: Router
+        private router: Router,
+        private cdr: ChangeDetectorRef
     ) {
+        // Set max date to today for date of birth
+        const today = new Date();
+        this.maxDate = today.toISOString().split('T')[0];
+
+        // Initialize form with only necessary fields
         this.profileForm = this.fb.group({
-            firstName: [''],
-            lastName: [''],
-            email: [{ value: '', disabled: true }],
-            username: [{ value: '', disabled: true }],
+            firstName: ['', Validators.required],
+            lastName: ['', Validators.required],
             photoURL: [''],
             about: [''],
             location: [''],
@@ -60,49 +67,43 @@ export class PersonalAccountComponent implements OnInit {
             return;
         }
 
-        this.currentUser = this.authService.getCurrentUser();
-        console.log('Initial currentUser from AuthService:', this.currentUser);
-
-        if (this.currentUser) {
-            this.patchForm(this.currentUser);
-            this.loadUserProfile();
-        } else {
-            this.errorMessage = 'No user data available. Please log in again.';
-            setTimeout(() => {
-                this.router.navigate(['/auth']);
-            }, 2000);
-        }
+        this.loadUserProfile();
     }
 
     loadUserProfile(): void {
         this.loading = true;
-        this.userService.getMyProfile().subscribe({
-            next: (userProfile: any) => {
-                console.log('User profile loaded successfully from API:', userProfile);
+        this.errorMessage = '';
+        this.successMessage = '';
+
+        this.userService.getMyProfile().pipe(
+            finalize(() => {
                 this.loading = false;
-
+                this.cdr.detectChanges();
+            })
+        ).subscribe({
+            next: (userProfile: any) => {
+                console.log('User profile loaded successfully:', userProfile);
+                
                 if (userProfile) {
-                    this.currentUser = { ...this.currentUser, ...userProfile };
-                    this.patchForm(this.currentUser);
+                    this.currentUser = userProfile;
+                    this.patchForm(userProfile);
                     this.successMessage = 'Profile loaded successfully';
-
+                    
                     setTimeout(() => {
                         this.successMessage = '';
+                        this.cdr.detectChanges();
                     }, 3000);
                 }
             },
             error: (err: any) => {
-                console.error('Failed to fetch profile from API:', err.message);
-                this.loading = false;
-
+                console.error('Failed to load profile:', err);
+                
                 if (err.status === 401) {
                     this.errorMessage = 'Session expired. Please log in again.';
                     setTimeout(() => {
                         this.authService.logout();
                         this.router.navigate(['/auth']);
                     }, 2000);
-                } else if (err.status === 404) {
-                    this.errorMessage = 'Profile endpoint not found. Please check API configuration.';
                 } else {
                     this.errorMessage = `Could not load profile: ${err.message}`;
                 }
@@ -110,179 +111,269 @@ export class PersonalAccountComponent implements OnInit {
         });
     }
 
-    patchForm(user: any) {
-        console.log('Patching form with user data from API:', user);
+    patchForm(user: any): void {
+        console.log('Patching form with data:', user);
 
-        const formData: any = {};
+        const formData: any = {
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            photoURL: user.photoURL || '',
+            about: user.about || '',
+            location: user.location || '',
+            work: user.work || '',
+            wantedToTravel: user.wantedToTravel || '',
+            pets: user.pets || '',
+            uselessSkill: user.uselessSkill || '',
+            funFact: user.funFact || '',
+            favoriteSong: user.favoriteSong || '',
+            school: user.school || '',
+            spendTimeDoing: user.spendTimeDoing || '',
+            dateOfBirth: user.dateOfBirth || '',
+            showTheDecade: user.showTheDecade !== undefined ? user.showTheDecade : true,
+            languageIds: Array.isArray(user.languageIds) ? user.languageIds : [],
+            interestIds: Array.isArray(user.interestIds) ? user.interestIds : [],
+            roles: Array.isArray(user.roles) ? user.roles : []
+        };
 
-        Object.keys(this.profileForm.controls).forEach(field => {
-            const possibleSources = [
-                user[field],
-                user[field.toLowerCase()],
-                user[field.toUpperCase()],
-                user[`${field}Name`],
-                user[`${field.toLowerCase()}Name`]
-            ];
-
-            const claimName = `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/${field.toLowerCase()}`;
-            possibleSources.push(user[claimName]);
-
-            const value = possibleSources.find(val => val != null && val !== '');
-            formData[field] = value || '';
-        });
-
-        if (!formData.email) {
-            if (user.email) {
-                formData.email = user.email;
-            } else if (user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']) {
-                formData.email = user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
+        // Format date for input[type="date"]
+        if (formData.dateOfBirth && typeof formData.dateOfBirth === 'string') {
+            const date = new Date(formData.dateOfBirth);
+            if (!isNaN(date.getTime())) {
+                formData.dateOfBirth = date.toISOString().split('T')[0];
             }
-        }
-
-        if (!formData.firstName && user.given_name) {
-            formData.firstName = user.given_name;
-        }
-        if (!formData.lastName && user.family_name) {
-            formData.lastName = user.family_name;
-        }
-
-        if (!formData.languageIds || !Array.isArray(formData.languageIds)) {
-            formData.languageIds = [];
-        }
-        if (!formData.interestIds || !Array.isArray(formData.interestIds)) {
-            formData.interestIds = [];
-        }
-        if (!formData.roles || !Array.isArray(formData.roles)) {
-            formData.roles = [];
-        }
-        if (formData.showTheDecade === undefined || formData.showTheDecade === null) {
-            formData.showTheDecade = true;
         }
 
         console.log('Form data to patch:', formData);
         this.profileForm.patchValue(formData);
+        this.cdr.detectChanges();
     }
 
-    onSubmit() {
-        console.log('Form submission started');
+    toggleEditMode(): void {
+        this.isEditing = !this.isEditing;
+        
+        if (this.isEditing) {
+            this.profileForm.enable();
+            // Keep certain fields disabled
+            this.profileForm.get('languageIds')?.disable();
+            this.profileForm.get('interestIds')?.disable();
+            this.profileForm.get('roles')?.disable();
+        } else {
+            this.profileForm.disable();
+        }
+        this.cdr.detectChanges();
+    }
 
-        if (!this.currentUser) {
-            this.errorMessage = 'No user data available. Please log in again.';
+    onSubmit(): void {
+        if (this.profileForm.invalid) {
+            this.markFormGroupTouched(this.profileForm);
+            this.errorMessage = 'Please fill in all required fields correctly.';
             return;
         }
 
         this.loading = true;
-        this.successMessage = '';
         this.errorMessage = '';
+        this.successMessage = '';
 
-        const formValue = this.profileForm.getRawValue();
-
-        if (formValue.dateOfBirth) {
-            try {
-                formValue.dateOfBirth = this.userService.formatDateForApi(formValue.dateOfBirth);
-            } catch (e) {
-                console.warn('Invalid date format:', e);
+        const formData = this.profileForm.getRawValue();
+        
+        // Clean data
+        const cleanedData: any = {};
+        Object.keys(formData).forEach(key => {
+            if (formData[key] === '' || formData[key] === null || formData[key] === undefined) {
+                cleanedData[key] = null;
+            } else {
+                cleanedData[key] = formData[key];
             }
-        }
+        });
 
-        console.log('Data to update via API:', formValue);
+        // Ensure arrays are empty if not provided
+        cleanedData.languageIds = Array.isArray(cleanedData.languageIds) ? cleanedData.languageIds : [];
+        cleanedData.interestIds = Array.isArray(cleanedData.interestIds) ? cleanedData.interestIds : [];
+        cleanedData.roles = Array.isArray(cleanedData.roles) ? cleanedData.roles : [];
 
-        this.userService.updateCurrentUser(formValue).subscribe({
-            next: (updatedProfile: any) => {
-                console.log('Profile updated successfully via API:', updatedProfile);
+        console.log('Submitting cleaned data:', cleanedData);
+
+        this.userService.updateCurrentUser(cleanedData).pipe(
+            finalize(() => {
                 this.loading = false;
-                this.successMessage = 'Profile updated successfully!';
-
-                this.currentUser = { ...this.currentUser, ...updatedProfile };
-                this.patchForm(this.currentUser);
-
+                this.cdr.detectChanges();
+            })
+        ).subscribe({
+            next: (response: any) => {
+                console.log('Update successful:', response);
+                
+                if (response.user) {
+                    this.currentUser = response.user;
+                    this.patchForm(response.user);
+                    this.isEditing = false;
+                    this.profileForm.disable();
+                    this.successMessage = response.message || 'Profile updated successfully!';
+                    
+                    // Update auth service
+                    if (response.user.email || response.user.firstName || response.user.lastName) {
+                        const currentAuthUser = this.authService.getCurrentUser();
+                        if (currentAuthUser) {
+                            const updatedUser = {
+                                ...currentAuthUser,
+                                firstName: response.user.firstName || currentAuthUser.firstName,
+                                lastName: response.user.lastName || currentAuthUser.lastName,
+                                email: response.user.email || currentAuthUser.email,
+                                photoURL: response.user.photoURL || currentAuthUser.photoURL
+                            };
+                            this.authService.updateCurrentUser(updatedUser);
+                        }
+                    }
+                } else {
+                    this.successMessage = 'Profile updated successfully!';
+                }
+                
                 setTimeout(() => {
                     this.successMessage = '';
+                    this.cdr.detectChanges();
                 }, 3000);
             },
             error: (err: HttpErrorResponse) => {
-                console.error('Failed to update profile via API:', err);
-                this.loading = false;
-
-                if (err.error && err.error.errors) {
+                console.error('Update failed:', err);
+                
+                if (err.error?.errors) {
                     const errorMessages = Object.values(err.error.errors).flat().join(', ');
                     this.errorMessage = `Validation errors: ${errorMessages}`;
-                } else if (err.error && err.error.message) {
+                } else if (err.error?.message) {
                     this.errorMessage = err.error.message;
-                } else if (err.status === 401) {
-                    this.errorMessage = 'Session expired. Please log in again.';
-                    setTimeout(() => {
-                        this.authService.logout();
-                        this.router.navigate(['/auth']);
-                    }, 2000);
-                } else if (err.status === 400) {
-                    this.errorMessage = 'Invalid data. Please check your input.';
-                } else if (err.status === 404) {
-                    this.errorMessage = 'Update endpoint not found. Please check API configuration.';
                 } else {
-                    this.errorMessage = `Failed to update profile: ${err.message}`;
+                    this.errorMessage = 'Failed to update profile. Please try again.';
                 }
             }
         });
     }
 
-    logout() {
-        this.authService.logout();
-        this.router.navigate(['/auth']);
-    }
-
-    toggleDebugInfo() {
-        this.showDebugInfo = !this.showDebugInfo;
-        if (this.showDebugInfo) {
-            this.userService.debugAuthInfo();
-        }
-    }
-
-    onPhotoUpload(event: any) {
-        const file = event.target.files[0];
+    onPhotoUpload(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const file = input?.files?.[0];
+        
         if (!file) return;
 
+        // Validate file
         const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            this.errorMessage = 'Please upload a valid image file (JPEG, PNG, GIF, WebP)';
+        if (!validTypes.includes(file.type.toLowerCase())) {
+            this.errorMessage = 'Invalid file type. Please upload JPEG, PNG, GIF, or WebP.';
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            this.errorMessage = 'File size should be less than 5MB';
+            this.errorMessage = 'File is too large. Maximum size is 5MB.';
             return;
         }
 
         this.loading = true;
-        this.userService.uploadProfilePhoto(file).subscribe({
-            next: (response: any) => {
+        this.errorMessage = '';
+        this.successMessage = '';
+
+        this.userService.uploadProfilePhoto(file).pipe(
+            finalize(() => {
                 this.loading = false;
-                console.log('Upload response:', response);
-
-                if (response.success || response.photoURL) {
-                    this.successMessage = 'Photo uploaded successfully!';
-
+                this.cdr.detectChanges();
+            })
+        ).subscribe({
+            next: (response: any) => {
+                console.log('Photo upload successful:', response);
+                
+                if (response.success) {
+                    this.successMessage = response.message || 'Photo uploaded successfully!';
+                    
                     if (response.photoURL) {
+                        this.currentUser.photoURL = response.photoURL;
                         this.profileForm.patchValue({ photoURL: response.photoURL });
                     }
-
+                    
+                    if (response.user) {
+                        this.currentUser = { ...this.currentUser, ...response.user };
+                        this.patchForm(this.currentUser);
+                    }
+                    
+                    // Refresh profile
                     this.userService.refreshUserProfile().subscribe({
                         next: (profile) => {
                             this.currentUser = { ...this.currentUser, ...profile };
                             this.patchForm(this.currentUser);
+                        },
+                        error: (err) => {
+                            console.warn('Could not refresh profile:', err);
                         }
                     });
-
-                    setTimeout(() => {
-                        this.successMessage = '';
-                    }, 3000);
                 }
+                
+                setTimeout(() => {
+                    this.successMessage = '';
+                    this.cdr.detectChanges();
+                }, 3000);
+                
+                // Clear file input
+                input.value = '';
             },
             error: (err: HttpErrorResponse) => {
-                this.loading = false;
-                console.error('Upload error:', err);
+                console.error('Photo upload failed:', err);
                 this.errorMessage = err.error?.message || 'Failed to upload photo. Please try again.';
+                input.value = '';
             }
         });
+    }
+
+    deleteAccount(): void {
+        if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+            return;
+        }
+
+        this.loading = true;
+        this.userService.deleteUser().subscribe({
+            next: () => {
+                this.loading = false;
+                alert('Account deleted successfully.');
+                this.authService.logout();
+                this.router.navigate(['/auth']);
+            },
+            error: (err) => {
+                this.loading = false;
+                console.error('Failed to delete account:', err);
+                this.errorMessage = 'Failed to delete account. Please try again.';
+            }
+        });
+    }
+
+    logout(): void {
+        this.authService.logout();
+        this.router.navigate(['/auth']);
+    }
+
+    toggleDebugInfo(): void {
+        this.showDebugInfo = !this.showDebugInfo;
+        if (this.showDebugInfo) {
+            this.userService.debugAuthInfo();
+        }
+        this.cdr.detectChanges();
+    }
+
+    private markFormGroupTouched(formGroup: FormGroup): void {
+        Object.values(formGroup.controls).forEach(control => {
+            control.markAsTouched();
+            if (control instanceof FormGroup) {
+                this.markFormGroupTouched(control);
+            }
+        });
+    }
+
+    getFieldError(field: string): string {
+        const control = this.profileForm.get(field);
+        if (control?.touched && control?.errors) {
+            if (control.errors['required']) {
+                return 'This field is required';
+            }
+        }
+        return '';
+    }
+
+    hasError(field: string): boolean {
+        const control = this.profileForm.get(field);
+        return !!(control && control.invalid && (control.touched || control.dirty));
     }
 }

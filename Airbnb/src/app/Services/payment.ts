@@ -55,7 +55,7 @@ export interface PaymentApiResponse {
   providedIn: 'root'
 })
 export class PaymentService {
-  private baseUrl = '/api/Payment';
+  private baseUrl = 'http://localhost:5034/api/Payment';
   
   // Subjects for reactive updates
   private paymentMethodsSubject = new BehaviorSubject<PaymentMethod[]>([]);

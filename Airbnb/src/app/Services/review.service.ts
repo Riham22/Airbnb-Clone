@@ -42,9 +42,9 @@ export interface CreateServiceReviewDto {
     providedIn: 'root'
 })
 export class ReviewService {
-    private apiUrl = 'https://localhost:7020/api/Reviews';
-    private expApiUrl = 'https://localhost:7020/api/ExpReview';
-    private serviceApiUrl = 'https://localhost:7020/api/ServiceReview';
+    private apiUrl = 'http://localhost:5034/api/Reviews';
+    private expApiUrl = 'http://localhost:5034/api/ExpReview';
+    private serviceApiUrl = 'http://localhost:5034/api/ServiceReview';
 
     constructor(private http: HttpClient) { }
 

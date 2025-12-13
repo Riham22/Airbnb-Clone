@@ -65,7 +65,7 @@ export class Data {
     console.log('🔄 Loading properties from API...');
 
     // Note: Using capital 'P' in Properties to match your API
-    this.http.get<any>('https://localhost:7020/api/Properties').subscribe({
+    this.http.get<any>('http://localhost:5034/api/Properties').subscribe({
       next: (response) => {
         console.log('✅ API Response received:', response);
 
@@ -256,7 +256,7 @@ export class Data {
   loadExperiences() {
     console.log('🔄 Loading experiences from API...');
 
-    this.http.get<any[]>('https://localhost:7020/api/Experience').subscribe({
+    this.http.get<any[]>('http://localhost:5034/api/Experience').subscribe({
       next: (data) => {
         console.log('✅ Experiences API Response:', data?.length);
         if (data && data.length > 0) {
@@ -345,7 +345,7 @@ export class Data {
   loadServices() {
     console.log('🔄 Loading services from API...');
 
-    this.http.get<any[]>('https://localhost:7020/api/Services').subscribe({
+    this.http.get<any[]>('http://localhost:5034/api/Services').subscribe({
       next: (data) => {
         console.log('✅ Services API Response:', data?.length);
 
@@ -491,7 +491,7 @@ export class Data {
   }
 
   getPropertyDetails(id: number) {
-    return this.http.get<any>(`https://localhost:7020/api/Properties/${id}`).pipe(
+    return this.http.get<any>(`http://localhost:5034/api/Properties/${id}`).pipe(
       tap(p => console.log('📦 GetPropertyDetails API:', p)),
       // We map it here or in the component. Let's map it here to be consistent
       // But for simplicity, let's return the raw Observable and map in component or use a helper
@@ -500,11 +500,11 @@ export class Data {
   }
 
   getServiceDetails(id: number) {
-    return this.http.get<any>(`https://localhost:7020/api/Services/${id}`);
+    return this.http.get<any>(`http://localhost:5034/api/Services/${id}`);
   }
 
   getExperienceDetails(id: number) {
-    return this.http.get<any>(`https://localhost:7020/api/Experience/GetById/${id}`);
+    return this.http.get<any>(`http://localhost:5034/api/Experience/GetById/${id}`);
   }
 
   searchProperties(filters: SearchFilters): RentalProperty[] {
@@ -547,7 +547,7 @@ export class Data {
   }
 
   toggleWishlist(itemType: string, itemId: number) {
-    return this.http.post<any>('https://localhost:7020/api/Wishlist/toggle', {
+    return this.http.post<any>('http://localhost:5034/api/Wishlist/toggle', {
       itemType: itemType,
       itemId: itemId
     }).pipe(
@@ -584,15 +584,15 @@ export class Data {
   }
 
   getWishlist() {
-    return this.http.get<any>('https://localhost:7020/api/Wishlist');
+    return this.http.get<any>('http://localhost:5034/api/Wishlist');
   }
 
   isInWishlist(itemType: string, itemId: number) {
-    return this.http.get<any>(`https://localhost:7020/api/Wishlist/check/${itemType}/${itemId}`);
+    return this.http.get<any>(`http://localhost:5034/api/Wishlist/check/${itemType}/${itemId}`);
   }
 
   getWishlistCount() {
-    return this.http.get<any>('https://localhost:7020/api/Wishlist/count');
+    return this.http.get<any>('http://localhost:5034/api/Wishlist/count');
   }
 
   isWishlistedSync(itemType: string, itemId: number): boolean {
@@ -726,11 +726,11 @@ export class Data {
     // Handle standard absolute URLs (http/https)
     if (url.startsWith('http')) {
       // Fix for stale localhost:5000/7187 URLs in database if they occur
-      if (url.includes('localhost') && !url.includes('7020')) {
+      if (url.includes('localhost') && !url.includes('5034')) {
         // Extract the path after 'uploads/'
         const match = url.match(/\/uploads\/(.*)/);
         if (match) {
-          return `https://localhost:7020/uploads/${match[1]}`;
+          return `http://localhost:5034/uploads/${match[1]}`;
         }
       }
       return url;
@@ -738,13 +738,13 @@ export class Data {
 
     // Handle bare filenames (e.g. "101.jpg") -> Assume properties upload folder as fallback
     if (!url.includes('/') && !url.includes('\\')) {
-      return `https://localhost:7020/uploads/properties/${url}`;
+      return `http://localhost:5034/uploads/properties/${url}`;
     }
 
     // Handle API-relative paths (e.g. "uploads/...")
     // Ensure we don't double-slash
     const cleanPath = url.startsWith('/') ? url.substring(1) : url;
-    return `https://localhost:7020/${cleanPath}`;
+    return `http://localhost:5034/${cleanPath}`;
   }
 
   updateWishlist(propertyId: number, isWishlisted: boolean) {

@@ -11,7 +11,7 @@ import { HostListing } from '../Models/HostListing';
   providedIn: 'root'
 })
 export class HostService {
-  private apiUrl = 'https://localhost:7020/api';
+  private apiUrl = 'http://localhost:5034/api';
 
   private statsSubject = new BehaviorSubject<HostStats>(this.getInitialStats());
   private bookingsSubject = new BehaviorSubject<HostBooking[]>([]);
