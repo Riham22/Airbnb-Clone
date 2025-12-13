@@ -216,4 +216,36 @@ export class Booking implements OnInit, OnDestroy {
       }
     });
   }
+
+  public processImageUrl(url: string | null | undefined): string {
+    if (!url) return 'assets/default-listing.jpg';
+
+    // Handle legacy seed data paths that point to non-existent /images/ folder
+    if (url.startsWith('/images/') || url.startsWith('images/')) {
+        return 'assets/default-listing.jpg';
+    }
+
+    // Handle standard absolute URLs (http/https)
+    if (url.startsWith('http')) {
+        // Fix for stale localhost:5000/7187 URLs in database if they occur
+        if (url.includes('localhost') && !url.includes('7020')) {
+            // Extract the path after 'uploads/'
+            const match = url.match(/\/uploads\/(.*)/);
+            if (match) {
+                return `https://localhost:7020/uploads/${match[1]}`;
+            }
+        }
+        return url;
+    }
+
+    // Handle bare filenames (e.g. "101.jpg") -> Assume properties upload folder as fallback
+    if (!url.includes('/') && !url.includes('\\')) {
+        return `https://localhost:7020/uploads/properties/${url}`;
+    }
+
+    // Handle API-relative paths (e.g. "uploads/...")
+    // Ensure we don't double-slash
+    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+    return `https://localhost:7020/${cleanPath}`;
+  }
 }

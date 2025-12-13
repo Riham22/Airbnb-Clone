@@ -53,7 +53,7 @@
 
     <div *ngFor="let booking of getFilteredBookings()" class="booking-card">
         <div class="booking-image">
-            <img [src]="booking.propertyCoverImage" [alt]="booking.propertyTitle" loading="lazy">
+            <img [src]="processImageUrl(booking.propertyCoverImage)" [alt]="booking.propertyTitle" loading="lazy">
             <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
                 {{ booking.status }}
             </span>
