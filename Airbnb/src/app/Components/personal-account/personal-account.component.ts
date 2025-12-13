@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { UserService } from '../../Services/user.service';
 import { AuthService } from '../../Services/auth';
 import { User } from '../../Models/User';
@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 })
 export class PersonalAccountComponent implements OnInit {
     profileForm: FormGroup;
-    currentUser: User | null = null;
+    currentUser: any = null;
     loading = false;
     successMessage = '';
     errorMessage = '';
@@ -30,22 +30,26 @@ export class PersonalAccountComponent implements OnInit {
         private router: Router
     ) {
         this.profileForm = this.fb.group({
-            firstName: ['', Validators.required],
-            lastName: ['', Validators.required],
-            email: [{ value: '', disabled: true }], // Email usually not editable directly
+            firstName: [''],
+            lastName: [''],
+            email: [{ value: '', disabled: true }],
+            username: [{ value: '', disabled: true }],
             photoURL: [''],
-            dateOfBirth: [''],
+            about: [''],
+            location: [''],
             work: [''],
             wantedToTravel: [''],
             pets: [''],
             uselessSkill: [''],
-            showTheDecade: [false],
             funFact: [''],
             favoriteSong: [''],
             school: [''],
             spendTimeDoing: [''],
-            location: [''],
-            about: ['']
+            dateOfBirth: [''],
+            showTheDecade: [true],
+            languageIds: [[]],
+            interestIds: [[]],
+            roles: [[]]
         });
     }
 
@@ -100,7 +104,7 @@ export class PersonalAccountComponent implements OnInit {
             this.photoFile = input.files[0];
             const reader = new FileReader();
             reader.onload = (e) => {
-                this.photoPreview = e.target?.result;
+                this.photoPreview = e.target?.result ?? null;
                 // Also update form value so on submit we'll send base64 string if new file
                 this.profileForm.patchValue({ photoURL: this.photoPreview });
             };

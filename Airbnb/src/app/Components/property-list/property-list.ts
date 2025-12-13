@@ -62,6 +62,13 @@ export class PropertyList implements OnInit, OnChanges {
       subtitle: 'Escape the ordinary',
       icon: '🌾',
       properties: [] as any[]
+    },
+    {
+      id: 'other',
+      title: 'More Stays',
+      subtitle: 'Discover more properties',
+      icon: '🏠',
+      properties: [] as any[]
     }
   ];
 
@@ -101,6 +108,13 @@ export class PropertyList implements OnInit, OnChanges {
       subtitle: 'Rejuvenating activities',
       icon: '🧘',
       properties: [] as any[]
+    },
+    {
+      id: 'other',
+      title: 'More Experiences',
+      subtitle: 'Discover even more',
+      icon: '✨',
+      properties: [] as any[]
     }
   ];
 
@@ -139,6 +153,13 @@ export class PropertyList implements OnInit, OnChanges {
       title: 'Transportation',
       subtitle: 'Get around easily',
       icon: '🚗',
+      properties: [] as any[]
+    },
+    {
+      id: 'other',
+      title: 'More Services',
+      subtitle: 'Professional assistance',
+      icon: '🛠️',
       properties: [] as any[]
     }
   ];
@@ -184,19 +205,44 @@ export class PropertyList implements OnInit, OnChanges {
   constructor(private dataService: Data) { }
 
   ngOnInit() {
+    // Subscribe to data service observables for reactive updates
+    this.dataService.properties$.subscribe(() => {
+      this.loadAllData();
+      this.updateAllCategories();
+    });
+
+    this.dataService.experiences$.subscribe(() => {
+      this.loadAllData();
+      this.updateAllCategories();
+    });
+
+    this.dataService.services$.subscribe(() => {
+      this.loadAllData();
+      this.updateAllCategories();
+    });
+
+    // Initial load
     this.loadAllData();
     this.updateAllCategories();
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['properties'] || changes['filters']) {
+      this.loadAllData();
       this.updateAllCategories();
     }
   }
 
   // In your PropertyList component, make sure you're loading properties correctly
   private loadAllData(): void {
-    // Get properties, experiences, and services from data service
+    // If input properties are provided and not empty, use them
+    if (this.properties && this.properties.length > 0) {
+      this.allListings = this.properties;
+      console.log('Using @Input properties:', this.allListings.length);
+      return;
+    }
+
+    // Otherwise, get from data service
     const rentalProperties = this.dataService.getProperties();
     const experiences = (this.dataService as any).getExperiences ? (this.dataService as any).getExperiences() : [];
     const services = (this.dataService as any).getServices ? (this.dataService as any).getServices() : [];
@@ -212,12 +258,7 @@ export class PropertyList implements OnInit, OnChanges {
       ...services
     ];
 
-    console.log('All Listings:', this.allListings); // Debug log
-
-    // If input properties are provided, use them instead
-    if (this.properties && this.properties.length > 0) {
-      this.allListings = this.properties;
-    }
+    console.log('All Listings loaded from service:', this.allListings.length); // Debug log
   }
   private updateAllCategories(): void {
     const filteredProperties = this.applyFilters(this.allListings);
@@ -228,19 +269,46 @@ export class PropertyList implements OnInit, OnChanges {
     });
 
     // Update property categories
-    this.categories.forEach(category => {
+    const assignedPropertyIds = new Set<string>();
+    this.categories.filter(c => c.id !== 'other').forEach(category => {
       category.properties = this.filterPropertiesByType(filteredProperties, category.id);
+      category.properties.forEach(p => assignedPropertyIds.add(p.id));
     });
+    // Catch-all for properties
+    const otherProp = this.categories.find(c => c.id === 'other');
+    if (otherProp) {
+      otherProp.properties = filteredProperties.filter(p =>
+        p.type === 'property' && !assignedPropertyIds.has(p.id)
+      );
+    }
 
     // Update experiences
-    this.experiences.forEach(exp => {
+    const assignedExperienceIds = new Set<string>();
+    this.experiences.filter(e => e.id !== 'other').forEach(exp => {
       exp.properties = this.filterExperiencesByCategory(filteredProperties, exp.id);
+      exp.properties.forEach(p => assignedExperienceIds.add(p.id));
     });
+    // Catch-all for experiences
+    const otherExp = this.experiences.find(e => e.id === 'other');
+    if (otherExp) {
+      otherExp.properties = filteredProperties.filter(p =>
+        p.type === 'experience' && !assignedExperienceIds.has(p.id)
+      );
+    }
 
     // Update services
-    this.services.forEach(service => {
+    const assignedServiceIds = new Set<string>();
+    this.services.filter(s => s.id !== 'other').forEach(service => {
       service.properties = this.filterServicesByCategory(filteredProperties, service.id);
+      service.properties.forEach(p => assignedServiceIds.add(p.id));
     });
+    // Catch-all for services
+    const otherService = this.services.find(s => s.id === 'other');
+    if (otherService) {
+      otherService.properties = filteredProperties.filter(p =>
+        p.type === 'service' && !assignedServiceIds.has(p.id)
+      );
+    }
   }
 
   // Enhanced filtering with Airbnb-like options
@@ -649,21 +717,29 @@ export class PropertyList implements OnInit, OnChanges {
   // Check if listing is in wishlist
   isInWishlist(listing: any): boolean {
     // This would integrate with your wishlist service
-    return this.dataService.isWishlistedSync ? this.dataService.isWishlistedSync(listing.id) : false;
+    if (!listing || !listing.type) return false;
+    const type = listing.type.charAt(0).toUpperCase() + listing.type.slice(1);
+    return this.dataService.isWishlistedSync ? this.dataService.isWishlistedSync(type, listing.id) : false;
   }
 
-  // Toggle wishlist
-  toggleWishlist(listing: any): void {
-    const wasInWishlist = this.isInWishlist(listing);
-    if (this.dataService.toggleWishlist) {
-      const isNowInWishlist = this.dataService.toggleWishlist('property', listing.id);
-      this.wishlistChange.emit({
-        listing,
-        inWishlist: isNowInWishlist,
-        wasInWishlist
-      });
-    }
+ // When wishlist button is clicked in a property card:
+onWishlistClick(property: any) {
+  // Determine the item type based on the property
+  let itemType = 'Property';
+
+  if (property.type === 'experience') {
+    itemType = 'Experience';
+  } else if (property.type === 'service') {
+    itemType = 'Service';
   }
+
+  // Emit the event with all necessary information
+  this.wishlistChange.emit({
+    propertyId: property.id,
+    isWishlisted: !property.isWishlisted, // Toggle the state
+    itemType: itemType
+  });
+}
 
   // ADD THESE METHODS
   get hasExperiences(): boolean {

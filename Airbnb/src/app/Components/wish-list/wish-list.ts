@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -39,7 +39,10 @@ export class WishlistComponent implements OnInit, OnDestroy {
   public loading = false;
   private subscriptions = new Subscription();
 
-  constructor(private dataService: Data) { }
+  constructor(
+    private dataService: Data,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit() {
     this.loadWishlists();
@@ -51,10 +54,39 @@ export class WishlistComponent implements OnInit, OnDestroy {
 
   private loadWishlists(): void {
     this.loading = true;
+    console.log('📋 Loading wishlists...');
+
+    // Safety timeout
+    const timeout = setTimeout(() => {
+      if (this.loading) {
+        this.loading = false;
+        console.warn('⏱️ Wishlist load timed out');
+        this.cdr.detectChanges();
+      }
+    }, 10000);
+
     this.subscriptions.add(
       this.dataService.getWishlist().subscribe({
         next: (response: any) => {
-          const items: WishlistItem[] = response.data || response || [];
+          clearTimeout(timeout);
+          console.log('✅ Wishlist loaded:', response);
+          const rawItems = response.data || response || [];
+
+          // Map backend fields to frontend interface
+          const items: WishlistItem[] = Array.isArray(rawItems) ? rawItems.map((item: any) => ({
+            id: item.id || item.Id,
+            itemType: (item.itemType || item.ItemType || 'property').toLowerCase(),
+            itemId: item.itemId || item.ItemId,
+            itemTitle: item.itemTitle || item.title || item.Title || 'Untitled',
+            itemLocation: item.itemLocation || item.location || item.Location || '',
+            itemPrice: item.itemPrice || item.price || item.Price || 0,
+            itemRating: item.itemRating || item.rating || item.Rating || 0,
+            itemReviewCount: item.itemReviewCount || item.reviewsCount || item.ReviewsCount || 0,
+            itemImageUrl: item.itemImageUrl || item.coverImage || item.CoverImage || '',
+            addedAt: item.addedAt || item.CreatedAt || new Date().toISOString()
+          })) : [];
+
+          console.log('🐞 Debug Wishlist Items:', items);
 
           // Group items into a "My Favorites" wishlist for now
           // In a real app, you'd fetch multiple wishlists
@@ -70,10 +102,13 @@ export class WishlistComponent implements OnInit, OnDestroy {
             this.wishlists = [];
           }
           this.loading = false;
+          this.cdr.detectChanges(); // Force update
         },
         error: (err) => {
-          console.error('Error loading wishlist:', err);
+          clearTimeout(timeout);
+          console.error('❌ Error loading wishlist:', err);
           this.loading = false;
+          this.cdr.detectChanges(); // Force update
         }
       })
     );

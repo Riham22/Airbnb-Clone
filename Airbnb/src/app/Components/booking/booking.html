@@ -1,108 +1,151 @@
-<div class="booking-container">
-    <!-- Header -->
-    <div class="booking-header">
-        <h1>My Bookings</h1>
-        <p class="subtitle">Manage your reservations and upcoming trips</p>
+<div class="booking-header">
+    <div class="header-left">
+        <a routerLink="/" class="home-btn" title="Go Home">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+            Home
+        </a>
+        <h1>Trips</h1>
     </div>
-
-    <!-- Tabs -->
-    <div class="booking-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="setActiveTab('upcoming')">
-            Upcoming
+    <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="setActiveTab('pending')">
+            Pending
         </button>
-        <button class="tab-btn" [class.active]="activeTab === 'past'" (click)="setActiveTab('past')">
-            Past
+        <button class="tab-btn" [class.active]="activeTab === 'paid'" (click)="setActiveTab('paid')">
+            Paid
         </button>
         <button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="setActiveTab('cancelled')">
             Cancelled
         </button>
     </div>
+</div>
 
-    <!-- Loading State -->
-    <div *ngIf="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading your bookings...</p>
-    </div>
+<!-- Loading State -->
+<div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading your bookings...</p>
+</div>
 
-    <!-- Error State -->
-    <div *ngIf="error && !loading" class="error-state">
-        <svg viewBox="0 0 24 24" width="48" height="48">
+<!-- Error State -->
+<div *ngIf="error && !loading" class="error-state">
+    <svg viewBox="0 0 24 24" width="48" height="48">
+        <path fill="currentColor"
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+    </svg>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="loadBookings()">Try Again</button>
+</div>
+
+<!-- Bookings List -->
+<div *ngIf="!loading && !error" class="bookings-list">
+    <div *ngIf="getFilteredBookings().length === 0" class="empty-state">
+        <svg viewBox="0 0 24 24" width="64" height="64">
             <path fill="currentColor"
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
         </svg>
-        <p>{{ error }}</p>
-        <button class="retry-btn" (click)="loadBookings()">Try Again</button>
+        <h3>No bookings found</h3>
+        <p *ngIf="activeTab === 'pending'">You don't have any pending payments.</p>
+        <p *ngIf="activeTab === 'paid'">You don't have any paid trips yet.</p>
+        <p *ngIf="activeTab === 'cancelled'">You don't have any cancelled reservations.</p>
+        <a routerLink="/home" class="browse-btn">Browse Properties</a>
     </div>
 
-    <!-- Bookings List -->
-    <div *ngIf="!loading && !error" class="bookings-list">
-        <div *ngIf="getFilteredBookings().length === 0" class="empty-state">
-            <svg viewBox="0 0 24 24" width="64" height="64">
-                <path fill="currentColor"
-                    d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-            </svg>
-            <h3>No bookings found</h3>
-            <p *ngIf="activeTab === 'upcoming'">You don't have any upcoming reservations.</p>
-            <p *ngIf="activeTab === 'past'">You don't have any past reservations.</p>
-            <p *ngIf="activeTab === 'cancelled'">You don't have any cancelled reservations.</p>
-            <a routerLink="/home" class="browse-btn">Browse Properties</a>
+    <div *ngFor="let booking of getFilteredBookings()" class="booking-card">
+        <div class="booking-image">
+            <img [src]="booking.propertyCoverImage" [alt]="booking.propertyTitle" loading="lazy">
+            <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
+                {{ booking.status }}
+            </span>
         </div>
 
-        <div *ngFor="let booking of getFilteredBookings()" class="booking-card">
-            <div class="booking-image">
-                <img [src]="booking.propertyImage" [alt]="booking.propertyTitle" loading="lazy">
-                <span class="status-badge" [ngClass]="getStatusClass(booking.status)">
-                    {{ booking.status }}
-                </span>
+        <div class="booking-details">
+            <div class="property-info">
+                <h3>{{ booking.propertyTitle }}</h3>
+                <p class="booking-id">Booking #{{ booking.id }}</p>
             </div>
 
-            <div class="booking-details">
-                <div class="property-info">
-                    <h3>{{ booking.propertyTitle }}</h3>
-                    <p class="booking-id">Booking #{{ booking.id }}</p>
-                </div>
-
-                <div class="date-info">
-                    <div class="date-row">
-                        <svg viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="currentColor"
-                                d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-                        </svg>
-                        <div>
-                            <strong>Check-in:</strong> {{ formatDate(booking.checkInDate) }}
-                        </div>
+            <div class="date-info">
+                <div class="date-row">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor"
+                            d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+                    </svg>
+                    <div>
+                        <strong>Check-in:</strong> {{ formatDate(booking.checkInDate) }}
                     </div>
-                    <div class="date-row">
-                        <svg viewBox="0 0 24 24" width="20" height="20">
-                            <path fill="currentColor"
-                                d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-                        </svg>
-                        <div>
-                            <strong>Check-out:</strong> {{ formatDate(booking.checkOutDate) }}
-                        </div>
-                    </div>
-                    <p class="nights-count">{{ booking.numberOfNights }} night{{ booking.numberOfNights > 1 ? 's' : ''
-                        }}</p>
                 </div>
-
-                <div class="price-info">
-                    <div class="total-price">
-                        <span class="price-label">Total:</span>
-                        <span class="price-amount">{{ booking.currency }} {{ booking.totalPrice }}</span>
+                <div class="date-row">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor"
+                            d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+                    </svg>
+                    <div>
+                        <strong>Check-out:</strong> {{ formatDate(booking.checkOutDate) }}
                     </div>
-                    <p class="booking-date">Booked on {{ formatDate(booking.createdAt) }}</p>
                 </div>
+                <p class="nights-count">{{ booking.numberOfNights }} night{{ booking.numberOfNights > 1 ? 's' : ''
+                    }}</p>
             </div>
 
-            <div class="booking-actions">
-                <a [routerLink]="['/booking', booking.id]" class="action-btn view-btn">
-                    View Details
-                </a>
-                <button *ngIf="canCancelBooking(booking)" class="action-btn cancel-btn"
-                    (click)="cancelBooking(booking.id)">
-                    Cancel Booking
-                </button>
+            <div class="price-info">
+                <div class="total-price">
+                    <span class="price-label">Total:</span>
+                    <span class="price-amount">{{ booking.currency }} {{ booking.totalPrice }}</span>
+                </div>
             </div>
+        </div>
+
+        <div class="booking-actions">
+            <!-- PENDING: Pay Now -->
+            <a [routerLink]="['/payment', booking.id]" class="action-btn btn-pending" *ngIf="activeTab === 'pending'">
+                Pay Now
+            </a>
+
+            <!-- PAID: Paid -->
+            <button class="action-btn btn-paid" *ngIf="activeTab === 'paid'">
+                Paid
+            </button>
+
+            <!-- CANCELLED: Cancelled Info -->
+            <button class="action-btn btn-cancelled" *ngIf="activeTab === 'cancelled'">
+                Cancelled
+            </button>
+
+            <button class="action-btn review-btn" *ngIf="canReview(booking)" (click)="openReviewModal(booking)">
+                Write Review
+            </button>
+
+            <button class="action-btn cancel-btn" *ngIf="canCancelBooking(booking)" (click)="cancelBooking(booking.id)">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" *ngIf="showReviewModal" (click)="closeReviewModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <h3>Write a Review</h3>
+
+        <div class="rating-input">
+            <label>Rating:</label>
+            <div class="stars">
+                <span *ngFor="let star of [1,2,3,4,5]" (click)="reviewData.rating = star"
+                    [class.filled]="star <= reviewData.rating">★</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Comment:</label>
+            <textarea [(ngModel)]="reviewData.comment" placeholder="Share your experience..." rows="4"></textarea>
+        </div>
+
+        <div class="modal-actions">
+            <button class="cancel-modal-btn" (click)="closeReviewModal()">Cancel</button>
+            <button class="submit-modal-btn" (click)="submitReview()" [disabled]="submittingReview">
+                {{ submittingReview ? 'Submitting...' : 'Submit Review' }}
+            </button>
         </div>
     </div>
 </div>

@@ -2,6 +2,7 @@ import { Review } from "./review";
 
 // models/service.ts
 export interface Service {
+  isWishlisted: boolean;
   id: number;
   type: 'service';
   name: string;
@@ -13,10 +14,11 @@ export interface Service {
   images: string[];
   category: string;
   duration: string;
-  provider: {
+  maxGuests?: number;
+  host: {
     name: string;
     joinedDate: string;
-    isVerified: boolean;
+    isSuperhost: boolean;
     avatar: string;
   };
   description: string;

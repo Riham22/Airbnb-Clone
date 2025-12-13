@@ -1,4 +1,4 @@
-// models/admin-stats.model.ts
+
 export interface AdminStats {
   totalUsers: number;
   totalListings: number;
@@ -9,4 +9,6 @@ export interface AdminStats {
   monthlyGrowth: number;
   weeklyRevenue?: number;
   activeBookings?: number;
+  totalServices?: number;
+  totalExperiences?: number;
 }

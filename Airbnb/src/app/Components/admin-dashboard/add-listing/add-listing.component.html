@@ -1,0 +1,86 @@
+<div class="page-container">
+    <div class="page-header">
+        <button class="btn-back" (click)="goBack()">← Back to Dashboard</button>
+        <h1>Add New Listing</h1>
+    </div>
+
+    <div class="form-card">
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label>Listing Title</label>
+                <input type="text" [(ngModel)]="newListing.name" name="name" required placeholder="Cozy Downtown Appt">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea [(ngModel)]="newListing.description" name="description" rows="4"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Price per Night ($)</label>
+                    <input type="number" [(ngModel)]="newListing.price" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label>Location (City, Country)</label>
+                    <input type="text" [(ngModel)]="newListing.location" name="location" required
+                        placeholder="New York, USA">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Property Type</label>
+                    <select [(ngModel)]="newListing.propertyTypeId" name="propertyType">
+                        <option [ngValue]="null">Select Type</option>
+                        <option *ngFor="let type of propertyTypes" [value]="type.id">{{ type.name }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select [(ngModel)]="newListing.propertyCategoryId" name="propertyCategory">
+                        <option [ngValue]="null">Select Category</option>
+                        <option *ngFor="let cat of propertyCategories" [value]="cat.id">{{ cat.name }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Details Row -->
+            <div class="form-row four-col">
+                <div class="form-group">
+                    <label>Guests</label>
+                    <input type="number" [(ngModel)]="newListing.maxGuests" name="guests">
+                </div>
+                <div class="form-group">
+                    <label>Bedrooms</label>
+                    <input type="number" [(ngModel)]="newListing.bedrooms" name="bedrooms">
+                </div>
+                <div class="form-group">
+                    <label>Beds</label>
+                    <input type="number" [(ngModel)]="newListing.beds" name="beds">
+                </div>
+                <div class="form-group">
+                    <label>Baths</label>
+                    <input type="number" [(ngModel)]="newListing.bathrooms" name="bathrooms">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Images</label>
+                <div class="file-upload">
+                    <input type="file" (change)="onFileSelected($event)" multiple accept="image/*">
+                    <p>Drag and drop or click to upload</p>
+                </div>
+                <div *ngIf="selectedFiles.length > 0" class="file-list">
+                    <span *ngFor="let file of selectedFiles">{{ file.name }}</span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" [disabled]="isLoading">
+                    {{ isLoading ? 'Creating Listing...' : 'Create Listing' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

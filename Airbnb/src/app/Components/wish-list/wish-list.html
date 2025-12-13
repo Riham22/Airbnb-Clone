@@ -3,6 +3,16 @@
   <div *ngIf="!selectedWishlist" class="wishlists-grid-view">
     <div class="header">
       <h1>Wishlists</h1>
+      <a routerLink="/" class="home-btn-icon" aria-label="Go to Home">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation"
+          focusable="false"
+          style="display: block; fill: none; height: 16px; width: 16px; stroke: currentcolor; stroke-width: 3; overflow: visible;">
+          <g fill="none">
+            <path d="M16 4 L2 16 L4 18 L6 16 L6 26 L12 26 L12 18 L20 18 L20 26 L26 26 L26 16 L28 18 L30 16 L16 4 Z"
+              fill="currentcolor"></path>
+          </g>
+        </svg>
+      </a>
     </div>
 
     <div *ngIf="loading" class="loading-state">
@@ -45,7 +55,8 @@
     </div>
 
     <div class="listings-grid">
-      <div *ngFor="let item of selectedWishlist.listings" class="listing-card">
+      <div *ngFor="let item of selectedWishlist.listings" class="listing-card"
+        [routerLink]="['/' + (item.itemType || 'property'), item.itemId]">
         <div class="listing-image">
           <img [src]="item.itemImageUrl" [alt]="item.itemTitle">
           <button class="remove-btn" (click)="removeFromWishlist(item.itemId, $event)">

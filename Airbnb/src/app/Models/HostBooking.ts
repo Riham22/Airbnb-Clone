@@ -1,13 +1,16 @@
 
-
 export interface HostBooking {
   id: number;
+  propertyName: string;
   guestName: string;
-  guestAvatar: string;
-  listingName: string;
-  checkIn: string;
-  checkOut: string;
+  guestEmail: string;
+  checkIn: Date;
+  checkOut: Date;
   guests: number;
   totalPrice: number;
-  status: 'upcoming' | 'current' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  bookingDate: Date;
+  propertyImage: string;
+  guestAvatar?: string;
+  listingName?: string;
 }

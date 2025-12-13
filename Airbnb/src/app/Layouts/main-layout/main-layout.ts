@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { NavBarComponent } from "../../Components/nav-bar/nav-bar.component";
+import { SearchComponent } from '../../Pages/search/search';
 
 
 
@@ -8,7 +10,8 @@ import { RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, NavBarComponent, SearchComponent],
+
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css'
 })

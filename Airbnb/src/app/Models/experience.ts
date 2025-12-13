@@ -2,6 +2,7 @@ import { Review } from "./review";
 
 // models/experience.ts
 export interface Experience {
+  isWishlisted: boolean;
   id: number;
   type: 'experience';
   name: string;
@@ -14,6 +15,7 @@ export interface Experience {
   category: string;
   duration: string;
   maxParticipants: number;
+  maxGuests?: number;
   host: {
     name: string;
     joinedDate: string;
@@ -24,8 +26,23 @@ export interface Experience {
   highlights: string[];
   includes: string[];
   requirements: string[];
+  amenities?: string[]; // Added for UI compatibility
   reviews: Review[];
   meetingPoint: string;
   languages: string[];
+  activities: ExperienceActivity[];
 }
 
+export interface ExperienceActivity {
+  id: number;
+  name: string;
+  description: string;
+  durationMinutes: number;
+}
+
+export interface ExperienceActivity {
+  id: number;
+  name: string;
+  description: string;
+  durationMinutes: number;
+}
