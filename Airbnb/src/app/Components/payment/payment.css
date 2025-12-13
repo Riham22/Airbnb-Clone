@@ -352,3 +352,170 @@
   display: block;
   min-height: 100vh;
 }
+/* components/payment/payment.css - Add these styles */
+
+/* Stripe Card Element */
+.stripe-card-element {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  transition: all 0.2s;
+}
+
+.stripe-card-element.StripeElement--focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.stripe-card-element.StripeElement--invalid {
+  border-color: #EF4444;
+}
+
+.stripe-errors {
+  color: #EF4444;
+  font-size: 14px;
+  margin-top: 8px;
+  min-height: 20px;
+}
+
+/* Security Notice */
+.security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #F3F4F6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.security-icon {
+  width: 24px;
+  height: 24px;
+  color: #059669;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.security-notice div {
+  flex: 1;
+}
+
+.security-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.security-notice p {
+  margin: 0;
+  font-size: 14px;
+  color: #6B7280;
+  line-height: 1.5;
+}
+
+/* Test Payment Section */
+.test-payment-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.test-payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.test-payment-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Payment Method Cards with brand icons */
+.method-icon.card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.method-icon.paypal {
+  background: linear-gradient(135deg, #003087 0%, #009cde 100%);
+  color: white;
+}
+
+.method-icon.bank_transfer {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.completed {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.status-badge.pending {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.status-badge.processing {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.status-badge.failed {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+/* Loading states */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #4F46E5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #6B7280;
+  font-size: 16px;
+}

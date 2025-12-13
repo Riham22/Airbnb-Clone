@@ -1,8 +1,10 @@
-import { Component, Output, EventEmitter, OnInit, Input } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DateRange } from '../../Models/DateRange';
 import { GuestCounts } from '../../Models/guest-counts';
+import { LocationCollectorService } from '../../Services/location-collector.service'; // <-- Add this
+import { Subscription } from 'rxjs'; // <-- Add this
 
 @Component({
   selector: 'app-main-search-bar',
@@ -11,10 +13,17 @@ import { GuestCounts } from '../../Models/guest-counts';
   templateUrl: './main-search-bar-component.html',
   styleUrl: './main-search-bar-component.css'
 })
-export class MainSearchBarComponent implements OnInit {
+export class MainSearchBarComponent implements OnInit, OnDestroy {
   @Output() openFilters = new EventEmitter<void>();
   @Output() filtersChanged = new EventEmitter<any>();
-  @Input() locationOptions: any[] = [];
+  
+  // Remove static @Input() and make it dynamic
+  // @Input() locationOptions: any[] = [];
+  
+  // Dynamic locations
+  locationOptions: any[] = [];
+  isLoadingLocations = false;
+  private locationSubscription?: Subscription;
 
   // UI state
   activePanel: string | null = null;
@@ -49,11 +58,76 @@ export class MainSearchBarComponent implements OnInit {
   availableYears: number[] = [];
   availableDecades: number[] = [];
 
-  constructor() { }
+  constructor(
+    private locationCollector: LocationCollectorService // <-- Inject service
+  ) { }
 
   ngOnInit(): void {
     this.generateAvailableYears();
     this.generateAvailableDecades();
+    this.loadDynamicLocations(); // <-- Load dynamic locations
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscription
+    if (this.locationSubscription) {
+      this.locationSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Load dynamic locations from API/DB
+   */
+  public loadDynamicLocations(): void {
+    this.isLoadingLocations = true;
+    
+    this.locationSubscription = this.locationCollector.getDynamicLocations().subscribe({
+      next: (locations) => {
+        this.locationOptions = locations;
+        this.isLoadingLocations = false;
+        console.log('📍 Dynamic locations loaded in search bar:', locations.length);
+        
+        if (locations.length === 0) {
+          console.warn('⚠️ No locations found in search bar');
+          this.loadFallbackLocations();
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error loading locations in search bar:', error);
+        this.loadFallbackLocations();
+        this.isLoadingLocations = false;
+      }
+    });
+  }
+
+  /**
+   * Fallback locations if API fails
+   */
+  private loadFallbackLocations(): void {
+    this.locationOptions = [
+      {
+        value: 'flexible',
+        label: "I'm flexible",
+        icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FF385C">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>`,
+        description: 'Discover unique stays',
+        category: 'property',
+        count: 100
+      }
+    ];
+  }
+
+  /**
+   * Debug function to check locations
+   */
+  debugLocations(): void {
+    console.log('🔍 Debug locations:', {
+      options: this.locationOptions,
+      count: this.locationOptions.length,
+      currentFilter: this.currentFilters.location
+    });
+    this.locationCollector.debugData();
   }
 
   // ========== PANEL METHODS ==========
@@ -62,6 +136,11 @@ export class MainSearchBarComponent implements OnInit {
     if (panel === 'dates') {
       this.currentMonth = new Date();
       this.calendarView = 'month';
+    }
+    
+    // Debug when opening location panel
+    if (panel === 'location') {
+      console.log('📍 Opening location panel with options:', this.locationOptions.length);
     }
   }
 
@@ -76,6 +155,7 @@ export class MainSearchBarComponent implements OnInit {
 
   // ========== LOCATION METHODS ==========
   selectLocation(location: string): void {
+    console.log('📍 Location selected:', location);
     this.currentFilters.location = location;
     this.filtersChanged.emit(this.currentFilters);
     setTimeout(() => this.closePanel(), 300);
@@ -223,8 +303,21 @@ export class MainSearchBarComponent implements OnInit {
   // ========== DISPLAY METHODS ==========
   getLocationDisplay(): string {
     if (!this.currentFilters.location) return 'Anywhere';
+    
+    // For "flexible" option
+    if (this.currentFilters.location === 'flexible') {
+      return "I'm flexible";
+    }
+    
+    // Find location in options
     const option = this.locationOptions.find(opt => opt.value === this.currentFilters.location);
-    return option ? option.label : 'Anywhere';
+    
+    if (option) {
+      return option.label;
+    } else {
+      // If not found in options but has a value, show it directly
+      return this.currentFilters.location.replace('_', ' ') || 'Anywhere';
+    }
   }
 
   getDatesDisplay(): string {

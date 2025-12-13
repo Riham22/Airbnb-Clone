@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
     providedIn: 'root'
 })
 export class ChatService {
-    private apiUrl = 'http://localhost:5034/api/chatbot';
+    private apiUrl = 'https://localhost:7020/api/chatbot';
     private sessionId: string;
 
     constructor(private http: HttpClient) {

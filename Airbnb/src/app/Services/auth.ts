@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = "http://localhost:5034/api/Account";
+  private apiUrl = "https://localhost:7020/api/Account";
 
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   private currentUser = new BehaviorSubject<any>(null);
@@ -234,4 +234,5 @@ export class AuthService {
 
     return role.toLowerCase() === 'admin';
   }
+  
 }

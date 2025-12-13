@@ -39,8 +39,8 @@ export interface UserProfile extends UserProfileUpdate {
   providedIn: 'root'
 })
 export class UserService {
-  private userApiUrl = "http://localhost:5034/api/User";
-  private accountApiUrl = "http://localhost:5034/api/Account";
+  private userApiUrl = "https://localhost:7020/api/User";
+  private accountApiUrl = "https://localhost:7020/api/Account";
 
   private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
   userProfile$ = this.userProfileSubject.asObservable();

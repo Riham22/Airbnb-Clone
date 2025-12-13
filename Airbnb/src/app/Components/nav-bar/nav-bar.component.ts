@@ -538,12 +538,68 @@ export class NavBarComponent implements OnInit {
   }
 
   // ========== USER DISPLAY METHODS ==========
-  getUserDisplayName(): string {
-    if (this.isAuthenticated && this.currentUser) {
-      return `${this.currentUser.firstName} ${this.currentUser.lastName?.charAt(0)}.`;
-    }
+ // في navbar.component.ts - تحديث الدالة
+getUserDisplayName(): string {
+  console.log('🔄 Getting user display name...');
+  
+  // Check if user is authenticated
+  if (!this.isAuthenticated) {
+    console.log('🔄 User not authenticated, showing "Log in"');
     return 'Log in';
   }
+  
+  // Check if currentUser exists
+  if (!this.currentUser) {
+    console.log('🔄 currentUser is null or undefined');
+    return 'Log in';
+  }
+  
+  // Debug current user object
+  console.log('🔄 currentUser object:', this.currentUser);
+  console.log('🔄 currentUser type:', typeof this.currentUser);
+  console.log('🔄 currentUser keys:', Object.keys(this.currentUser));
+  
+  // Try to get display name from various possible properties
+  let displayName = '';
+  
+  // Method 1: Check firstName and lastName
+  if (this.currentUser.firstName || this.currentUser.lastName) {
+    const firstName = this.currentUser.firstName || '';
+    const lastName = this.currentUser.lastName || '';
+    
+    if (firstName && lastName) {
+      displayName = `${firstName} ${lastName.charAt(0)}.`;
+    } else if (firstName) {
+      displayName = firstName;
+    } else if (lastName) {
+      displayName = lastName;
+    }
+  }
+  
+  // Method 2: Check name (if user object has a single name field)
+  if (!displayName && this.currentUser.name) {
+    displayName = this.currentUser.name;
+  }
+  
+  // Method 3: Check username
+  if (!displayName && this.currentUser.username) {
+    displayName = this.currentUser.username;
+  }
+  
+  // Method 4: Extract from email
+  if (!displayName && this.currentUser.email) {
+    const emailParts = this.currentUser.email.split('@')[0];
+    displayName = emailParts.charAt(0).toUpperCase() + emailParts.slice(1);
+  }
+  
+  // Method 5: Fallback
+  if (!displayName) {
+    displayName = 'User';
+  }
+  
+  console.log('🔄 Final display name:', displayName);
+  return displayName;
+}
 
   getUserInitials(): string {
     if (this.isAuthenticated && this.currentUser) {

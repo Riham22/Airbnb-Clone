@@ -6,7 +6,15 @@ import { Subject, takeUntil } from 'rxjs';
 import { PaymentMethod } from '../../Models/PaymentMethod';
 import { Transaction } from '../../Models/Transaction';
 import { Payout } from '../../Models/Payout';
-import { PaymentService, PaymentIntentRequest, ConfirmPaymentRequest } from '../../Services/payment';
+import { 
+  PaymentService, 
+  SetupIntentResponse,
+  AddPaymentMethodRequest,
+  CreatePaymentIntentRequest 
+} from '../../Services/payment';
+
+// Declare Stripe for TypeScript (will be loaded via script tag)
+declare const Stripe: any;
 
 interface NewCard {
   number: string;
@@ -24,9 +32,12 @@ interface NewCard {
   styleUrl: './payment.css'
 })
 export class PaymentComponent implements OnInit, OnDestroy {
+  // Payment data
   public paymentMethods: PaymentMethod[] = [];
   public transactions: Transaction[] = [];
   public payouts: Payout[] = [];
+  
+  // UI state
   public activeTab: 'methods' | 'transactions' | 'payouts' = 'methods';
   public showAddCard = false;
   public payoutAmount = 0;
@@ -35,7 +46,10 @@ export class PaymentComponent implements OnInit, OnDestroy {
   public errorMessage = '';
   public successMessage = '';
   public transactionFilter = 'all';
+  public stripe: any = null;
+  public cardElement: any = null;
 
+  // New card form
   public newCard: NewCard = {
     number: '',
     expiry: '',
@@ -44,18 +58,32 @@ export class PaymentComponent implements OnInit, OnDestroy {
     zipCode: ''
   };
 
+  // Test payment form
+  public testPayment = {
+    amount: 50,
+    bookingId: 123,
+    currency: 'USD',
+    selectedMethodId: ''
+  };
+
   private destroy$ = new Subject<void>();
 
   constructor(private paymentService: PaymentService) {}
 
-  public ngOnInit(): void {
+  public async ngOnInit(): Promise<void> {
     this.loadPaymentData();
+    
+    // Initialize Stripe (test key)
+    this.initializeStripe();
     
     // Subscribe to real-time updates
     this.paymentService.getPaymentMethodsObservable()
       .pipe(takeUntil(this.destroy$))
       .subscribe(methods => {
         this.paymentMethods = methods;
+        if (methods.length > 0) {
+          this.testPayment.selectedMethodId = methods[0].id;
+        }
       });
 
     this.paymentService.getTransactionsObservable()
@@ -72,39 +100,87 @@ export class PaymentComponent implements OnInit, OnDestroy {
       });
   }
 
+  private initializeStripe(): void {
+    // Load Stripe.js dynamically
+    if (!(window as any).Stripe) {
+
+      const script = document.createElement('script');
+      script.src = 'https://js.stripe.com/v3/';
+      script.onload = () => {
+        this.setupStripe();
+      };
+      document.head.appendChild(script);
+    } else {
+      this.setupStripe();
+    }
+  }
+
+  private setupStripe(): void {
+    // Use your Stripe publishable key (test mode)
+    const stripePublishableKey = 'pk_test_51S...'; // 🔴 Replace with your actual key
+    
+    this.stripe = Stripe(stripePublishableKey);
+    console.log('✅ Stripe initialized');
+  }
+
+  private setupCardElement(): void {
+    if (!this.stripe) {
+      console.error('❌ Stripe not initialized');
+      return;
+    }
+
+    // Create card element
+    const elements = this.stripe.elements();
+    this.cardElement = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+          '::placeholder': {
+            color: '#aab7c4'
+          }
+        },
+        invalid: {
+          color: '#fa755a'
+        }
+      }
+    });
+
+    // Mount card element
+    setTimeout(() => {
+      const cardElementDiv = document.getElementById('card-element');
+      if (cardElementDiv) {
+        this.cardElement.mount('#card-element');
+        console.log('✅ Card element mounted');
+      }
+    }, 100);
+  }
+
   public ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-// Update the loadPaymentData method in your component
-private loadPaymentData(): void {
-  this.isLoading = true;
-  this.errorMessage = '';
-  this.successMessage = '';
+  private loadPaymentData(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
 
-  console.log('🔍 Loading all payment data from API...');
+    console.log('🔍 Loading all payment data from API...');
 
-  // Use the unified load method
-  this.paymentService.loadAllPaymentData().subscribe({
-    next: (data) => {
-      console.log('✅ Payment data loaded successfully');
-      console.log(`📊 ${data.methods.length} payment methods`);
-      console.log(`💳 ${data.transactions.length} transactions`);
-      console.log(`💰 ${data.payouts.length} payouts`);
-      
-      // Data is already loaded into subjects via the service
-      // Just calculate balance
-      this.calculateAvailableBalance();
-      this.isLoading = false;
-    },
-    error: (error) => {
-      console.error('❌ Error loading payment data:', error);
-      this.errorMessage = 'Failed to load payment data. Please try again.';
-      this.isLoading = false;
-    }
-  });
-}
+    this.paymentService.loadAllPaymentData().subscribe({
+      next: (data) => {
+        console.log('✅ Payment data loaded successfully:', data);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error loading payment data:', error);
+        this.errorMessage = 'Failed to load payment data. Please check your internet connection.';
+        this.isLoading = false;
+      }
+    });
+  }
+
   private calculateAvailableBalance(): void {
     const earnings = this.transactions
       .filter(t => t.type === 'earning' && t.status === 'completed')
@@ -118,183 +194,239 @@ private loadPaymentData(): void {
     console.log('💰 Available balance calculated:', this.availableBalance);
   }
 
+  // ================ UI METHODS ================
+  
   public setActiveTab(tab: 'methods' | 'transactions' | 'payouts'): void {
     this.activeTab = tab;
     this.errorMessage = '';
     this.successMessage = '';
   }
 
-  public setDefaultMethod(methodId: string): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
+  public openAddCardModal(): void {
+    this.showAddCard = true;
+    setTimeout(() => {
+      this.setupCardElement();
+    }, 100);
+  }
 
-    console.log('⚙️ Setting default payment method:', methodId);
+  public closeAddCardModal(): void {
+    this.showAddCard = false;
+    this.resetCardForm();
+  }
 
-    this.paymentService.setDefaultPaymentMethod(methodId).subscribe({
-      next: () => {
-        console.log('✅ Default payment method updated');
-        this.successMessage = 'Default payment method updated successfully';
-        this.isLoading = false;
-        
-        // Auto-hide success message after 3 seconds
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 3000);
-      },
-      error: (error) => {
-        console.error('❌ Error setting default payment method:', error);
-        this.errorMessage = 'Failed to set default payment method. Please try again.';
-        this.isLoading = false;
+  // ================ PAYMENT METHODS ================
+  
+
+  
+public async addCard(): Promise<void> {
+  if (!this.stripe || !this.cardElement) {
+    this.errorMessage = 'Payment system not ready. Please try again.';
+    return;
+  }
+
+  this.isLoading = true;
+  this.errorMessage = '';
+
+  try {
+    console.log('💳 Starting card addition process...');
+    
+    // Step 1: Get setup intent from backend - FIXED
+    const setupIntentResponse = await this.paymentService.getSetupIntent().toPromise();
+    
+    // Check if setupIntentResponse exists
+    if (!setupIntentResponse || !setupIntentResponse.data?.clientSecret) {
+      this.errorMessage = 'Failed to initialize payment. Please try again.';
+      this.isLoading = false;
+      return;
+    }
+    
+    console.log('✅ Setup intent received:', setupIntentResponse);
+
+    // Step 2: Confirm card setup with Stripe - FIXED
+    const { error, setupIntent: confirmedSetupIntent } = await this.stripe.confirmCardSetup(
+      setupIntentResponse.data.clientSecret, // Now safely accessed
+      {
+        payment_method: {
+          card: this.cardElement,
+          billing_details: {
+            name: this.newCard.name,
+            address: {
+              postal_code: this.newCard.zipCode
+            }
+          }
+        }
       }
-    });
+    );
+
+
+    
+      if (error) {
+        console.error('❌ Stripe error:', error);
+        this.errorMessage = error.message || 'Failed to verify card.';
+        this.isLoading = false;
+        return;
+      }
+
+      console.log('✅ Card verified by Stripe:', confirmedSetupIntent);
+
+      // Step 3: Save payment method to backend
+      const paymentMethodRequest: AddPaymentMethodRequest = {
+        stripePaymentMethodId: confirmedSetupIntent.payment_method,
+        setAsDefault: this.paymentMethods.length === 0
+      };
+
+      const savedMethod = await this.paymentService.addPaymentMethod(paymentMethodRequest).toPromise();
+      console.log('✅ Payment method saved to backend:', savedMethod);
+
+      this.successMessage = 'Payment method added successfully!';
+      this.closeAddCardModal();
+      this.isLoading = false;
+
+      // Auto-hide success message
+      setTimeout(() => {
+        this.successMessage = '';
+      }, 3000);
+
+    } catch (error: any) {
+      console.error('❌ Error adding card:', error);
+      this.errorMessage = error.message || 'Failed to add payment method. Please try again.';
+      this.isLoading = false;
+    }
+  }
+
+  public setDefaultMethod(methodId: string): void {
+    if (confirm('Set this as your default payment method?')) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      this.paymentService.setDefaultPaymentMethod(methodId).subscribe({
+        next: () => {
+          this.successMessage = 'Default payment method updated!';
+          this.isLoading = false;
+          
+          setTimeout(() => {
+            this.successMessage = '';
+          }, 3000);
+        },
+        error: (error) => {
+          console.error('❌ Error setting default method:', error);
+          this.errorMessage = 'Failed to set default payment method.';
+          this.isLoading = false;
+        }
+      });
+    }
   }
 
   public removePaymentMethod(methodId: string): void {
-    if (confirm('Are you sure you want to remove this payment method? This action cannot be undone.')) {
+    if (confirm('Are you sure you want to remove this payment method?')) {
       this.isLoading = true;
       this.errorMessage = '';
-      this.successMessage = '';
-
-      console.log('🗑️ Removing payment method:', methodId);
 
       this.paymentService.removePaymentMethod(methodId).subscribe({
         next: () => {
-          console.log('✅ Payment method removed');
-          this.successMessage = 'Payment method removed successfully';
+          this.successMessage = 'Payment method removed!';
           this.isLoading = false;
           
-          // Auto-hide success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
           }, 3000);
         },
         error: (error) => {
           console.error('❌ Error removing payment method:', error);
-          this.errorMessage = 'Failed to remove payment method. Please try again.';
+          this.errorMessage = 'Failed to remove payment method.';
           this.isLoading = false;
         }
       });
     }
   }
 
-  public addCard(): void {
-    if (this.validateCard()) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-
-      console.log('💳 Adding new payment card...');
-
-      // First, create a payment intent
-      const paymentIntentData: PaymentIntentRequest = {
-        amount: 100, // $1.00 authorization charge
-        currency: 'USD',
-        paymentMethodType: 'card',
-        metadata: {
-          cardLastFour: this.newCard.number.slice(-4),
-          cardType: this.getCardProvider(this.newCard.number)
-        }
-      };
-
-      this.paymentService.createPaymentIntent(paymentIntentData).subscribe({
-        next: (paymentIntent) => {
-          console.log('✅ Payment intent created:', paymentIntent.id);
-          
-          // Then confirm the payment with the card details
-          const confirmData: ConfirmPaymentRequest = {
-            paymentIntentId: paymentIntent.id,
-            paymentMethodId: undefined // Will be created from card details
-          };
-
-          // In a real implementation, you would use Stripe Elements or similar
-          // For now, we'll simulate adding the card
-          this.simulateAddCardToBackend();
-        },
-        error: (error) => {
-          console.error('❌ Error creating payment intent:', error);
-          this.errorMessage = 'Failed to process card. Please check your details and try again.';
-          this.isLoading = false;
-        }
-      });
+  // ================ TEST PAYMENT ================
+  
+  public async processTestPayment(): Promise<void> {
+    if (!this.testPayment.selectedMethodId || this.testPayment.amount <= 0) {
+      this.errorMessage = 'Please select a payment method and enter amount.';
+      return;
     }
-  }
 
-  private simulateAddCardToBackend(): void {
-    // Simulate API call - replace with actual implementation
-    setTimeout(() => {
-      const newMethod: PaymentMethod = {
-        id: Date.now().toString(),
-        type: 'card',
-        lastFour: this.newCard.number.slice(-4),
-        expiryDate: this.newCard.expiry,
-        isDefault: this.paymentMethods.length === 0,
-        provider: this.getCardProvider(this.newCard.number),
-        cardHolderName: this.newCard.name
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    try {
+      const paymentRequest: CreatePaymentIntentRequest = {
+        bookingId: this.testPayment.bookingId,
+        amount: this.testPayment.amount,
+        currency: this.testPayment.currency || 'USD',
+        paymentMethod: 'Card',
+        savedPaymentMethodId: parseInt(this.testPayment.selectedMethodId),
+        saveCard: false
       };
 
-      // Update local state (in real app, this would come from API response)
-      this.paymentMethods = [...this.paymentMethods, newMethod];
-      this.paymentService['paymentMethodsSubject'].next(this.paymentMethods);
+      console.log('💸 Processing test payment:', paymentRequest);
 
-      console.log('✅ Card added successfully');
-      this.successMessage = 'Payment method added successfully';
-      this.showAddCard = false;
-      this.resetCardForm();
+      const result = await this.paymentService.createPaymentIntent(paymentRequest).toPromise();
+      console.log('✅ Payment intent created:', result);
+
+      this.successMessage = `Payment of $${this.testPayment.amount} processed successfully!`;
       this.isLoading = false;
-      
-      // Auto-hide success message after 3 seconds
+
+      // Refresh transactions
+      this.paymentService.getTransactions().subscribe();
+
       setTimeout(() => {
         this.successMessage = '';
       }, 3000);
-    }, 1500);
-  }
 
-  public requestPayout(): void {
-    if (this.payoutAmount > 0 && this.payoutAmount <= this.availableBalance) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-
-      console.log('💰 Requesting payout:', this.payoutAmount);
-
-      this.paymentService.requestPayout(this.payoutAmount).subscribe({
-        next: (newPayout) => {
-          console.log('✅ Payout requested:', newPayout);
-          this.successMessage = `Payout of $${this.payoutAmount} requested successfully`;
-          this.payoutAmount = 0;
-          this.calculateAvailableBalance();
-          this.isLoading = false;
-          
-          // Auto-hide success message after 3 seconds
-          setTimeout(() => {
-            this.successMessage = '';
-          }, 3000);
-        },
-        error: (error) => {
-          console.error('❌ Error requesting payout:', error);
-          this.errorMessage = 'Failed to request payout. Please try again.';
-          this.isLoading = false;
-        }
-      });
-    } else if (this.payoutAmount > this.availableBalance) {
-      this.errorMessage = 'Payout amount cannot exceed available balance';
+    } catch (error: any) {
+      console.error('❌ Error processing payment:', error);
+      this.errorMessage = error.message || 'Payment failed. Please try again.';
+      this.isLoading = false;
     }
   }
 
-  public validateCard(): boolean {
-    const isValid = this.newCard.number.length === 16 &&
-           /^\d+$/.test(this.newCard.number) &&
-           this.validateExpiryDate(this.newCard.expiry) &&
-           this.newCard.cvc.length === 3 &&
-           /^\d+$/.test(this.newCard.cvc) &&
-           this.newCard.name.trim().length > 0;
+  // ================ PAYOUTS ================
+  
+  public requestPayout(): void {
+    if (this.payoutAmount <= 0 || this.payoutAmount > this.availableBalance) {
+      this.errorMessage = 'Please enter a valid payout amount.';
+      return;
+    }
 
-    if (!isValid) {
-      this.errorMessage = 'Please check your card details and try again';
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.paymentService.requestPayout(this.payoutAmount).subscribe({
+      next: () => {
+        this.successMessage = `Payout of $${this.payoutAmount} requested successfully!`;
+        this.payoutAmount = 0;
+        this.isLoading = false;
+        
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
+      },
+      error: (error) => {
+        console.error('❌ Error requesting payout:', error);
+        this.errorMessage = 'Failed to request payout. Please try again.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // ================ FORM VALIDATION ================
+  
+  public validateCard(): boolean {
+    // Basic validation - in real app, use Stripe Elements validation
+    if (!this.newCard.name.trim()) {
+      this.errorMessage = 'Please enter cardholder name.';
+      return false;
     }
     
-    return isValid;
+    if (!this.newCard.zipCode || this.newCard.zipCode.length < 5) {
+      this.errorMessage = 'Please enter valid ZIP code.';
+      return false;
+    }
+    
+    return true;
   }
 
   public resetCardForm(): void {
@@ -306,30 +438,14 @@ private loadPaymentData(): void {
       zipCode: ''
     };
     this.errorMessage = '';
-  }
-
-  private validateExpiryDate(expiry: string): boolean {
-    if (expiry.length !== 5 || !expiry.includes('/')) {
-      return false;
+    
+    if (this.cardElement) {
+      this.cardElement.clear();
     }
-
-    const [month, year] = expiry.split('/').map(Number);
-    const currentYear = new Date().getFullYear() % 100;
-    const currentMonth = new Date().getMonth() + 1;
-
-    return month >= 1 && month <= 12 &&
-           year >= currentYear &&
-           (year > currentYear || month >= currentMonth);
   }
 
-  private getCardProvider(cardNumber: string): string {
-    if (cardNumber.startsWith('4')) return 'Visa';
-    if (cardNumber.startsWith('5')) return 'Mastercard';
-    if (cardNumber.startsWith('34') || cardNumber.startsWith('37')) return 'American Express';
-    if (cardNumber.startsWith('6')) return 'Discover';
-    return 'Credit Card';
-  }
-
+  // ================ HELPER METHODS ================
+  
   public retryLoad(): void {
     this.errorMessage = '';
     this.loadPaymentData();
@@ -338,9 +454,6 @@ private loadPaymentData(): void {
   public filterTransactions(filter: string): void {
     this.transactionFilter = filter;
     console.log('🔍 Filtering transactions by:', filter);
-    
-    // In a real implementation, you would call the API with filter
-    // For now, we'll just log it
   }
 
   public testApiConnection(): void {
@@ -348,7 +461,7 @@ private loadPaymentData(): void {
     this.paymentService.testConnection().subscribe({
       next: (response) => {
         console.log('✅ API Connection test successful:', response);
-        this.successMessage = 'API connection successful';
+        this.successMessage = 'API connection successful!';
         
         setTimeout(() => {
           this.successMessage = '';
@@ -359,5 +472,18 @@ private loadPaymentData(): void {
         this.errorMessage = 'API connection failed. Please check your backend.';
       }
     });
+  }
+
+  // Format card display
+  public getCardIcon(brand: string): string {
+    switch(brand.toLowerCase()) {
+      case 'visa': return 'fab fa-cc-visa';
+      case 'mastercard': return 'fab fa-cc-mastercard';
+      case 'amex':
+      case 'american express': return 'fab fa-cc-amex';
+      case 'discover': return 'fab fa-cc-discover';
+      case 'paypal': return 'fab fa-paypal';
+      default: return 'fas fa-credit-card';
+    }
   }
 }
