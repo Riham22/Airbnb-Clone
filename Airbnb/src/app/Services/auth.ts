@@ -246,23 +246,34 @@ export class AuthService {
     const user = this.getCurrentUser();
     if (!user) return false;
 
+    console.log('Checking admin status for user:', user);
+
+    // 1. Check for Roles array (standard backend response)
+    if (Array.isArray(user.Roles) && user.Roles.some((r: string) => r.toLowerCase() === 'admin')) return true;
+    if (Array.isArray(user.roles) && user.roles.some((r: string) => r.toLowerCase() === 'admin')) return true;
+
+    // 2. Check for single role property (legacy or claim)
     const role = user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
       user.role || user.Role;
 
-    console.log('Checking admin status - Role:', role);
+    console.log('Checking admin status - Single Role:', role);
 
-    if (!role) {
-      const username = user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || user.name || user.username;
-      return username && username.toLowerCase() === 'admin';
-    }
+    if (role && role.toLowerCase() === 'admin') return true;
 
-    return role.toLowerCase() === 'admin';
+    // 3. Last resort: check username
+    const username = user['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || user.name || user.username;
+    return username && username.toLowerCase() === 'admin';
   }
 
   isHost(): boolean {
     const user = this.getCurrentUser();
     if (!user) return false;
 
+    // 1. Check for Roles array
+    if (Array.isArray(user.Roles) && user.Roles.some((r: string) => r.toLowerCase() === 'host')) return true;
+    if (Array.isArray(user.roles) && user.roles.some((r: string) => r.toLowerCase() === 'host')) return true;
+
+    // 2. Check for single role property
     const role = user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
       user.role || user.Role;
 
