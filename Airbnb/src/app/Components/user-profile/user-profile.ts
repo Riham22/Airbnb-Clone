@@ -1,31 +1,34 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../Services/auth';
 import { UserService } from '../../Services/user.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './user-profile.html',
-  styleUrl: './user-profile.css'
+  styleUrl: './user-profile.css',
+  providers: [DatePipe]
 })
 export class UserProfile implements OnInit {
-  user: any = null;
+  currentUser: any = null; // Renamed from 'user' to match template
   loading: boolean = true;
-  editUser: any = {};
-  error: string = '';
-  isEditMode = false;
+  profileForm!: FormGroup; // Added form group
+
+  isEditing = false; // Renamed from 'isEditMode'
   isSaving = false;
-  isUploadingPhoto = false; // New state for photo upload
+  isUploadingPhoto = false;
+
+  // Delete Account State
   isDeleting = false;
   showDeleteModal = false;
 
-  // Password change
+  // Password Change State
   showChangePasswordModal = false;
   isChangingPassword = false;
   passwordData = {
@@ -34,21 +37,67 @@ export class UserProfile implements OnInit {
   };
   confirmPassword = '';
 
+  successMessage: string | null = null;
+  errorMessage: string | null = null;
+  maxDate: string;
+
   constructor(
     private authService: AuthService,
     private userService: UserService,
-    private router: Router
-  ) { }
+    private router: Router,
+    private fb: FormBuilder,
+    private datePipe: DatePipe,
+    private cdr: ChangeDetectorRef
+  ) {
+    const today = new Date();
+    this.maxDate = today.toISOString().split('T')[0];
+    this.initForm();
+  }
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadUserStats();
 
     // Subscribe to user updates
     this.authService.currentUser$.subscribe(user => {
-      this.user = user;
+      if (user) {
+        this.currentUser = user;
+        if (!this.isEditing) {
+          this.patchFormValues();
+        }
+      }
+    });
+  }
+
+  initForm(): void {
+    this.profileForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]], // Usually read-only
+      phone: [''],
+      dateOfBirth: [''],
+      gender: [''],
+      address: [''],
+      about: ['', [Validators.maxLength(2000)]]
     });
 
-    this.loadUserStats();
+    // Disable form initially
+    this.profileForm.disable();
+  }
+
+  patchFormValues(): void {
+    if (!this.currentUser) return;
+
+    this.profileForm.patchValue({
+      firstName: this.getUserProperty('firstName', 'given_name'),
+      lastName: this.getUserProperty('lastName', 'family_name'),
+      email: this.getUserProperty('email', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'),
+      phone: this.currentUser.phone || this.currentUser.phoneNumber || '',
+      dateOfBirth: this.datePipe.transform(this.currentUser.dateOfBirth, 'yyyy-MM-dd') || '',
+      gender: this.currentUser.gender || '',
+      address: this.currentUser.address || '',
+      about: this.currentUser.about || this.currentUser.bio || ''
+    });
   }
 
   userStats: any = { tripsCount: 0, wishlistsCount: 0, reviewsCount: 0 };
@@ -66,26 +115,19 @@ export class UserProfile implements OnInit {
 
   loadUserData(): void {
     this.loading = true;
-    this.error = '';
+    this.errorMessage = null;
 
-    // Use UserService.getMyProfile() - this returns cached data from AuthService
     this.userService.getMyProfile().subscribe({
       next: (data: any) => {
-        if (data) {
-          this.user = data;
-          console.log('Loaded user data:', this.user);
-        } else {
-          // Fallback to current user from AuthService
-          this.user = this.authService.getCurrentUser();
-          console.log('Using AuthService current user:', this.user);
-        }
+        this.currentUser = data || this.authService.getCurrentUser();
+        this.patchFormValues();
         this.loading = false;
       },
       error: (err: any) => {
         console.error('Error loading profile:', err);
-        // Fallback to current user from AuthService
-        this.user = this.authService.getCurrentUser();
-        this.error = 'Could not load fresh profile data. Using cached data.';
+        this.currentUser = this.authService.getCurrentUser();
+        this.patchFormValues();
+        this.errorMessage = 'Could not load fresh profile data.';
         this.loading = false;
       }
     });
@@ -93,44 +135,138 @@ export class UserProfile implements OnInit {
 
   // Helper method to safely get user properties
   getUserProperty(primaryKey: string, secondaryKey?: string): any {
-    if (!this.user) return '';
-
-    // Try primary key first
-    if (this.user[primaryKey]) {
-      return this.user[primaryKey];
-    }
-
-    // Try secondary key if provided
-    if (secondaryKey && this.user[secondaryKey]) {
-      return this.user[secondaryKey];
-    }
-
-    // Return empty string if not found
-    return '';
+    if (!this.currentUser) return '';
+    return this.currentUser[primaryKey] || (secondaryKey ? this.currentUser[secondaryKey] : '') || '';
   }
 
   toggleEditMode(): void {
-    this.isEditMode = !this.isEditMode;
-    if (this.isEditMode) {
-      this.resetEditUser();
+    this.isEditing = !this.isEditing;
+    if (this.isEditing) {
+      this.profileForm.enable();
+      // Keep email read-only usually
+      this.profileForm.get('email')?.disable();
+    } else {
+      this.profileForm.disable();
+      this.patchFormValues(); // Reset changes
     }
   }
 
-  resetEditUser(): void {
-    this.editUser = {
-      firstName: this.getUserProperty('firstName', 'given_name'),
-      lastName: this.getUserProperty('lastName', 'family_name'),
-      email: this.getUserProperty('email', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'),
-      username: this.getUserProperty('username', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'),
-      dateOfBirth: this.user?.dateOfBirth || ''
+  onPhotoUpload(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.isUploadingPhoto = true;
+      console.log('Starting photo upload...');
+
+      this.userService.uploadPhoto(file)
+        .pipe(finalize(() => {
+          console.log('Upload finalize called. Resetting isUploadingPhoto.');
+          this.isUploadingPhoto = false;
+          this.cdr.detectChanges(); // Force UI update
+        }))
+        .subscribe({
+          next: (res: any) => {
+            console.log('Upload response received:', res);
+
+            // Check for PhotoURL (PascalCase), photoUrl (camelCase), or photoURL (camelCase with caps URL)
+            let rawPhotoUrl = res.PhotoURL || res.photoUrl || res.photoURL || res.url;
+            console.log('Raw resolved photo URL:', rawPhotoUrl);
+
+            // Resolve full URL
+            let photoUrl = '';
+            if (rawPhotoUrl) {
+              if (rawPhotoUrl.startsWith('http')) {
+                photoUrl = rawPhotoUrl;
+              } else {
+                photoUrl = `https://localhost:7020${rawPhotoUrl.startsWith('/') ? '' : '/'}${rawPhotoUrl}`;
+              }
+            }
+            console.log('Final resolved photo URL:', photoUrl);
+
+            if (this.currentUser) {
+              this.currentUser.photoURL = photoUrl;
+              // Update auth service to reflect changes in Navbar immediately
+              const updatedUser = { ...this.authService.getCurrentUser(), photoURL: photoUrl };
+              this.authService.updateCurrentUser(updatedUser);
+            }
+            this.successMessage = 'Photo updated successfully!';
+            setTimeout(() => {
+              this.successMessage = null;
+              this.cdr.detectChanges();
+            }, 3000);
+          },
+          error: (err) => {
+            console.error('Photo upload failed:', err);
+            this.errorMessage = 'Failed to upload photo.';
+            this.cdr.detectChanges();
+          }
+        });
+    }
+  }
+
+  onSubmit(): void {
+    if (this.profileForm.invalid) return;
+
+    this.isSaving = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    const formValues = this.profileForm.getRawValue();
+
+    // Sanitize payload: valid DateOnly format or null
+    const payload = {
+      ...formValues,
+      dateOfBirth: formValues.dateOfBirth ? formValues.dateOfBirth : null,
+      phone: formValues.phone || null,
+      gender: formValues.gender || null,
+      address: formValues.address || null,
+      about: formValues.about || null
     };
+
+    this.userService.updateCurrentUser(payload).subscribe({
+      next: (res: any) => {
+        this.isSaving = false;
+        this.isEditing = false;
+        this.profileForm.disable();
+
+        // Update local state
+        this.currentUser = { ...this.currentUser, ...formValues };
+
+        this.successMessage = 'Profile updated successfully!';
+        setTimeout(() => this.successMessage = null, 3000);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error updating profile:', error);
+        this.isSaving = false;
+        this.errorMessage = error.error?.message || 'Failed to update profile.';
+      }
+    });
+  }
+
+  // Validation Helpers
+  hasError(field: string): boolean {
+    const control = this.profileForm.get(field);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+
+  getFieldError(field: string): string {
+    const control = this.profileForm.get(field);
+    if (control?.hasError('required')) return 'This field is required';
+    if (control?.hasError('email')) return 'Invalid email address';
+    if (control?.hasError('minlength')) return `Minimum length is ${control.errors?.['minlength'].requiredLength}`;
+    return '';
+  }
+
+  // Confirmation Methods
+  confirmDeleteAccount(): void {
+    this.showDeleteModal = true;
   }
 
   cancelEdit(): void {
-    this.isEditMode = false;
-    this.resetEditUser();
+    this.isEditing = false;
+    this.patchFormValues(); // Reset keys
   }
 
+  // File Upload Helper
   triggerUpload(): void {
     const fileInput = document.getElementById('photoInput') as HTMLInputElement;
     if (fileInput) {
@@ -138,120 +274,25 @@ export class UserProfile implements OnInit {
     }
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.isUploadingPhoto = true;
-      this.userService.uploadPhoto(file).subscribe({
-        next: (res: any) => {
-          console.log('Photo uploaded:', res);
-          this.isUploadingPhoto = false;
-
-          // Initial path depends on backend return. 
-          // If returns partial path "images/profiles/...", we need to prepend base URL or handle static serving
-          // Assuming base URL is 'https://localhost:7020/'
-
-          // Update user photo locally
-          const photoUrl = `https://localhost:7020/${res.photoUrl}`;
-
-          // Update both main user and edit buffer (if relevant)
-          if (this.user) this.user.photoURL = photoUrl;
-
-          // Also update AuthService local storage
-          // this.authService.updateCurrentUser(this.user);
-
-          alert('Photo updated successfully!');
-        },
-        error: (err) => {
-          console.error('Photo upload failed:', err);
-          this.isUploadingPhoto = false;
-
-          let msg = 'Failed to upload photo.';
-          if (err.status) msg += ` Status: ${err.status} ${err.statusText}`;
-          if (err.error && typeof err.error === 'string') msg += ` - ${err.error}`;
-          else if (err.error && err.error.message) msg += ` - ${err.error.message}`;
-
-          alert(msg);
-        }
-      });
-    }
-  }
-
-  saveChanges(): void {
-    // Get user ID from multiple possible locations
-    const userId = this.getUserProperty('id', 'userId') ||
-      this.user?.Id ||
-      this.user?.user_id ||
-      this.user?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
-
-    if (!userId) {
-      alert('Cannot save: No user ID found');
-      return;
-    }
-
-    this.isSaving = true;
-
-    // Use UserService.updateCurrentUser() - this uses AuthService.updateUserProfile()
-    this.userService.updateCurrentUser(this.editUser).subscribe({
-      next: (res: any) => {
-        this.isSaving = false;
-        this.isEditMode = false;
-
-        // Success - update local state
-        this.user = { ...this.user, ...this.editUser };
-        alert('Profile updated successfully!');
-      },
-      error: (error: HttpErrorResponse) => {
-        console.error('Error updating profile:', error);
-        this.isSaving = false;
-
-        // Improve error message
-        let errorMessage = 'Failed to update profile via API.';
-        if (error.error && typeof error.error === 'string') {
-          errorMessage += ` ${error.error}`;
-        } else if (error.message) {
-          errorMessage += ` ${error.message}`;
-        }
-
-        // Do NOT update locally if API fails, to avoid confusion
-        // Show clear error to user
-        alert(errorMessage);
-
-        // Optional: if user wants to 'force' local update, we could offer that, 
-        // but for now let's strict to "Server Validated" updates.
-      }
-    });
-  }
-
-  confirmDeleteAccount(): void {
-    this.showDeleteModal = true;
-  }
-
-  // In UserProfile component, update the deleteAccount method:
+  // Account Deletion
   deleteAccount(): void {
     this.isDeleting = true;
-
     this.userService.deleteUser().subscribe({
       next: () => {
         this.isDeleting = false;
         this.showDeleteModal = false;
-        // Redirect after successful deletion
+        this.authService.logout();
         this.router.navigate(['/']);
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error deleting account:', error);
         this.isDeleting = false;
-
-        if (error.status === 404) {
-          alert('Delete account endpoint might not be available.');
-        } else {
-          alert('Failed to delete account. Please try again.');
-        }
+        this.errorMessage = 'Failed to delete account. Please try again.';
       }
     });
   }
 
-
+  // Password Management
   changePassword(): void {
     this.showChangePasswordModal = true;
   }
@@ -275,33 +316,24 @@ export class UserProfile implements OnInit {
 
     this.isChangingPassword = true;
 
-    // Use UserService.changePassword() - this uses AuthService.changePassword()
-    // this.userService.changePassword(this.passwordData).subscribe({
-    //   next: (res: any) => {
-    //     this.isChangingPassword = false;
-    //     this.showChangePasswordModal = false;
-    //     this.passwordData = { currentPassword: '', newPassword: '' };
-    //     this.confirmPassword = '';
-
-    //     alert('Password changed successfully!');
-    //   },
-    //   error: (error: HttpErrorResponse) => {
-    //     console.error('Error changing password:', error);
-    //     this.isChangingPassword = false;
-
-    //     if (error.status === 404) {
-    //       alert('Change password endpoint might not be available.');
-    //     } else if (error.status === 400) {
-    //       alert('Current password is incorrect.');
-    //     } else {
-    //       alert('Failed to change password. Please try again.');
-    //     }
-    //   }
-    // });
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/auth']);
+    this.userService.changePassword(this.passwordData).subscribe({
+      next: (res: any) => {
+        this.isChangingPassword = false;
+        this.showChangePasswordModal = false;
+        this.passwordData = { currentPassword: '', newPassword: '' };
+        this.confirmPassword = '';
+        this.successMessage = 'Password changed successfully!';
+        setTimeout(() => this.successMessage = null, 3000);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error changing password:', error);
+        this.isChangingPassword = false;
+        if (error.status === 400) {
+          this.errorMessage = 'Current password is incorrect.';
+        } else {
+          this.errorMessage = 'Failed to change password.';
+        }
+      }
+    });
   }
 }

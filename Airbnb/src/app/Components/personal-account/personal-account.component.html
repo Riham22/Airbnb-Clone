@@ -1,110 +1,326 @@
-<div class="max-w-4xl mx-auto ">
+<div class="max-w-4xl mx-auto p-4">
+  <!-- Debug button -->
+  <!-- <div class="flex justify-end mb-4">
+    <button (click)="toggleDebugInfo()"
+            class="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">
+      {{ showDebugInfo ? 'Hide Debug' : 'Show Debug' }}
+    </button>
+  </div> -->
+
+  <!-- Debug info section -->
+  <!-- <div *ngIf="showDebugInfo" class="mb-6 p-4 bg-gray-100 rounded text-sm">
+    <h3 class="font-bold mb-2">Debug Information:</h3>
+    <pre>{{ currentUser | json }}</pre>
+    <div class="mt-2">
+      <button (click)="userService.debugAuthInfo()"
+              class="px-2 py-1 bg-blue-100 rounded text-xs">
+        Console Debug
+      </button>
+    </div>
+  </div> -->
+
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900">Personal Info</h1>
-    <p class="text-gray-600 mt-2">Update your profile information and how we can reach you.</p>
+    <h1 class="text-3xl font-bold text-gray-900">Personal Account</h1>
+    <p class="text-gray-600 mt-2">Manage your profile information</p>
   </div>
 
-  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-    {{ errorMessage }}
+  <!-- Email Display (Read-only) -->
+  <div *ngIf="currentUser?.email" class="mb-6 p-4 bg-blue-50 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Email Address</h3>
+    <div class="flex items-center">
+      <span class="text-gray-700">{{ currentUser.email }}</span>
+      <span class="ml-2 px-2 py-1 text-xs bg-gray-100 rounded text-gray-600">Cannot be changed</span>
+    </div>
   </div>
 
-  <div *ngIf="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+  <!-- Action Buttons -->
+  <div class="flex justify-between items-center mb-6 p-4 bg-gray-50 rounded-lg">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900">Profile Actions</h3>
+      <p class="text-sm text-gray-600">Edit or delete your account</p>
+    </div>
+    <div class="flex space-x-3">
+      <button *ngIf="!isEditing"
+              (click)="toggleEditMode()"
+              [disabled]="loading"
+              class="px-4 py-2 bg-rose-600 text-white rounded-md hover:bg-rose-700 disabled:opacity-50">
+        Edit Profile
+      </button>
+      <button *ngIf="isEditing"
+              (click)="toggleEditMode()"
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+        Cancel Edit
+      </button>
+      <button (click)="deleteAccount()"
+              [disabled]="loading"
+              class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50">
+        Delete Account
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" 
+       class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded transition-opacity duration-300">
     {{ successMessage }}
   </div>
 
+  <div *ngIf="errorMessage" 
+       class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded transition-opacity duration-300">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Profile Form -->
   <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
-    
-    <!-- Name Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
-        <input type="text" id="firstName" formControlName="firstName" 
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+    <!-- Hidden required fields for API -->
+    <div style="display: none;">
+      <input type="checkbox" formControlName="showTheDecade" [checked]="true">
+      <input type="text" formControlName="languageIds">
+      <input type="text" formControlName="interestIds">
+      <input type="text" formControlName="roles">
+    </div>
+
+    <!-- Photo Upload Section -->
+    <div class="mb-6 p-6 bg-white rounded-lg border border-gray-200">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+      <div class="flex items-start space-x-6">
+        <!-- Current Profile Photo -->
+        <div class="relative">
+          <img [src]="currentUser?.photoURL || 'https://ui-avatars.com/api/?name=' + (currentUser?.firstName || 'User') + '+' + (currentUser?.lastName || '') + '&background=gray&color=fff'"
+               alt="Profile"
+               class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg">
+          
+          <!-- Loading Overlay -->
+          <div *ngIf="loading" 
+               class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+            <div class="text-white text-center">
+              <svg class="animate-spin h-8 w-8 mx-auto mb-2" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              <span class="text-xs">Uploading...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload Controls -->
+        <div class="flex-1">
+          <div class="mb-4">
+            <input placeholder="image" type="file"
+                   #fileInput
+                   (change)="onPhotoUpload($event)"
+                   accept="image/*"
+                   class="hidden">
+            <button type="button"
+                    (click)="fileInput.click()"
+                    [disabled]="loading || !isEditing"
+                    class="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              {{ loading ? 'Uploading...' : 'Upload New Photo' }}
+            </button>
+          </div>
+
+          <div class="text-sm text-gray-600 space-y-2">
+            <p>• Supported formats: JPEG, PNG, GIF, WebP</p>
+            <p>• Maximum size: 5 MB</p>
+            <p>• Recommended: Square image, at least 400×400 pixels</p>
+          </div>
+
+          <!-- Photo URL Input -->
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Or enter image URL:</label>
+            <div class="flex">
+              <input type="text"
+                     formControlName="photoURL"
+                     placeholder="https://example.com/photo.jpg"
+                     [readonly]="!isEditing"
+                     [class.border-red-500]="hasError('photoURL')"
+                     class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
+              <button type="button"
+                      (click)="onSubmit()"
+                      [disabled]="loading || !isEditing"
+                      class="px-4 py-2 bg-gray-100 border border-gray-300 border-l-0 rounded-r-md hover:bg-gray-200 disabled:opacity-50">
+                Update URL
+              </button>
+            </div>
+            <div *ngIf="hasError('photoURL')" class="text-red-500 text-xs mt-1">
+              {{ getFieldError('photoURL') }}
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
-        <input type="text" id="lastName" formControlName="lastName" 
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+    </div>
+
+    <!-- Basic Information -->
+    <div class="p-6 bg-white rounded-lg border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- First Name -->
+        <div>
+          <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+          <input type="text" id="firstName" formControlName="firstName"
+                 [readonly]="!isEditing"
+                 [class.border-red-500]="hasError('firstName')"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
+          <div *ngIf="hasError('firstName')" class="text-red-500 text-xs mt-1">
+            {{ getFieldError('firstName') }}
+          </div>
+        </div>
+
+        <!-- Last Name -->
+        <div>
+          <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+          <input type="text" id="lastName" formControlName="lastName"
+                 [readonly]="!isEditing"
+                 [class.border-red-500]="hasError('lastName')"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
+          <div *ngIf="hasError('lastName')" class="text-red-500 text-xs mt-1">
+            {{ getFieldError('lastName') }}
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Email (Read-only) -->
-    <div>
-      <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-      <input type="email" id="email" formControlName="email" 
-             class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 text-gray-500 shadow-sm sm:text-sm p-2 border cursor-not-allowed">
-    </div>
-
-    <!-- Photo URL -->
-    <div>
-      <label for="photoURL" class="block text-sm font-medium text-gray-700">Profile Photo URL</label>
-      <input type="text" id="photoURL" formControlName="photoURL" 
-             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
-    </div>
-
-    <!-- About -->
-    <div>
-      <label for="about" class="block text-sm font-medium text-gray-700">About</label>
-      <textarea id="about" rows="4" formControlName="about" 
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border"></textarea>
+    <!-- About Section -->
+    <div class="p-6 bg-white rounded-lg border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">About You</h3>
+      
+      <div>
+        <label for="about" class="block text-sm font-medium text-gray-700 mb-1">About</label>
+        <textarea id="about" rows="4" formControlName="about"
+                  [readonly]="!isEditing"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100"
+                  placeholder="Tell us about yourself..."></textarea>
+        <div class="text-xs text-gray-500 mt-1">
+          {{ profileForm.get('about')?.value?.length || 0 }}/2000 characters
+        </div>
+      </div>
     </div>
 
     <!-- Location & Work -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
-        <input type="text" id="location" formControlName="location" 
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
-      </div>
-      <div>
-        <label for="work" class="block text-sm font-medium text-gray-700">Work</label>
-        <input type="text" id="work" formControlName="work" 
-               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+    <div class="p-6 bg-white rounded-lg border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Location & Work</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Location -->
+        <div>
+          <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <input type="text" id="location" formControlName="location"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100"
+                 placeholder="City, Country">
+        </div>
+
+        <!-- Work -->
+        <div>
+          <label for="work" class="block text-sm font-medium text-gray-700 mb-1">Work</label>
+          <input type="text" id="work" formControlName="work"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100"
+                 placeholder="Your profession">
+        </div>
       </div>
     </div>
 
     <!-- Fun Details -->
-    <div class="border-t border-gray-200 pt-6">
-      <h2 class="text-lg font-medium text-gray-900 mb-4">Fun Details</h2>
+    <div class="p-6 bg-white rounded-lg border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Fun Details</h3>
+      
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Fun Fact -->
         <div>
-          <label for="funFact" class="block text-sm font-medium text-gray-700">Fun Fact</label>
-          <input type="text" id="funFact" formControlName="funFact" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+          <label for="funFact" class="block text-sm font-medium text-gray-700 mb-1">Fun Fact</label>
+          <input type="text" id="funFact" formControlName="funFact"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
         </div>
+
+        <!-- Favorite Song -->
         <div>
-          <label for="favoriteSong" class="block text-sm font-medium text-gray-700">Favorite Song</label>
-          <input type="text" id="favoriteSong" formControlName="favoriteSong" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+          <label for="favoriteSong" class="block text-sm font-medium text-gray-700 mb-1">Favorite Song</label>
+          <input type="text" id="favoriteSong" formControlName="favoriteSong"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
         </div>
+
+        <!-- Useless Skill -->
         <div>
-          <label for="uselessSkill" class="block text-sm font-medium text-gray-700">Useless Skill</label>
-          <input type="text" id="uselessSkill" formControlName="uselessSkill" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+          <label for="uselessSkill" class="block text-sm font-medium text-gray-700 mb-1">Useless Skill</label>
+          <input type="text" id="uselessSkill" formControlName="uselessSkill"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
         </div>
+
+        <!-- School -->
         <div>
-          <label for="school" class="block text-sm font-medium text-gray-700">School</label>
-          <input type="text" id="school" formControlName="school" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+          <label for="school" class="block text-sm font-medium text-gray-700 mb-1">School</label>
+          <input type="text" id="school" formControlName="school"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
         </div>
+
+        <!-- Pets -->
         <div>
-          <label for="pets" class="block text-sm font-medium text-gray-700">Pets</label>
-          <input type="text" id="pets" formControlName="pets" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+          <label for="pets" class="block text-sm font-medium text-gray-700 mb-1">Pets</label>
+          <input type="text" id="pets" formControlName="pets"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100"
+                 placeholder="Dog, Cat, etc.">
         </div>
+
+        <!-- Spend Time Doing -->
         <div>
-          <label for="spendTimeDoing" class="block text-sm font-medium text-gray-700">I spend time doing...</label>
-          <input type="text" id="spendTimeDoing" formControlName="spendTimeDoing" 
-                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-2 border">
+          <label for="spendTimeDoing" class="block text-sm font-medium text-gray-700 mb-1">I spend time doing...</label>
+          <input type="text" id="spendTimeDoing" formControlName="spendTimeDoing"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
+        </div>
+
+        <!-- Want to Travel -->
+        <div>
+          <label for="wantedToTravel" class="block text-sm font-medium text-gray-700 mb-1">Want to travel to...</label>
+          <input type="text" id="wantedToTravel" formControlName="wantedToTravel"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
+        </div>
+
+        <!-- Date of Birth -->
+        <div>
+          <label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+          <input type="date" id="dateOfBirth" formControlName="dateOfBirth"
+                 [max]="maxDate"
+                 [readonly]="!isEditing"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-rose-500 focus:border-rose-500 disabled:bg-gray-100">
         </div>
       </div>
     </div>
 
-    <div class="flex justify-end pt-6">
-      <button type="submit" [disabled]="loading" 
-              class="bg-rose-600 text-white px-6 py-2 rounded-md hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 disabled:opacity-50">
+    <!-- Form Actions -->
+    <div *ngIf="isEditing" class="flex justify-end space-x-4 pt-6">
+      <button type="button"
+              (click)="toggleEditMode()"
+              [disabled]="loading"
+              class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+        Cancel
+      </button>
+      <button type="submit"
+              [disabled]="loading || profileForm.invalid"
+              class="bg-rose-600 text-white px-6 py-2 rounded-md hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 disabled:opacity-50 disabled:cursor-not-allowed">
         {{ loading ? 'Saving...' : 'Save Changes' }}
       </button>
     </div>
   </form>
+
+  <!-- Bottom Actions -->
+  <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between">
+    <button type="button"
+            (click)="logout()"
+            class="text-sm text-gray-600 hover:text-gray-900">
+      ← Logout
+    </button>
+    
+    <div class="text-sm text-gray-500">
+      Last updated: {{ currentUser?.updatedAt | date:'medium' }}
+    </div>
+  </div>
 </div>

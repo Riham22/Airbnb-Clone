@@ -7,6 +7,7 @@ import { PaymentMethod } from '../../Models/PaymentMethod';
 import { Transaction } from '../../Models/Transaction';
 import { Payout } from '../../Models/Payout';
 import { PaymentService, PaymentIntentRequest, ConfirmPaymentRequest } from '../../Services/payment';
+import { PaymentService as NewPaymentService, PaymentMethodDto } from '../../Services/payment.service';
 
 interface NewCard {
   number: string;
@@ -25,6 +26,9 @@ interface NewCard {
 })
 export class PaymentComponent implements OnInit, OnDestroy {
   public paymentMethods: PaymentMethod[] = [];
+  public savedPaymentMethods: PaymentMethodDto[] = []; // Saved cards from LocalStorage
+  public selectedPaymentMethodId: number | null = null;
+  public useNewCard = false;
   public transactions: Transaction[] = [];
   public payouts: Payout[] = [];
   public activeTab: 'methods' | 'transactions' | 'payouts' = 'methods';
@@ -46,11 +50,15 @@ export class PaymentComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private paymentService: PaymentService) {}
+  constructor(
+    private paymentService: PaymentService,
+    private newPaymentService: NewPaymentService
+  ) { }
 
   public ngOnInit(): void {
+    this.loadSavedPaymentMethods();
     this.loadPaymentData();
-    
+
     // Subscribe to real-time updates
     this.paymentService.getPaymentMethodsObservable()
       .pipe(takeUntil(this.destroy$))
@@ -77,34 +85,55 @@ export class PaymentComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-// Update the loadPaymentData method in your component
-private loadPaymentData(): void {
-  this.isLoading = true;
-  this.errorMessage = '';
-  this.successMessage = '';
-
-  console.log('🔍 Loading all payment data from API...');
-
-  // Use the unified load method
-  this.paymentService.loadAllPaymentData().subscribe({
-    next: (data) => {
-      console.log('✅ Payment data loaded successfully');
-      console.log(`📊 ${data.methods.length} payment methods`);
-      console.log(`💳 ${data.transactions.length} transactions`);
-      console.log(`💰 ${data.payouts.length} payouts`);
-      
-      // Data is already loaded into subjects via the service
-      // Just calculate balance
-      this.calculateAvailableBalance();
-      this.isLoading = false;
-    },
-    error: (error) => {
-      console.error('❌ Error loading payment data:', error);
-      this.errorMessage = 'Failed to load payment data. Please try again.';
-      this.isLoading = false;
+  private loadSavedPaymentMethods(): void {
+    // Load saved payment methods from LocalStorage
+    const stored = localStorage.getItem('user_payment_methods');
+    if (stored) {
+      try {
+        this.savedPaymentMethods = JSON.parse(stored);
+        // Auto-select default method if available
+        const defaultMethod = this.savedPaymentMethods.find(m => m.isDefault);
+        if (defaultMethod) {
+          this.selectedPaymentMethodId = defaultMethod.id;
+        } else if (this.savedPaymentMethods.length > 0) {
+          // Select first method if no default
+          this.selectedPaymentMethodId = this.savedPaymentMethods[0].id;
+        }
+      } catch (e) {
+        console.error('Error loading saved payment methods:', e);
+        this.savedPaymentMethods = [];
+      }
     }
-  });
-}
+  }
+
+  // Update the loadPaymentData method in your component
+  private loadPaymentData(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    console.log('🔍 Loading all payment data from API...');
+
+    // Use the unified load method
+    this.paymentService.loadAllPaymentData().subscribe({
+      next: (data) => {
+        console.log('✅ Payment data loaded successfully');
+        console.log(`📊 ${data.methods.length} payment methods`);
+        console.log(`💳 ${data.transactions.length} transactions`);
+        console.log(`💰 ${data.payouts.length} payouts`);
+
+        // Data is already loaded into subjects via the service
+        // Just calculate balance
+        this.calculateAvailableBalance();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Error loading payment data:', error);
+        this.errorMessage = 'Failed to load payment data. Please try again.';
+        this.isLoading = false;
+      }
+    });
+  }
   private calculateAvailableBalance(): void {
     const earnings = this.transactions
       .filter(t => t.type === 'earning' && t.status === 'completed')
@@ -136,7 +165,7 @@ private loadPaymentData(): void {
         console.log('✅ Default payment method updated');
         this.successMessage = 'Default payment method updated successfully';
         this.isLoading = false;
-        
+
         // Auto-hide success message after 3 seconds
         setTimeout(() => {
           this.successMessage = '';
@@ -163,7 +192,7 @@ private loadPaymentData(): void {
           console.log('✅ Payment method removed');
           this.successMessage = 'Payment method removed successfully';
           this.isLoading = false;
-          
+
           // Auto-hide success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
@@ -200,7 +229,7 @@ private loadPaymentData(): void {
       this.paymentService.createPaymentIntent(paymentIntentData).subscribe({
         next: (paymentIntent) => {
           console.log('✅ Payment intent created:', paymentIntent.id);
-          
+
           // Then confirm the payment with the card details
           const confirmData: ConfirmPaymentRequest = {
             paymentIntentId: paymentIntent.id,
@@ -242,7 +271,7 @@ private loadPaymentData(): void {
       this.showAddCard = false;
       this.resetCardForm();
       this.isLoading = false;
-      
+
       // Auto-hide success message after 3 seconds
       setTimeout(() => {
         this.successMessage = '';
@@ -265,7 +294,7 @@ private loadPaymentData(): void {
           this.payoutAmount = 0;
           this.calculateAvailableBalance();
           this.isLoading = false;
-          
+
           // Auto-hide success message after 3 seconds
           setTimeout(() => {
             this.successMessage = '';
@@ -284,16 +313,16 @@ private loadPaymentData(): void {
 
   public validateCard(): boolean {
     const isValid = this.newCard.number.length === 16 &&
-           /^\d+$/.test(this.newCard.number) &&
-           this.validateExpiryDate(this.newCard.expiry) &&
-           this.newCard.cvc.length === 3 &&
-           /^\d+$/.test(this.newCard.cvc) &&
-           this.newCard.name.trim().length > 0;
+      /^\d+$/.test(this.newCard.number) &&
+      this.validateExpiryDate(this.newCard.expiry) &&
+      this.newCard.cvc.length === 3 &&
+      /^\d+$/.test(this.newCard.cvc) &&
+      this.newCard.name.trim().length > 0;
 
     if (!isValid) {
       this.errorMessage = 'Please check your card details and try again';
     }
-    
+
     return isValid;
   }
 
@@ -318,8 +347,8 @@ private loadPaymentData(): void {
     const currentMonth = new Date().getMonth() + 1;
 
     return month >= 1 && month <= 12 &&
-           year >= currentYear &&
-           (year > currentYear || month >= currentMonth);
+      year >= currentYear &&
+      (year > currentYear || month >= currentMonth);
   }
 
   private getCardProvider(cardNumber: string): string {
@@ -338,7 +367,7 @@ private loadPaymentData(): void {
   public filterTransactions(filter: string): void {
     this.transactionFilter = filter;
     console.log('🔍 Filtering transactions by:', filter);
-    
+
     // In a real implementation, you would call the API with filter
     // For now, we'll just log it
   }
@@ -349,7 +378,7 @@ private loadPaymentData(): void {
       next: (response) => {
         console.log('✅ API Connection test successful:', response);
         this.successMessage = 'API connection successful';
-        
+
         setTimeout(() => {
           this.successMessage = '';
         }, 3000);

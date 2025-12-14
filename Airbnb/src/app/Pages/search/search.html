@@ -50,7 +50,9 @@
               </g>
             </svg>
             <div class="user-avatar" *ngIf="isAuthenticated && currentUser; else guestAvatar">
-              {{ getUserInitials() }}
+              <img *ngIf="currentUser?.photoURL" [src]="currentUser.photoURL" alt="Profile"
+                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+              <span *ngIf="!currentUser?.photoURL">{{ getUserInitials() }}</span>
             </div>
             <ng-template #guestAvatar>
               <div class="user-avatar guest">
@@ -139,7 +141,9 @@
     <!-- User info section -->
     <div class="user-section" *ngIf="isAuthenticated && currentUser">
       <div class="user-avatar-large">
-        {{ getUserInitials() }}
+        <img *ngIf="currentUser?.photoURL" [src]="currentUser.photoURL" alt="Profile"
+          style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+        <span *ngIf="!currentUser?.photoURL">{{ getUserInitials() }}</span>
       </div>
       <div class="user-details">
         <h3 class="user-fullname">{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>

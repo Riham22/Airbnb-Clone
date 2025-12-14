@@ -1,0 +1,202 @@
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Header -->
+    <div class="mb-8">
+        <nav class="text-sm text-gray-500 mb-4">
+            <a routerLink="/account" class="hover:underline">Account</a>
+            <span class="mx-2">&gt;</span>
+            <span class="text-gray-900">Payments & payouts</span>
+        </nav>
+        <h1 class="text-3xl font-bold text-gray-900">Payments & payouts</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 mb-8">
+        <div class="flex space-x-8">
+            <button (click)="activeTab = 'methods'" [class.border-black]="activeTab === 'methods'"
+                [class.text-black]="activeTab === 'methods'"
+                class="pb-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-800 transition-colors">
+                Payment methods
+            </button>
+            <button (click)="activeTab = 'history'" [class.border-black]="activeTab === 'history'"
+                [class.text-black]="activeTab === 'history'"
+                class="pb-4 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-800 transition-colors">
+                Transaction history
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Payment Methods Tab -->
+    <div *ngIf="activeTab === 'methods'" class="animate-fade-in">
+        <div class="grid grid-cols-1 gap-8">
+            <!-- Methods List -->
+            <div class="space-y-6">
+                <h2 class="text-xl font-semibold">Your payment methods</h2>
+
+                <div *ngIf="loadingMethods" class="py-8 text-center text-gray-500">
+                    Loading payment methods...
+                </div>
+
+                <div *ngIf="!loadingMethods && paymentMethods.length === 0" class="py-8 text-gray-500">
+                    No payment methods saved yet.
+                </div>
+
+                <!-- Card Item -->
+                <div *ngFor="let method of paymentMethods"
+                    class="border rounded-xl p-4 flex justify-between items-start hover:shadow-md transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-8 bg-gray-100 rounded border flex items-center justify-center text-xl">
+                            <!-- Simple icon mapping -->
+                            <span *ngIf="method.cardBrand.toLowerCase().includes('visa')">💳</span>
+                            <span *ngIf="method.cardBrand.toLowerCase().includes('master')">💳</span>
+                            <span
+                                *ngIf="!method.cardBrand.toLowerCase().includes('visa') && !method.cardBrand.toLowerCase().includes('master')">💳</span>
+                        </div>
+                        <div>
+                            <p class="font-medium capitalize">{{ method.cardBrand }} •••• {{ method.last4Digits }}</p>
+                            <p class="text-sm text-gray-500">Expires {{ method.expiryMonth }}/{{ method.expiryYear }}
+                            </p>
+                            <span *ngIf="method.isDefault"
+                                class="inline-block mt-2 text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">Default</span>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <button (click)="toggleMenu(method.id)" class="p-2 hover:bg-gray-100 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path
+                                    d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div *ngIf="openMenuId === method.id"
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-100">
+                            <div class="py-1">
+                                <button *ngIf="!method.isDefault" (click)="setAsDefault(method.id)"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Set
+                                    as default</button>
+                                <button (click)="deleteMethod(method.id)"
+                                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button (click)="openAddCardModal()"
+                    class="font-semibold text-black underline mt-4 hover:text-gray-700">
+                    Add payment method
+                </button>
+            </div>
+
+            <!-- Promo Section (Right Column) -->
+        </div>
+    </div>
+
+
+    <!-- History Tab -->
+    <div *ngIf="activeTab === 'history'" class="animate-fade-in">
+        <h2 class="text-xl font-semibold mb-6">Payment history</h2>
+
+        <div *ngIf="loadingHistory" class="text-center py-8 text-gray-500">Loading history...</div>
+
+        <div *ngIf="!loadingHistory && paymentHistory.length === 0"
+            class="text-center py-12 border rounded-xl bg-gray-50">
+            <p class="text-gray-500">No payment history found.</p>
+        </div>
+
+        <div *ngIf="!loadingHistory && paymentHistory.length > 0" class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="py-4 font-medium text-gray-500">Date</th>
+                        <th class="py-4 font-medium text-gray-500">Type</th>
+                        <th class="py-4 font-medium text-gray-500">Details</th>
+                        <th class="py-4 font-medium text-gray-500">Amount</th>
+                        <th class="py-4 font-medium text-gray-500">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let payment of paymentHistory" class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="py-4">{{ payment.createdAt | date:'mediumDate' }}</td>
+                        <td class="py-4 capitalize">{{ payment.bookingType }}</td>
+                        <td class="py-4 text-sm text-gray-600">ID: {{ payment.relatedId }}</td>
+                        <td class="py-4 font-medium">
+                            {{ payment.amount | currency:payment.currency }}
+                        </td>
+                        <td class="py-4">
+                            <span [class.text-green-600]="payment.status === 'Succeeded'"
+                                [class.text-red-600]="payment.status === 'Failed'" class="text-sm font-medium">
+                                {{ payment.status }}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Add Card Modal -->
+<div *ngIf="showAddCardModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-slide-up">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="font-semibold text-lg">Add card</h3>
+            <button (click)="closeAddCardModal()" class="p-2 hover:bg-gray-100 rounded-full">✕</button>
+        </div>
+
+        <div class="p-6">
+
+            <!-- Note removed from top -->
+
+            <form (submit)="onAddCardSubmit($event)">
+                <div class="space-y-4">
+                    <!-- Realistic Mock Input -->
+                    <div class="border rounded-lg p-3">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Card Information</label>
+                        <div class="h-10 bg-white rounded border flex items-center px-3 mb-2">
+                            <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            <input type="text" placeholder="0000 0000 0000 0000" maxlength="19"
+                                [(ngModel)]="mockCardNumber" name="cardNumber"
+                                class="w-full bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-300">
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="w-1/2 h-10 bg-white rounded border flex items-center px-3">
+                                <input type="text" placeholder="MM / YY" maxlength="5" [(ngModel)]="mockExpiry"
+                                    name="cardExpiry"
+                                    class="w-full bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-300">
+                            </div>
+                            <div class="w-1/2 h-10 bg-white rounded border flex items-center px-3">
+                                <input type="text" placeholder="CVC" maxlength="3" [(ngModel)]="mockCvc" name="cardCvc"
+                                    class="w-full bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-300">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="default-check" [(ngModel)]="newCardIsDefault" name="isDefault"
+                            class="rounded border-gray-300">
+                        <label for="default-check" class="text-sm text-gray-700">Set as default payment method</label>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button type="submit" [disabled]="isAddingCard"
+                        class="w-full py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg font-bold text-lg hover:brightness-110 transition-all disabled:opacity-50">
+                        {{ isAddingCard ? 'Processing...' : 'Save Card' }}
+                    </button>
+                    <p class="mt-4 text-xs text-center text-gray-400">
+                        Secure connection via Stripe. (Currently in simulation mode without API keys)
+                    </p>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

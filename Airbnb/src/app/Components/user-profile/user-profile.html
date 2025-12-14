@@ -11,9 +11,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
-        {{ isEditMode ? 'Cancel Edit' : 'Edit Profile' }}
+        {{ isEditing ? 'Cancel Edit' : 'Edit Profile' }}
       </button>
-      <button class="delete-account-btn" (click)="confirmDeleteAccount()" *ngIf="!isEditMode">
+      <button class="delete-account-btn" (click)="confirmDeleteAccount()" *ngIf="!isEditing">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -28,19 +28,25 @@
     <p>Loading profile...</p>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="error" class="error-container">
-    <p>{{ error }}</p>
+  <!-- Messages -->
+  <div *ngIf="errorMessage" class="error-container">
+    <p>{{ errorMessage }}</p>
+  </div>
+  <div *ngIf="successMessage" class="success-container p-4 mb-4 bg-green-100 text-green-700 rounded-lg">
+    <p>{{ successMessage }}</p>
   </div>
 
   <!-- Main Content Grid -->
-  <div class="profile-grid" *ngIf="!loading && !error">
+  <div class="profile-grid" *ngIf="!loading && !errorMessage">
     <!-- Left Column - Profile Card -->
     <div class="profile-card">
       <div class="profile-avatar-section">
         <div class="avatar-container">
           <div class="avatar-circle">
-            <span class="avatar-text">{{ getUserProperty('firstName', 'given_name')?.charAt(0) || 'U' }}{{
+            <img *ngIf="currentUser?.photoURL" [src]="currentUser.photoURL" alt="Profile"
+              class="w-full h-full object-cover">
+            <span *ngIf="!currentUser?.photoURL" class="avatar-text">{{ getUserProperty('firstName',
+              'given_name')?.charAt(0) || 'U' }}{{
               getUserProperty('lastName', 'family_name')?.charAt(0) || 'S' }}</span>
           </div>
           <div class="avatar-status"></div>
@@ -51,9 +57,9 @@
           'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress') || 'No email' }}</p>
 
         <!-- Hidden File Input -->
-        <input type="file" id="photoInput" (change)="onFileSelected($event)" accept="image/*" style="display: none;">
+        <input type="file" id="photoInput" (change)="onPhotoUpload($event)" accept="image/*" style="display: none;">
 
-        <button class="avatar-upload-btn" *ngIf="isEditMode" (click)="triggerUpload()" [disabled]="isUploadingPhoto">
+        <button class="avatar-upload-btn" *ngIf="isEditing" (click)="triggerUpload()" [disabled]="isUploadingPhoto">
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -79,26 +85,9 @@
         </div>
       </div>
 
-      <!-- <div class="verification-section">
-            <h3 class="section-title">Verified info</h3>
-            <div class="verification-item verified">
-              <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-              </svg>
-              <span>Email address</span>
-            </div>
-            <div class="verification-item">
-              <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd"/>
-              </svg>
-              <span>Phone number</span>
-              <button class="verification-btn" *ngIf="isEditMode">Add</button>
-            </div>
-          </div> -->
-
       <!-- Save/Cancel buttons for edit mode -->
-      <div class="edit-actions" *ngIf="isEditMode">
-        <button class="save-btn" (click)="saveChanges()" [disabled]="isSaving">
+      <div class="edit-actions" *ngIf="isEditing">
+        <button class="save-btn" (click)="onSubmit()" [disabled]="isSaving || profileForm.invalid">
           {{ isSaving ? 'Saving...' : 'Save Changes' }}
         </button>
         <button class="cancel-btn" (click)="cancelEdit()" [disabled]="isSaving">
@@ -110,7 +99,7 @@
     <!-- Right Column - Details & Settings -->
     <div class="details-section">
       <!-- Personal Information Card -->
-      <div class="details-card">
+      <div class="details-card" [formGroup]="profileForm">
         <div class="card-header">
           <h3 class="card-title">Personal Information</h3>
           <button title="edit" class="card-edit-btn" (click)="toggleEditMode()">
@@ -124,144 +113,136 @@
         <div class="info-grid">
           <div class="info-item">
             <label class="info-label">First name</label>
-            <div *ngIf="!isEditMode">
+            <div *ngIf="!isEditing">
               <p class="info-value">{{ getUserProperty('firstName', 'given_name') }}</p>
             </div>
-            <div *ngIf="isEditMode">
-              <input type="text" [(ngModel)]="editUser.firstName" class="edit-input" placeholder="First name">
+            <div *ngIf="isEditing">
+              <input type="text" formControlName="firstName" class="edit-input" placeholder="First name">
+              <span class="text-xs text-red-500" *ngIf="hasError('firstName')">{{ getFieldError('firstName') }}</span>
             </div>
           </div>
           <div class="info-item">
             <label class="info-label">Last name</label>
-            <div *ngIf="!isEditMode">
+            <div *ngIf="!isEditing">
               <p class="info-value">{{ getUserProperty('lastName', 'family_name') }}</p>
             </div>
-            <div *ngIf="isEditMode">
-              <input type="text" [(ngModel)]="editUser.lastName" class="edit-input" placeholder="Last name">
+            <div *ngIf="isEditing">
+              <input type="text" formControlName="lastName" class="edit-input" placeholder="Last name">
+              <span class="text-xs text-red-500" *ngIf="hasError('lastName')">{{ getFieldError('lastName') }}</span>
             </div>
           </div>
           <div class="info-item">
             <label class="info-label">Email</label>
-            <div *ngIf="!isEditMode">
+            <div *ngIf="!isEditing">
               <p class="info-value">{{ getUserProperty('email',
                 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress') }}</p>
             </div>
-            <div *ngIf="isEditMode">
-              <input type="email" [(ngModel)]="editUser.email" class="edit-input" placeholder="Email">
+            <div *ngIf="isEditing">
+              <input type="email" formControlName="email" class="edit-input" placeholder="Email">
+              <span class="text-xs text-red-500" *ngIf="hasError('email')">{{ getFieldError('email') }}</span>
             </div>
           </div>
           <div class="info-item">
             <label class="info-label">Username</label>
-            <div class="info-value-with-icon" *ngIf="!isEditMode">
+            <div class="info-value-with-icon" *ngIf="!isEditing">
               <p class="info-value">{{ getUserProperty('username',
                 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name') }}</p>
             </div>
-            <div *ngIf="isEditMode">
-              <input type="text" [(ngModel)]="editUser.username" class="edit-input" placeholder="Username">
+            <div *ngIf="isEditing">
+              <input type="text"
+                [value]="getUserProperty('username', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name')"
+                disabled class="edit-input bg-gray-100 cursor-not-allowed" title="Username cannot be changed">
             </div>
           </div>
         </div>
       </div>
 
       <!-- Account Settings Card -->
-      <!-- <div class="details-card">
-            <div class="card-header">
-              <h3 class="card-title">Account Settings</h3>
+      <div class="details-card">
+        <div class="card-header">
+          <h3 class="card-title">Account Settings</h3>
+        </div>
+
+        <div class="settings-list">
+          <div class="setting-item">
+            <div class="setting-content">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <div>
+                <h4 class="setting-title">Login & Security</h4>
+                <p class="setting-description">Update password and secure your account</p>
+              </div>
             </div>
+            <button class="setting-action-btn" (click)="changePassword()">Manage</button>
+          </div>
 
-            <div class="settings-list">
-              <div class="setting-item">
-                <div class="setting-content">
-                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                  </svg>
-                  <div>
-                    <h4 class="setting-title">Login & Security</h4>
-                    <p class="setting-description">Update password and secure your account</p>
-                  </div>
-                </div>
-                <button class="setting-action-btn" (click)="changePassword()">Manage</button>
+          <div class="setting-item">
+            <div class="setting-content">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <div>
+                <h4 class="setting-title">Payments & Payouts</h4>
+                <p class="setting-description">Review payments, payouts, coupons, and gift cards</p>
               </div>
+            </div>
+            <button class="setting-action-btn" routerLink="/account/payments">Manage</button>
+          </div>
+          <!-- Taxes section removed -->
+        </div>
 
-              <div class="setting-item">
-                <div class="setting-content">
-                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-                  </svg>
-                  <div>
-                    <h4 class="setting-title">Payments & Payouts</h4>
-                    <p class="setting-description">Review payments, payouts, coupons, and gift cards</p>
-                  </div>
-                </div>
-                <button class="setting-action-btn">Manage</button>
-              </div>
+        <!-- Delete Account Confirmation Modal -->
+        <div class="modal-overlay" *ngIf="showDeleteModal">
+          <div class="modal-content">
+            <h3>Delete Account</h3>
+            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+            <p class="warning-text">All your data, including listings, bookings, and reviews will be permanently
+              deleted.
+            </p>
 
-              <div class="setting-item">
-                <div class="setting-content">
-                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                  </svg>
-                  <div>
-                    <h4 class="setting-title">Taxes</h4>
-                    <p class="setting-description">Manage taxpayer information and tax documents</p>
-                  </div>
-                </div>
-                <button class="setting-action-btn">Manage</button>
-              </div>
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="showDeleteModal = false" [disabled]="isDeleting">
+                Cancel
+              </button>
+
+              <button type="button" class="btn-danger" (click)="deleteAccount()" [disabled]="isDeleting">
+                {{ isDeleting ? 'Deleting...' : 'Delete Account' }}
+              </button>
+
             </div>
           </div>
         </div>
-      </div>
-    </div> -->
 
-      <!-- Delete Account Confirmation Modal -->
-      <div class="modal-overlay" *ngIf="showDeleteModal">
-        <div class="modal-content">
-          <h3>Delete Account</h3>
-          <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-          <p class="warning-text">All your data, including listings, bookings, and reviews will be permanently deleted.
-          </p>
+        <!-- Change Password Modal -->
+        <div class="modal-overlay" *ngIf="showChangePasswordModal">
+          <div class="modal-content">
+            <h3>Change Password</h3>
+            <div class="password-form">
+              <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" [(ngModel)]="passwordData.currentPassword" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>New Password</label>
+                <input type="password" [(ngModel)]="passwordData.newPassword" class="form-input">
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <input type="password" [(ngModel)]="confirmPassword" class="form-input">
+              </div>
+            </div>
 
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="showDeleteModal = false" [disabled]="isDeleting">
-              Cancel
-            </button>
-
-            <button type="button" class="btn-danger" (click)="deleteAccount()" [disabled]="isDeleting">
-              {{ isDeleting ? 'Deleting...' : 'Delete Account' }}
-            </button>
-
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="cancelChangePassword()"
+                [disabled]="isChangingPassword">
+                Cancel
+              </button>
+              <button type="button" class="btn-danger" (click)="updatePassword()" [disabled]="isChangingPassword">
+                {{ isChangingPassword ? 'Changing...' : 'Change Password' }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Change Password Modal -->
-      <div class="modal-overlay" *ngIf="showChangePasswordModal">
-        <div class="modal-content">
-          <h3>Change Password</h3>
-          <div class="password-form">
-            <div class="form-group">
-              <label>Current Password</label>
-              <input type="password" [(ngModel)]="passwordData.currentPassword" class="form-input">
-            </div>
-            <div class="form-group">
-              <label>New Password</label>
-              <input type="password" [(ngModel)]="passwordData.newPassword" class="form-input">
-            </div>
-            <div class="form-group">
-              <label>Confirm New Password</label>
-              <input type="password" [(ngModel)]="confirmPassword" class="form-input">
-            </div>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="cancelChangePassword()"
-              [disabled]="isChangingPassword">
-              Cancel
-            </button>
-            <button type="button" class="btn-danger" (click)="updatePassword()" [disabled]="isChangingPassword">
-              {{ isChangingPassword ? 'Changing...' : 'Change Password' }}
-            </button>
-          </div>
-        </div>
-      </div>

@@ -75,10 +75,16 @@ export class UserService {
 
   // ============ Upload Profile Photo ============
   uploadPhoto(file: File): Observable<any> {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post(`${this.apiUrl}/upload-photo`, formData).pipe(
+    // Use the UserController endpoint which already handles file saving correctly
+    return this.http.post(`https://localhost:7020/api/User/${userId}/upload-photo`, formData).pipe(
       catchError(error => {
         console.error('Error uploading photo:', error);
         return throwError(() => error);
@@ -91,6 +97,8 @@ export class UserService {
     return this.http.get(`${this.apiUrl}/stats`).pipe(
       catchError(error => {
         console.error('Error fetching user stats:', error);
+        // Return dummy data if stats endpoint fails (temp fix until backend ready)
+        // return of({ tripsCount: 0, wishlistsCount: 0, reviewsCount: 0 });
         return throwError(() => error);
       })
     );
@@ -98,12 +106,25 @@ export class UserService {
 
   // ============ Helper Methods ============
   getCurrentUserId(): string | null {
-    const currentUser = this.authService.getCurrentUser();
-    return currentUser?.id || currentUser?.Id || currentUser?.userId || null;
+    return this.authService.getCurrentUserId();
   }
 
   isCurrentUserAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  // ============ New Methods for Compatibility ============
+  uploadProfilePhoto(file: File): Observable<any> {
+    return this.uploadPhoto(file);
+  }
+
+  refreshUserProfile(): Observable<any> {
+    return this.getMyProfile();
+  }
+
+  debugAuthInfo(): void {
+    console.log('Auth Info - User:', this.authService.getCurrentUser());
+    console.log('Auth Info - Token:', localStorage.getItem('auth_token') ? 'Prsent' : 'Missing');
   }
 
   getCurrentUsername(): string | null {

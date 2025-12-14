@@ -46,9 +46,12 @@ export class AuthService {
 
   // ============ Update Current User (Local State) ============
   updateCurrentUser(updatedUser: any): void {
-    this.currentUser.next(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    console.log('User updated in AuthService:', updatedUser);
+    // Wrap in Promise.resolve() to execute update in next microtask (fixes ExpressionChangedAfterItHasBeenCheckedError)
+    Promise.resolve().then(() => {
+      this.currentUser.next(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser)); // Keep persistence
+      console.log('User updated in AuthService:', updatedUser);
+    });
   }
 
   // ============ Update User Profile via API ============
@@ -63,7 +66,8 @@ export class AuthService {
 
     console.log('Updating user profile for ID:', userId, 'Data:', userData);
 
-    return this.http.put(`${this.apiUrl}/${userId}`, userData).pipe(
+    // Use api/User controller for updates
+    return this.http.put(`https://localhost:7020/api/User/${userId}`, userData).pipe(
       tap((response: any) => {
         console.log('Profile update API response:', response);
 
@@ -86,7 +90,8 @@ export class AuthService {
 
     console.log('Deleting user account ID:', userId);
 
-    return this.http.delete(`${this.apiUrl}/${userId}`).pipe(
+    // Use api/User controller for deletion
+    return this.http.delete(`https://localhost:7020/api/User/${userId}`).pipe(
       tap(() => {
         console.log('Account deleted successfully');
         this.logout();
