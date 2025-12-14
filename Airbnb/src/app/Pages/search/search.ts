@@ -751,8 +751,6 @@ export class SearchComponent implements OnInit {
   get menuItems(): MenuItem[] {
     if (this.isAuthenticated) {
       const items: MenuItem[] = [
-        { label: 'Messages', icon: '💬', route: '/messages' },
-        { label: 'Notifications', icon: '🔔', route: '/notifications' },
         { label: 'Trips', icon: '✈️', route: '/trips' },
         { label: 'Wishlists', icon: '❤️', route: '/wishlists' },
         { label: 'Account', icon: '👤', route: '/account' }];
@@ -769,13 +767,11 @@ export class SearchComponent implements OnInit {
         // User is already a host - show Host Dashboard
         items.push({ label: 'Host Dashboard', icon: '🏠', route: '/host' });
       } else {
-        // User is guest - show Become a Host (navigates to host dashboard for registration)
+        // User is guest - show Become a Host (navigates to host dashboard)
         items.push({ label: 'Become a Host', icon: '🏠', route: '/host' });
       }
 
       items.push(
-        { label: 'Help Center', icon: '❓', route: '/help' },
-        { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
         { separator: true },
         { label: 'Log out', icon: '🚪', action: 'logout' }
       );
@@ -784,8 +780,6 @@ export class SearchComponent implements OnInit {
     } else {
       return [
         { label: 'Become a Host', icon: '🏠', route: '/become-host' },
-        { label: 'Help Center', icon: '❓', route: '/help' },
-        { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
         { separator: true },
         { label: 'Log in or sign up', icon: '👤', route: '/auth' }
       ];

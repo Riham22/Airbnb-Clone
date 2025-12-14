@@ -153,8 +153,7 @@ export const routes: Routes = [
       {
         path: 'host',
         loadComponent: () => import('./Components/host-dashboard/host-dashboard').then(m => m.HostDashboardComponent),
-        canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['host', 'admin'] }
+        canActivate: [AuthGuard]
       },
       {
         path: 'wishlists',
