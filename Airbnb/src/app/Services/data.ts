@@ -30,6 +30,9 @@ export class Data {
   private propertyCategoriesSubject = new BehaviorSubject<any[]>([]);
   propertyCategories$ = this.propertyCategoriesSubject.asObservable();
 
+  private locationsSubject = new BehaviorSubject<string[]>([]);
+  locations$ = this.locationsSubject.asObservable();
+
   constructor(private http: HttpClient) {
     console.log('🚀 DataService initialized');
 
@@ -45,6 +48,23 @@ export class Data {
       this.loadServices();
       this.loadPropertyCategories();
     }, 100);
+  }
+
+  // ... (loadWishlist method remains same)
+
+  private updateLocations() {
+    const allListings = [...this.propertiesSubject.value, ...this.experiencesSubject.value, ...this.servicesSubject.value];
+    const cities = allListings.map(l => {
+      if (!l.location) return '';
+      // Assuming location format is "City, Country" or just "City"
+      const parts = l.location.split(',');
+      return parts[0].trim();
+    }).filter(c => c && c !== 'Unknown');
+
+    // Unique cities, sorted
+    const uniqueCities = [...new Set(cities)].sort();
+    console.log('🌍 Extracted unique locations:', uniqueCities);
+    this.locationsSubject.next(uniqueCities);
   }
 
   loadWishlist() {
@@ -195,6 +215,7 @@ export class Data {
         console.log('📦 First property:', mappedProperties[0]);
 
         this.propertiesSubject.next(mappedProperties);
+        this.updateLocations();
       },
       error: (err) => {
         console.error('❌ Failed to load properties:', err);
@@ -353,6 +374,7 @@ export class Data {
 
         console.log('✅ Mapped experiences:', mappedExperiences.length);
         this.experiencesSubject.next(mappedExperiences);
+        this.updateLocations();
       },
       error: (err) => {
         console.error('❌ Failed to load experiences:', err);
@@ -428,6 +450,7 @@ export class Data {
 
           console.log('✅ Mapped services:', mappedServices.length);
           this.servicesSubject.next(mappedServices);
+          this.updateLocations();
         } catch (e) {
           console.error('❌ Error mapping services:', e);
           this.servicesSubject.next([]);

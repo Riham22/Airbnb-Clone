@@ -117,14 +117,33 @@ export class AuthService {
         const token = res.token;
         localStorage.setItem('token', token);
 
-        const decodedUser = this.decodeToken(token);
+        // Use the full User object from response if available, otherwise fallback to token
+        // Use property access that handles both PascalCase (backend) and potential camelCase
+        const backendUser = res.User || res.user;
 
-        // Log the decoded user to see what properties are available
-        console.log('Decoded user from token:', decodedUser);
+        let finalUser;
+        if (backendUser) {
+          console.log('Using full user object from login response', backendUser);
 
-        this.currentUser.next(decodedUser);
+          // Ensure photoURL is absolute
+          if (backendUser.photoURL && !backendUser.photoURL.startsWith('http')) {
+            backendUser.photoURL = `https://localhost:7020${backendUser.photoURL.startsWith('/') ? '' : '/'}${backendUser.photoURL}`;
+          } else if (backendUser.PhotoURL && !backendUser.PhotoURL.startsWith('http')) {
+            // Handle PascalCase property if needed
+            backendUser.PhotoURL = `https://localhost:7020${backendUser.PhotoURL.startsWith('/') ? '' : '/'}${backendUser.PhotoURL}`;
+            // Normalize to camelCase for frontend consistency
+            backendUser.photoURL = backendUser.PhotoURL;
+          }
+
+          finalUser = backendUser;
+        } else {
+          console.log('Using decoded token for user data');
+          finalUser = this.decodeToken(token);
+        }
+
+        this.currentUser.next(finalUser);
         this.isAuthenticated.next(true);
-        localStorage.setItem('user', JSON.stringify(decodedUser));
+        localStorage.setItem('user', JSON.stringify(finalUser));
       })
     );
   }

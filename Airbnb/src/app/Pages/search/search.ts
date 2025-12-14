@@ -147,42 +147,32 @@ export class SearchComponent implements OnInit {
     this.setupFilterObservables();
     this.setupAuthObservables();
 
-    // Subscribe to property categories for dynamic "Where" options
-    this.dataService.propertyCategories$.subscribe(categories => {
-      if (categories && categories.length > 0) {
-        this.updateLocationOptions(categories);
+    // Subscribe to unique locations for "Where" options
+    this.dataService.locations$.subscribe(locations => {
+      if (locations && locations.length > 0) {
+        this.updateLocationOptions(locations);
       }
     });
   }
 
-  updateLocationOptions(categories: any[]) {
-    const baseOptions = [
-      { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' }
-    ];
+  updateLocationOptions(locations: string[]) {
+    // const baseOptions = [
+    //   { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' }
+    // ];
 
-    const mappedCategories = categories.map(cat => ({
-      value: cat.name.toLowerCase(), // Use name as value for filtering
-      label: cat.name,
-      icon: this.getCategoryIcon(cat.name),
-      description: cat.description || 'Explore this category'
+    const mappedLocations = locations.map(loc => ({
+      value: loc, // Use city name as value
+      label: loc,
+      icon: '📍', // Generic pin icon for locations
+      description: 'Explore stays in ' + loc
     }));
 
-    this.locationOptions = [...baseOptions, ...mappedCategories];
+    this.locationOptions = [...mappedLocations];
   }
 
   getCategoryIcon(name: string): string {
-    const n = name.toLowerCase();
-    if (n.includes('beach')) return '🏖️';
-    if (n.includes('city') || n.includes('urban')) return '🏙️';
-    if (n.includes('country') || n.includes('farm')) return '🚜';
-    if (n.includes('lake')) return '🛶';
-    if (n.includes('pool')) return '🏊';
-    if (n.includes('camp')) return '⛺';
-    if (n.includes('cabin')) return '🛖';
-    if (n.includes('mansion')) return '🏰';
-    if (n.includes('island')) return '🏝️';
-    if (n.includes('trending')) return '🔥';
-    return '🏡';
+    // Kept for compatibility but unused for location validation
+    return '📍';
   }
 
   // ========== FILTER METHODS ==========
@@ -692,39 +682,14 @@ export class SearchComponent implements OnInit {
   }
 
   private isListingInLocation(listing: any, location: string): boolean {
-    const loc = location.toLowerCase();
+    const filterLoc = location.toLowerCase().trim();
+    if (filterLoc === 'flexible') return true;
 
-    // Check property category first (Dynamic Categories)
-    if (listing.type === 'property' && listing.propertyCategory) {
-      if (listing.propertyCategory.toLowerCase() === loc) {
-        return true;
-      }
-    }
+    // Direct location match (City name)
+    const listingLoc = (listing.location || '').toLowerCase();
 
-    // Also check mapped propertyType
-    if (listing.type === 'property' && listing.propertyType) {
-      if (listing.propertyType.toLowerCase() === loc) {
-        return true;
-      }
-    }
-
-    // Fallback to location checks (Existing logic)
-    const locationMap: { [key: string]: string[] } = {
-      'new_york': ['New York', 'NY', 'New York City'],
-      'los_angeles': ['Los Angeles', 'LA', 'California', 'Malibu'],
-      'miami': ['Miami', 'Florida'],
-      'chicago': ['Chicago', 'Illinois'],
-      'las_vegas': ['Las Vegas', 'Nevada'],
-      'san_francisco': ['San Francisco', 'SF'],
-      'seattle': ['Seattle', 'Washington'],
-      'austin': ['Austin', 'Texas'],
-      'boston': ['Boston', 'Massachusetts']
-    };
-
-    const searchTerms = locationMap[location] || [location];
-    return searchTerms.some(term =>
-      listing.location.toLowerCase().includes(term.toLowerCase())
-    );
+    // Check if the listing location includes the selected city (e.g. "Cairo, Egypt" includes "Cairo")
+    return listingLoc.includes(filterLoc);
   }
 
   private isListingAvailable(listing: any, start: Date, end: Date): boolean {
