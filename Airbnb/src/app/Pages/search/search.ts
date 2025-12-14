@@ -702,35 +702,35 @@ export class SearchComponent implements OnInit {
   get menuItems(): MenuItem[] {
     if (this.isAuthenticated) {
       const items: MenuItem[] = [
-        { label: 'Messages', icon: '💬', route: '/messages' },
-        { label: 'Notifications', icon: '🔔', route: '/notifications' },
-        { label: 'Trips', icon: '✈️', route: '/trips' },
-        { label: 'Wishlists', icon: '❤️', route: '/wishlists' },
-        { label: 'Account', icon: '👤', route: '/account' }];
+        { label: 'Messages', icon: '<i class="fas fa-comments"></i>', route: '/messages' },
+        { label: 'Notifications', icon: '<i class="fas fa-bell"></i>', route: '/notifications' },
+        { label: 'Trips', icon: '<i class="fas fa-plane"></i>', route: '/trips' },
+        { label: 'Wishlists', icon: '<i class="fas fa-heart"></i>', route: '/wishlists' },
+        { label: 'Account', icon: '<i class="fas fa-user"></i>', route: '/account' }];
 
       // Add Admin Dashboard if user is admin
       if (this.authService.isAdmin()) {
-        items.push({ label: 'Admin Dashboard', icon: '⚡', route: '/admin' });
+        items.push({ label: 'Admin Dashboard', icon: '<i class="fas fa-tachometer-alt"></i>', route: '/admin' });
       }
 
       items.push(
         { separator: true },
-        { label: 'Become a Host', icon: '🏠', route: '/become-host' },
-        { label: 'Host an experience', icon: '🌟', route: '/host-experience' },
-        { label: 'Help Center', icon: '❓', route: '/help' },
-        { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
+        { label: 'Become a Host', icon: '<i class="fas fa-home"></i>', route: '/become-host' },
+        { label: 'Host an experience', icon: '<i class="fas fa-star"></i>', route: '/host-experience' },
+        { label: 'Help Center', icon: '<i class="fas fa-question-circle"></i>', route: '/help' },
+        { label: 'Gift cards', icon: '<i class="fas fa-gift"></i>', route: '/gift-cards' },
         { separator: true },
-        { label: 'Log out', icon: '🚪', action: 'logout' }
+        { label: 'Log out', icon: '<i class="fas fa-sign-out-alt"></i>', action: 'logout' }
       );
 
       return items;
     } else {
       return [
-        { label: 'Become a Host', icon: '🏠', route: '/become-host' },
-        { label: 'Help Center', icon: '❓', route: '/help' },
-        { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
+        { label: 'Become a Host', icon: '<i class="fas fa-home"></i>', route: '/become-host' },
+        { label: 'Help Center', icon: '<i class="fas fa-question-circle"></i>', route: '/help' },
+        { label: 'Gift cards', icon: '<i class="fas fa-gift"></i>', route: '/gift-cards' },
         { separator: true },
-        { label: 'Log in or sign up', icon: '👤', route: '/auth' }
+        { label: 'Log in or sign up', icon: '<i class="fas fa-user"></i>', route: '/auth' }
       ];
     }
   }

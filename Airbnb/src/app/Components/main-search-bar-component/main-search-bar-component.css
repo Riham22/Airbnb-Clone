@@ -89,7 +89,7 @@
 .search-section.active {
   background: white;
 }
-/* 
+/*
 .search-section:not(:last-child)::after {
   content: "";
   position: absolute;
@@ -125,22 +125,22 @@
   .main-search-container {
     padding: 12px 16px;
   }
-  
+
   .search-bar {
     flex-direction: column;
     border-radius: 12px;
   }
-  
+
   .search-section {
     width: 100%;
     border-bottom: 1px solid #ebebeb;
     padding: 12px 16px;
   }
-  
+
   .search-section:not(:last-child)::after {
     display: none;
   }
-  
+
   .filter-button {
     width: 100%;
     justify-content: center;
@@ -161,7 +161,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 28px;
   padding: 0;
-  box-shadow: 
+  box-shadow:
     0 40px 80px rgba(0, 0, 0, 0.25),
     0 0 0 1px rgba(255, 255, 255, 0.15) inset,
     0 20px 40px -20px rgba(255, 56, 92, 0.1);
@@ -370,7 +370,7 @@
 .location-option:hover {
   border-color: transparent;
   transform: translateY(-4px) scale(1.03);
-  box-shadow: 
+  box-shadow:
     0 16px 40px rgba(255, 56, 92, 0.2),
     0 0 0 1px rgba(255, 56, 92, 0.1) inset;
 }
@@ -382,7 +382,7 @@
 .location-option.selected {
   border-color: #ff385c;
   background: rgba(255, 56, 92, 0.08);
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(255, 56, 92, 0.15),
     0 0 0 2px rgba(255, 56, 92, 0.3) inset;
   animation: selectedPulse 2s infinite;
@@ -390,12 +390,12 @@
 
 @keyframes selectedPulse {
   0%, 100% {
-    box-shadow: 
+    box-shadow:
       0 12px 32px rgba(255, 56, 92, 0.15),
       0 0 0 2px rgba(255, 56, 92, 0.3) inset;
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 16px 40px rgba(255, 56, 92, 0.25),
       0 0 0 2px rgba(255, 56, 92, 0.4) inset;
   }
@@ -486,8 +486,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 28px 40px;
-  background: linear-gradient(135deg, 
-    rgba(255, 56, 92, 0.08) 0%, 
+  background: linear-gradient(135deg,
+    rgba(255, 56, 92, 0.08) 0%,
     rgba(230, 30, 77, 0.08) 100%);
   border-bottom: 1px solid rgba(255, 56, 92, 0.1);
   animation: slideDown 0.5s ease;
@@ -544,7 +544,7 @@
   color: white;
   border-color: transparent;
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(255, 56, 92, 0.3),
     0 0 0 2px rgba(255, 255, 255, 0.2) inset;
 }
@@ -613,7 +613,7 @@
   border-color: #ff385c;
   color: white;
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 
+  box-shadow:
     0 12px 40px rgba(255, 56, 92, 0.25),
     0 0 0 1px rgba(255, 56, 92, 0.1) inset;
 }
@@ -626,7 +626,7 @@
   background: linear-gradient(135deg, #ff385c 0%, #e61e4d 100%);
   color: white;
   border-color: transparent;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(255, 56, 92, 0.25),
     0 0 0 2px rgba(255, 255, 255, 0.2) inset;
   animation: activeButtonPulse 2s infinite;
@@ -634,12 +634,12 @@
 
 @keyframes activeButtonPulse {
   0%, 100% {
-    box-shadow: 
+    box-shadow:
       0 8px 32px rgba(255, 56, 92, 0.25),
       0 0 0 2px rgba(255, 255, 255, 0.2) inset;
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 12px 40px rgba(255, 56, 92, 0.35),
       0 0 0 2px rgba(255, 255, 255, 0.3) inset;
   }
@@ -1154,7 +1154,7 @@
   padding: 16px 32px;
   border-radius: 16px;
   transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(255, 56, 92, 0.3),
     0 0 0 2px rgba(255, 255, 255, 0.2) inset;
   position: relative;
@@ -1175,7 +1175,7 @@
 
 .clear-guests:hover {
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 
+  box-shadow:
     0 16px 48px rgba(255, 56, 92, 0.4),
     0 0 0 2px rgba(255, 255, 255, 0.3) inset;
 }
@@ -1466,17 +1466,17 @@
   .location-option {
     padding: 12px;
   }
-  
+
   .location-icon {
     width: 40px;
     height: 40px;
     margin-right: 12px;
   }
-  
+
   .location-info h3 {
     font-size: 14px;
   }
-  
+
   .location-info p {
     font-size: 12px;
   }

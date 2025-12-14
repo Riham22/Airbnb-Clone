@@ -1,6 +1,6 @@
 <!-- components/payment/payment.component.html -->
 <div class="payment-container">
-  
+
   <!-- Loading Overlay -->
   <!-- <div *ngIf="isLoading" class="loading-overlay">
     <div class="loading-spinner"></div>
@@ -210,42 +210,42 @@
       <div class="test-payment-form">
         <div class="form-group">
           <label for="paymentMethodSelect" class="form-label">Select Card</label>
-          <select 
+          <select
             id="paymentMethodSelect"
-            [(ngModel)]="testPayment.selectedMethodId" 
+            [(ngModel)]="testPayment.selectedMethodId"
             name="paymentMethodSelect"
             title="Select payment method for test payment"
             class="form-input"
             aria-label="Select payment method for test payment">
             <option value="" disabled selected>Select a card</option>
-            <option *ngFor="let method of paymentMethods" [value]="method.id">
+            <option *ngFor="let method of paymentMethods; trackBy: trackByPaymentMethodId" [value]="method.id">
               {{ method.provider }} •••• {{ method.lastFour }}
             </option>
           </select>
         </div>
-        
+
         <div class="form-row">
           <div class="form-group">
             <label for="testAmount" class="form-label">Amount ($)</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               id="testAmount"
-              [(ngModel)]="testPayment.amount" 
+              [(ngModel)]="testPayment.amount"
               name="testAmount"
-              min="1" 
-              max="1000" 
+              min="1"
+              max="1000"
               placeholder="50"
               title="Enter test payment amount"
               class="form-input"
               aria-label="Test payment amount in dollars">
           </div>
-          
+
           <div class="form-group">
             <label for="testBookingId" class="form-label">Booking ID</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               id="testBookingId"
-              [(ngModel)]="testPayment.bookingId" 
+              [(ngModel)]="testPayment.bookingId"
               name="testBookingId"
               placeholder="123"
               title="Enter booking ID for test payment"
@@ -253,10 +253,10 @@
               aria-label="Booking ID for test payment">
           </div>
         </div>
-        
-        <button 
-          type="button" 
-          (click)="processTestPayment()" 
+
+        <button
+          type="button"
+          (click)="processTestPayment()"
           class="btn-primary"
           [disabled]="isLoading || !testPayment.selectedMethodId"
           [attr.aria-label]="isLoading ? 'Processing test payment...' : 'Process test payment'">
@@ -267,7 +267,7 @@
 
     <!-- Payment Methods List -->
     <div class="payment-methods-list">
-      <div *ngFor="let method of paymentMethods" class="payment-method-card">
+    <div *ngFor="let method of paymentMethods; trackBy: trackByPaymentMethodId" class="payment-method-card">
         <div class="method-info">
           <div class="method-icon" [class]="method.type" [attr.aria-label]="method.provider + ' card'">
             <svg *ngIf="method.type === 'card'" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
@@ -352,10 +352,10 @@
       </div>
       <div class="filter-options">
         <label for="transactionFilter" class="sr-only">Filter transactions</label>
-        <select 
-          id="transactionFilter" 
-          [(ngModel)]="transactionFilter" 
-          (change)="filterTransactions(transactionFilter)" 
+        <select
+          id="transactionFilter"
+          [(ngModel)]="transactionFilter"
+          (change)="filterTransactions(transactionFilter)"
           name="transactionFilter"
           title="Filter transactions by type"
           class="filter-select"
@@ -369,7 +369,7 @@
     </div>
 
     <div class="transactions-list">
-      <div *ngFor="let transaction of transactions" class="transaction-item">
+      <div *ngFor="let transaction of transactions; trackBy: trackByTransactionId" class="transaction-item">
         <div class="transaction-icon" [class]="transaction.type" [attr.aria-label]="transaction.type + ' transaction'">
           <svg *ngIf="transaction.type === 'earning'" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -482,7 +482,7 @@
     <div class="payouts-history">
       <h3 class="subsection-title">Payout History</h3>
       <div class="payouts-list">
-        <div *ngFor="let payout of payouts" class="payout-item">
+        <div *ngFor="let payout of payouts; trackBy: trackByPayoutId" class="payout-item">
           <div class="payout-info">
             <div class="payout-date">{{ payout.date | date:'MMM d, yyyy' }}</div>
             <div class="payout-method">{{ payout.method }}</div>

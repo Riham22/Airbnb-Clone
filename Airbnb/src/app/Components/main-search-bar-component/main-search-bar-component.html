@@ -1,13 +1,13 @@
 <!-- Main search bar container -->
 <div class="main-search-container">
- 
+
   <div class="search-bar">
     <!-- Where -->
     <div class="search-section" [class.active]="activePanel === 'location'" (click)="openPanel('location')">
       <div class="search-label">Where</div>
       <div class="search-value">{{ getLocationDisplay() }}</div>
       <!-- Debug button (remove in production) -->
-      <button class="debug-btn" *ngIf="false" (click)="debugLocations()">🔍</button>
+      <button class="debug-btn" *ngIf="false" (click)="debugLocations()">Debug</button>
     </div>
 
     <!-- When -->
@@ -22,7 +22,7 @@
       <div class="search-value">{{ getGuestsDisplay() }}</div>
     </div>
   </div>
-   
+
   <!-- Filter Button -->
   <div class="filter-button-container">
     <button class="filter-button" (click)="onOpenFilters()">
@@ -54,26 +54,26 @@
   <!-- Locations grid -->
   <div *ngIf="!isLoadingLocations && locationOptions.length > 0" class="location-grid">
     <!-- "I'm flexible" option always first -->
-    <div *ngFor="let location of locationOptions" 
+    <div *ngFor="let location of locationOptions"
          class="location-option"
-         [class.selected]="currentFilters.location === location.value" 
+         [class.selected]="currentFilters.location === location.value"
          (click)="selectLocation(location.value)"
          [title]="location.category + ': ' + location.count + ' listings'">
-      
+
       <!-- SVG Icon -->
       <div class="location-icon" [innerHTML]="location.icon" *ngIf="location.icon"></div>
-      
+
       <!-- Fallback if icon is missing -->
       <div class="location-icon fallback" *ngIf="!location.icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#767676">
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
         </svg>
       </div>
-      
+
       <div class="location-info">
         <h3>{{ location.label }}</h3>
         <p>{{ location.description }}</p>
-        
+
         <!-- Category badges -->
         <div class="location-metadata">
           <span class="category-badge" [class.property]="location.category.includes('property')"
@@ -82,7 +82,7 @@
                 *ngIf="location.category.includes('experience')">Experience</span>
           <span class="category-badge" [class.service]="location.category.includes('service')"
                 *ngIf="location.category.includes('service')">Service</span>
-          
+
           <span class="location-count" *ngIf="location.count">
             {{ location.count }} listing{{ location.count > 1 ? 's' : '' }}
           </span>
@@ -93,7 +93,7 @@
 <!-- في nav-bar.component.html - أضف زر debug (يمكن إزالته لاحقاً) -->
 <div class="debug-tools">
   <button class="debug-btn" (click)="debugLocations()" title="Debug Data">
-    🔍 Debug
+    Debug
   </button>
 </div>
   <!-- No locations found -->

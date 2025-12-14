@@ -32,19 +32,7 @@ export class HomeComponent implements OnInit {
   isLoading = true;
   activePanel: string | null = null;
 
-  // Location options for MainSearchBarComponent
-  locationOptions = [
-    { value: 'flexible', label: "I'm flexible", icon: '🌍', description: 'Discover unique stays' },
-    { value: 'new_york', label: 'New York', icon: '🏙️', description: 'Big Apple adventures' },
-    { value: 'los_angeles', label: 'Los Angeles', icon: '🌴', description: 'Sunny California' },
-    { value: 'miami', label: 'Miami', icon: '🏖️', description: 'Beachfront escapes' },
-    { value: 'chicago', label: 'Chicago', icon: '🏙️', description: 'Windy City stays' },
-    { value: 'las_vegas', label: 'Las Vegas', icon: '🎰', description: 'Entertainment capital' },
-    { value: 'san_francisco', label: 'San Francisco', icon: '🌉', description: 'Golden Gate views' },
-    { value: 'seattle', label: 'Seattle', icon: '🌧️', description: 'Pacific Northwest' },
-    { value: 'austin', label: 'Austin', icon: '🎸', description: 'Live music capital' },
-    { value: 'boston', label: 'Boston', icon: '🎓', description: 'Historic charm' }
-  ];
+  // MainSearchBarComponent loads dynamic locations itself; no local static list required
 
   constructor(private dataService: Data) { }
 

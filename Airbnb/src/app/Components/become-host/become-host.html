@@ -74,19 +74,26 @@
                  class="location-search">
 
           <div class="location-suggestions" *ngIf="locationSuggestions.length > 0">
-            <div *ngFor="let suggestion of locationSuggestions"
+              <div *ngFor="let suggestion of locationSuggestions"
                  class="suggestion-item"
                  (click)="selectLocation(suggestion)"
                  role="button"
                  tabindex="0"
                  (keyup.enter)="selectLocation(suggestion)">
-              📍 {{ suggestion }}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="icon-pin">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+                </svg>
+                {{ suggestion }}
             </div>
           </div>
         </div>
 
         <div class="privacy-notice">
-          <div class="privacy-icon">🔒</div>
+          <div class="privacy-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-7h-1V7a5 5 0 00-10 0v3H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zM9 7a3 3 0 016 0v3H9V7z"/>
+            </svg>
+          </div>
           <div>
             <strong>Your address is private</strong>
             <p>Your exact address will only be shared with confirmed guests.</p>
@@ -296,7 +303,7 @@
             <div class="setting-item">
               <label>Check-in Window</label>
               <div class="time-inputs">
-                <select title="checkInStart" name="checkInStart" id="checkInStart" 
+                <select title="checkInStart" name="checkInStart" id="checkInStart"
                         [(ngModel)]="listingData.availability.checkInStart">
                   <option value="">Select start time</option>
                   <option *ngFor="let time of ['14:00', '15:00', '16:00', '17:00']" [value]="time">
@@ -304,7 +311,7 @@
                   </option>
                 </select>
                 <span>to</span>
-                <select title="checkInEnd" name="checkInEnd" id="checkInEnd" 
+                <select title="checkInEnd" name="checkInEnd" id="checkInEnd"
                         [(ngModel)]="listingData.availability.checkInEnd">
                   <option value="">Select end time</option>
                   <option *ngFor="let time of ['19:00', '20:00', '21:00', '22:00']" [value]="time">
@@ -316,7 +323,7 @@
 
             <div class="setting-item">
               <label for="checkOut">Check-out Time</label>
-              <select name="checkOut" id="checkOut" title="checkOut" 
+              <select name="checkOut" id="checkOut" title="checkOut"
                       [(ngModel)]="listingData.availability.checkOut">
                 <option value="">Select check-out time</option>
                 <option *ngFor="let time of ['10:00', '11:00', '12:00']" [value]="time">
@@ -348,7 +355,11 @@
       <h3>Why host on Airbnb?</h3>
 
       <div class="benefit-item">
-        <div class="benefit-icon">💰</div>
+        <div class="benefit-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zM11 10h2v2h-2v-2zm0 4h2v4h-2v-4z"/>
+          </svg>
+        </div>
         <div>
           <h4>Earn extra income</h4>
           <p>Hosts earn an average of $924 per month</p>

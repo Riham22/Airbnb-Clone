@@ -1,10 +1,16 @@
 /* --- Global Layout --- */
 .payment-container {
+  --primary: #FF385C; /* Airbnb-like primary color */
+  --primary-600: #e02f50;
+  --muted: #6b7280;
+  --surface: #ffffff;
+  --card-bg: #ffffff;
   max-width: 1000px;
   margin: 40px auto;
-  padding: 24px;
-  font-family: 'Inter', sans-serif;
-  color: #1f1f1f;
+  padding: 28px;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #111827;
+  background: transparent;
 }
 
 /* --- Loading Overlay --- */
@@ -25,8 +31,8 @@
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #ccc;
-  border-top-color: #4f46e5;
+  border: 4px solid rgba(0,0,0,0.08);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -37,12 +43,12 @@
 
 /* --- Alerts --- */
 .alert {
-  padding: 16px 20px;
-  border-radius: 10px;
-  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 6px 18px rgba(17,24,39,0.04);
 }
 
 .alert-content {
@@ -62,15 +68,15 @@
 }
 
 .alert-error {
-  background: #fee2e2;
-  border-left: 4px solid #dc2626;
-  color: #b91c1c;
+  background: #fff1f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
 }
 
 .alert-success {
-  background: #dcfce7;
-  border-left: 4px solid #16a34a;
-  color: #166534;
+  background: #f0fdf4;
+  border-left: 4px solid #059669;
+  color: #065f46;
 }
 
 /* --- Header --- */
@@ -78,7 +84,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 30px 0;
+  margin: 24px 0 28px;
 }
 
 .payment-title {
@@ -91,46 +97,49 @@
 }
 
 .balance-display {
-  padding: 20px 28px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
+  padding: 18px 24px;
+  background: linear-gradient(180deg, rgba(255,56,92,0.06), rgba(255,56,92,0.02));
+  border: 1px solid rgba(255,56,92,0.12);
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(17,24,39,0.04);
 }
 
 .balance-amount {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  color: #4f46e5;
-  margin-top: 4px;
+  color: var(--primary);
+  margin-top: 6px;
 }
 
 /* --- Tabs --- */
 .payment-tabs {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(15,23,42,0.04);
+  padding-bottom: 8px;
 }
 
 .tab-button {
   background: transparent;
   border: none;
-  padding: 10px 18px;
+  padding: 10px 16px;
   font-size: 14px;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   gap: 8px;
   align-items: center;
-  color: #555;
-  transition: 0.25s;
+  color: var(--muted);
+  transition: 0.18s ease;
 }
 
 .tab-button.active,
 .tab-button:hover {
-  background: #4f46e5;
+  background: var(--primary);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255,56,92,0.12);
 }
 
 .tab-icon {
@@ -151,16 +160,16 @@
 
 .form-input {
   width: 100%;
-  padding: 10px 14px 10px 38px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 12px 14px 12px 40px;
+  border: 1px solid rgba(15,23,42,0.06);
+  border-radius: 12px;
   font-size: 14px;
-  transition: 0.2s;
+  transition: 0.15s ease;
 }
 
 .form-input:focus {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+  border-color: var(--primary-600);
+  box-shadow: 0 6px 18px rgba(17,24,39,0.04);
   outline: none;
 }
 
@@ -186,34 +195,37 @@
 /* --- Buttons --- */
 .btn-primary {
   padding: 10px 18px;
-  background: #4f46e5;
+  background: var(--primary);
   color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
+  font-weight: 700;
+  transition: 0.15s ease;
+  box-shadow: 0 6px 18px rgba(255,56,92,0.12);
 }
 
 .btn-primary:hover {
-  background: #4338ca;
+  background: var(--primary-600);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  padding: 10px 18px;
-  background: #f3f4f6;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  color: #374151;
+  padding: 10px 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,0.06);
+  color: var(--muted);
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(17,24,39,0.04);
 }
 
 .btn-outline {
   padding: 8px 16px;
-  border: 1px solid #4f46e5;
-  color: #4f46e5;
+  border: 1px solid var(--primary);
+  color: var(--primary);
   background: transparent;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -226,18 +238,19 @@
 
 /* --- Payment Method Cards --- */
 .payment-method-card {
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  padding: 18px;
+  border: 1px solid rgba(15,23,42,0.04);
+  border-radius: 14px;
+  margin-bottom: 18px;
   display: flex;
   justify-content: space-between;
-  background: #fff;
-  transition: 0.2s;
+  background: var(--card-bg);
+  transition: all 0.18s ease;
 }
 
 .payment-method-card:hover {
-  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(17,24,39,0.08);
 }
 
 .method-info {
@@ -246,13 +259,13 @@
 }
 
 .method-icon {
-  width: 46px;
-  height: 46px;
-  background: #f3f4f6;
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01));
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .method-details .card-number,
@@ -262,25 +275,26 @@
 }
 
 .default-badge {
-  padding: 4px 10px;
-  background: #dcfce7;
-  color: #166534;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 6px 10px;
+  background: rgba(255,56,92,0.08);
+  color: var(--primary);
+  border-radius: 999px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 /* --- Empty State --- */
 .empty-state {
   text-align: center;
   padding: 40px;
-  opacity: 0.7;
+  opacity: 0.9;
 }
 
 .empty-icon svg {
-  width: 40px;
+  width: 52px;
+  color: rgba(17,24,39,0.6);
 }
 
 .empty-title {
@@ -293,16 +307,16 @@
 .transaction-item {
   display: flex;
   justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid #eee;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(15,23,42,0.04);
   align-items: center;
 }
 
 .transaction-icon {
-  width: 40px;
-  height: 40px;
-  background: #f3f4f6;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01));
+  border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -319,7 +333,7 @@
 }
 
 .transaction-amount.negative {
-  color: #dc2626;
+  color: #ef4444;
 }
 
 .status-badge {
@@ -385,16 +399,17 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: #F3F4F6;
-  border-radius: 8px;
+  background: rgba(15,23,42,0.02);
+  border-radius: 12px;
   padding: 16px;
   margin-top: 20px;
+  border-left: 4px solid rgba(255,56,92,0.08);
 }
 
 .security-icon {
   width: 24px;
   height: 24px;
-  color: #059669;
+  color: var(--primary);
   flex-shrink: 0;
   margin-top: 2px;
 }

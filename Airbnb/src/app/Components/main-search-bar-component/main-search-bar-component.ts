@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit, Input, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DateRange } from '../../Models/DateRange';
@@ -10,18 +10,18 @@ import { Subscription } from 'rxjs'; // <-- Add this
   selector: 'app-main-search-bar',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './main-search-bar-component.html',
   styleUrl: './main-search-bar-component.css'
 })
 export class MainSearchBarComponent implements OnInit, OnDestroy {
   @Output() openFilters = new EventEmitter<void>();
   @Output() filtersChanged = new EventEmitter<any>();
-  
-  // Remove static @Input() and make it dynamic
-  // @Input() locationOptions: any[] = [];
-  
+
+  // Allow parent to pass location options OR load dynamic ones
+  @Input() locationOptions: any[] = [];
+
   // Dynamic locations
-  locationOptions: any[] = [];
   isLoadingLocations = false;
   private locationSubscription?: Subscription;
 
@@ -29,7 +29,7 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
   activePanel: string | null = null;
   currentMonth: Date = new Date();
   calendarView: 'month' | 'year' | 'decade' = 'month';
-  
+
   // Filters
   currentFilters = {
     location: '',
@@ -60,6 +60,7 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
 
   constructor(
     private locationCollector: LocationCollectorService // <-- Inject service
+    , private cd: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -79,23 +80,31 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
    * Load dynamic locations from API/DB
    */
   public loadDynamicLocations(): void {
+    // If parent provided explicit options, keep them and skip loading
+    if (this.locationOptions && this.locationOptions.length > 0) {
+      this.isLoadingLocations = false;
+      return;
+    }
+
     this.isLoadingLocations = true;
-    
+
     this.locationSubscription = this.locationCollector.getDynamicLocations().subscribe({
       next: (locations) => {
         this.locationOptions = locations;
         this.isLoadingLocations = false;
         console.log('📍 Dynamic locations loaded in search bar:', locations.length);
-        
+
         if (locations.length === 0) {
           console.warn('⚠️ No locations found in search bar');
           this.loadFallbackLocations();
         }
+        this.cd.markForCheck();
       },
       error: (error) => {
         console.error('❌ Error loading locations in search bar:', error);
         this.loadFallbackLocations();
         this.isLoadingLocations = false;
+        this.cd.markForCheck();
       }
     });
   }
@@ -104,6 +113,9 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
    * Fallback locations if API fails
    */
   private loadFallbackLocations(): void {
+    // Only set fallback if parent did not provide options
+    if (this.locationOptions && this.locationOptions.length > 0) return;
+
     this.locationOptions = [
       {
         value: 'flexible',
@@ -137,7 +149,7 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
       this.currentMonth = new Date();
       this.calendarView = 'month';
     }
-    
+
     // Debug when opening location panel
     if (panel === 'location') {
       console.log('📍 Opening location panel with options:', this.locationOptions.length);
@@ -175,9 +187,9 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
       if (date >= this.dateSelection.start!) {
         this.dateSelection.end = date;
         this.dateSelection.selectingStart = true;
-        this.currentFilters.dates = { 
-          start: this.dateSelection.start, 
-          end: this.dateSelection.end 
+        this.currentFilters.dates = {
+          start: this.dateSelection.start,
+          end: this.dateSelection.end
         };
         this.filtersChanged.emit(this.currentFilters);
       } else {
@@ -303,15 +315,15 @@ export class MainSearchBarComponent implements OnInit, OnDestroy {
   // ========== DISPLAY METHODS ==========
   getLocationDisplay(): string {
     if (!this.currentFilters.location) return 'Anywhere';
-    
+
     // For "flexible" option
     if (this.currentFilters.location === 'flexible') {
       return "I'm flexible";
     }
-    
+
     // Find location in options
     const option = this.locationOptions.find(opt => opt.value === this.currentFilters.location);
-    
+
     if (option) {
       return option.label;
     } else {

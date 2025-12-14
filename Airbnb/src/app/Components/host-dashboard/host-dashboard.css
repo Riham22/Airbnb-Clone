@@ -147,6 +147,13 @@
   font-size: 14px;
 }
 
+.rating-star {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  color: #f59e0b;
+}
+
 /* Recent Activity */
 .recent-activity {
   background: white;

@@ -133,7 +133,9 @@
   <!-- Admin/Account Home Button -->
   <div class="admin-nav-container" *ngIf="isAdminPage || isAccountPage">
     <a routerLink="/" class="admin-home-btn">
-      <span class="home-icon">🏠</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="home-icon">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
       Go to Home
     </a>
   </div>
@@ -179,7 +181,7 @@
       <div *ngIf="item.separator" class="menu-separator"></div>
 
       <div *ngIf="!item.separator && item.action !== 'logout'" class="menu-option" (click)="onMenuItemClick(item)">
-        <span class="menu-icon">{{ item.icon }}</span>
+        <span class="menu-icon" [innerHTML]="item.icon"></span>
         <div class="menu-content">
           <span class="menu-label">{{ item.label }}</span>
         </div>
@@ -187,10 +189,10 @@
     </div>
 
     <!-- Logout section -->
-    <div class="logout-section" *ngIf="isAuthenticated">
+      <div class="logout-section" *ngIf="isAuthenticated">
       <div class="menu-separator"></div>
       <button class="logout-btn styled" (click)="logout()">
-        <span class="logout-icon">🚪</span>
+        <span class="logout-icon"><i class="fas fa-sign-out-alt"></i></span>
         <span class="logout-label">Log out</span>
       </button>
     </div>
@@ -266,13 +268,22 @@
 
         <div class="view-controls">
           <button class="view-button" [class.active]="calendarView === 'month'" (click)="switchToMonthView()">
-            📅 {{ getMonthYearDisplay() }}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M7 10h5v5H7zM19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+            </svg>
+            {{ getMonthYearDisplay() }}
           </button>
           <button class="view-button" [class.active]="calendarView === 'year'" (click)="switchToYearView()">
-            🗓️ {{ currentMonth.getFullYear() }}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+            </svg>
+            {{ currentMonth.getFullYear() }}
           </button>
           <button class="view-button" [class.active]="calendarView === 'decade'" (click)="switchToDecadeView()">
-            📊 {{ getCurrentDecade() }}s
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zM13 21h8v-10h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+            {{ getCurrentDecade() }}s
           </button>
         </div>
 

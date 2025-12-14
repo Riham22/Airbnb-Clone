@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -13,12 +13,13 @@ import { HostService } from '../../Services/Host.service';
   selector: 'app-host-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './host-dashboard.html',
   styleUrls: ['./host-dashboard.css']
 })
 export class HostDashboardComponent implements OnInit, OnDestroy {
-  // Data
-  stats: HostStats | null = null;
+  // Data (use Observables where possible)
+  stats$: import('rxjs').Observable<HostStats> | undefined;
   bookings: HostBooking[] = [];
   listings: HostListing[] = [];
   services: any[] = [];
@@ -92,9 +93,12 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription = new Subscription();
 
-  constructor(private hostService: HostService) { }
+  constructor(private hostService: HostService, private cd: ChangeDetectorRef) { }
 
   ngOnInit() {
+    // Initialize observables that depend on injected services
+    this.stats$ = this.hostService.stats$;
+
     this.loadDashboardData();
     this.loadCategories();
 
@@ -102,6 +106,7 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.hostService.loading$.subscribe((loading: boolean) => {
         this.loading = loading;
+        this.cd.markForCheck();
       })
     );
   }
@@ -115,7 +120,8 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.hostService.getStats().subscribe({
         next: (stats: any) => {
-          this.stats = stats;
+          // stats updated via BehaviorSubject; mark for change detection
+          this.cd.markForCheck();
         },
         error: (error: any) => {
           console.error('Error loading stats:', error);
@@ -128,6 +134,7 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
       this.hostService.getBookings().subscribe({
         next: (bookings: any) => {
           this.bookings = bookings;
+          this.cd.markForCheck();
         },
         error: (error: any) => {
           console.error('Error loading bookings:', error);
@@ -141,6 +148,7 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
         next: (listings: any) => {
           this.listings = listings;
           this.filteredListings = [...listings]; // Initialize filtered list
+          this.cd.markForCheck();
         },
         error: (error: any) => {
           console.error('Error loading listings:', error);
@@ -154,6 +162,7 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
         next: (services: any) => {
           this.services = services;
           this.filteredServices = [...services]; // Initialize filtered list
+          this.cd.markForCheck();
         },
         error: (error: any) => {
           console.error('Error loading services:', error);
@@ -167,6 +176,7 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
         next: (experiences: any) => {
           this.experiences = experiences;
           this.filteredExperiences = [...experiences]; // Initialize filtered list
+          this.cd.markForCheck();
         },
         error: (error: any) => {
           console.error('Error loading experiences:', error);
@@ -174,6 +184,12 @@ export class HostDashboardComponent implements OnInit, OnDestroy {
       })
     );
   }
+
+  // ========== TRACK BY FUNCTIONS ==========
+  trackByListingId(index: number, item: HostListing) { return item?.id; }
+  trackByBookingId(index: number, item: HostBooking) { return item?.id; }
+  trackByServiceId(index: number, item: any) { return item?.id; }
+  trackByExperienceId(index: number, item: any) { return item?.id; }
 
   private loadCategories(): void {
     // Load property types and categories

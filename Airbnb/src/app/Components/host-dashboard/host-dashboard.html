@@ -10,10 +10,16 @@
     <h1>Host Dashboard</h1>
     <div class="host-actions">
       <button class="btn-secondary" (click)="testEndpoints()" [disabled]="loading">
-        🧪 Test APIs
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20M7 8h10" />
+        </svg>
+        Test APIs
       </button>
       <button class="btn-primary" (click)="refreshData()" [disabled]="loading">
-        🔄 Refresh Data
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M23 4v6h-6M1 20v-6h6" />
+        </svg>
+        Refresh Data
       </button>
     </div>
   </header>
@@ -21,66 +27,109 @@
   <!-- Navigation Tabs -->
   <nav class="host-tabs">
     <button [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')" class="tab-button">
-      📊 Overview
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18" />
+      </svg>
+      Overview
     </button>
     <button [class.active]="activeTab === 'listings'" (click)="setActiveTab('listings')" class="tab-button">
-      🏠 Properties
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 11l9-7 9 7v8a1 1 0 01-1 1h-6v-6H10v6H4a1 1 0 01-1-1v-8z" />
+      </svg>
+      Properties
     </button>
     <button [class.active]="activeTab === 'services'" (click)="setActiveTab('services')" class="tab-button">
-      🛠️ Services
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 20h12M6 13h12M6 6h12" />
+      </svg>
+      Services
     </button>
     <button [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')" class="tab-button">
-      🏄 Experiences
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l4 8-4 8-4-8 4-8z" />
+      </svg>
+      Experiences
     </button>
     <button [class.active]="activeTab === 'bookings'" (click)="setActiveTab('bookings')" class="tab-button">
-      📅 Bookings
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14" />
+      </svg>
+      Bookings
     </button>
     <button [class.active]="activeTab === 'earnings'" (click)="setActiveTab('earnings')" class="tab-button">
-      💰 Earnings
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-3.31 0-6 1.61-6 6m12 0c0-4.39-2.69-6-6-6" />
+      </svg>
+      Earnings
     </button>
   </nav>
 
   <!-- ==================== OVERVIEW TAB ==================== -->
-  <section *ngIf="activeTab === 'overview' && stats" class="tab-content">
+  <section *ngIf="activeTab === 'overview'" class="tab-content">
+    <ng-container *ngIf="stats$ | async as stats">
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">💰</div>
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-3.31 0-6 1.61-6 6m12 0c0-4.39-2.69-6-6-6" />
+          </svg>
+        </div>
         <div class="stat-info">
           <h3>${{ stats.totalEarnings | number }}</h3>
           <p>Total Earnings</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📈</div>
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18" />
+          </svg>
+        </div>
         <div class="stat-info">
           <h3>${{ stats.monthlyEarnings | number }}</h3>
           <p>Monthly Earnings</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">🏠</div>
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 11l9-7 9 7v8a1 1 0 01-1 1h-6v-6H10v6H4a1 1 0 01-1-1v-8z" />
+          </svg>
+        </div>
         <div class="stat-info">
           <h3>{{ stats.activeListings | number }}</h3>
           <p>Active Listings</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📅</div>
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14" />
+          </svg>
+        </div>
         <div class="stat-info">
           <h3>{{ stats.totalBookings | number }}</h3>
           <p>Total Bookings</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📊</div>
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18" />
+          </svg>
+        </div>
         <div class="stat-info">
           <h3>{{ stats.occupancyRate | number: '1.0-1' }}%</h3>
           <p>Occupancy Rate</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">⭐</div>
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2l-2.81 6.63L2 9.24 7.46 13.97 5.82 21z" />
+          </svg>
+        </div>
         <div class="stat-info">
           <h3>{{ stats.averageRating | number: '1.1-1' }}</h3>
           <p>Average Rating</p>
@@ -95,9 +144,9 @@
         <!-- Recent Bookings -->
         <div class="recent-bookings">
           <h3>Recent Bookings</h3>
-          <div *ngFor="let booking of bookings.slice(0, 5)" class="activity-item">
+          <div *ngFor="let booking of bookings | slice:0:5; trackBy: trackByBookingId" class="activity-item">
             <div class="booking-avatar">
-              <img src="assets/default-avatar.png" alt="booking.guestName">
+              <img src="assets/default-avatar.png" alt="booking.guestName" loading="lazy">
             </div>
             <div class="activity-info">
               <strong>{{ booking.guestName }}</strong>
@@ -110,9 +159,9 @@
         <!-- Recent Listings -->
         <div class="recent-listings">
           <h3>Recent Listings</h3>
-          <div *ngFor="let listing of listings.slice(0, 5)" class="activity-item">
+          <div *ngFor="let listing of listings | slice:0:5; trackBy: trackByListingId" class="activity-item">
             <div class="listing-image">
-              <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
+              <img [src]="getImageUrl(listing.images[0])" alt="listing.title" loading="lazy">
             </div>
             <div class="activity-info">
               <strong>{{ listing.title }}</strong>
@@ -123,6 +172,7 @@
         </div>
       </div>
     </div>
+    </ng-container>
   </section>
 
   <!-- ==================== PROPERTIES TAB ==================== -->
@@ -162,10 +212,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let listing of filteredListings">
+          <tr *ngFor="let listing of filteredListings; trackBy: trackByListingId">
             <td class="listing-cell">
               <div class="listing-image">
-                <img [src]="getImageUrl(listing.images[0])" alt="listing.title">
+                <img [src]="getImageUrl(listing.images[0])" alt="listing.title" loading="lazy">
               </div>
               <div class="listing-info">
                 <strong>{{ listing.title }}</strong>
@@ -176,7 +226,10 @@
             <td>${{ listing.price }}/night</td>
             <td>
               <div class="rating">
-                ⭐ {{ listing.rating }} ({{ listing.reviewCount }})
+                <svg class="rating-star" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
+                </svg>
+                {{ listing.rating }} ({{ listing.reviewCount }})
               </div>
             </td>
             <td>{{ listing.bookingsCount }}</td>
@@ -212,7 +265,11 @@
     </div>
 
     <div *ngIf="filteredListings.length === 0" class="empty-state">
-      <div class="empty-icon">🏠</div>
+      <div class="empty-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 11l9-7 9 7v8a1 1 0 01-1 1h-6v-6H10v6H4a1 1 0 01-1-1v-8z" />
+        </svg>
+      </div>
       <h3 *ngIf="listings.length === 0">No properties found</h3>
       <h3 *ngIf="listings.length > 0 && filteredListings.length === 0">No properties match your search</h3>
       <p>Start by adding your first property!</p>
@@ -248,10 +305,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let service of filteredServices">
+          <tr *ngFor="let service of filteredServices; trackBy: trackByServiceId">
             <td class="listing-cell">
               <div class="listing-image">
-                <img [src]="getImageUrl(service.imageUrl || service.images?.[0])" alt="">
+                <img [src]="getImageUrl(service.imageUrl || service.images?.[0])" alt="" loading="lazy">
               </div>
               <div class="listing-info">
                 <strong>{{ service.name }}</strong>
@@ -260,7 +317,12 @@
             </td>
             <td>{{ service.category }}</td>
             <td>${{ service.price }}</td>
-            <td>⭐ {{ service.rating }} ({{ service.reviewCount }})</td>
+            <td>
+              <svg class="rating-star" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
+              </svg>
+              {{ service.rating }} ({{ service.reviewCount }})
+            </td>
             <td>
               <span [class]="'status-badge ' + getStatusClass(service.status)">
                 {{ service.status }}
@@ -293,7 +355,11 @@
     </div>
 
     <div *ngIf="filteredServices.length === 0" class="empty-state">
-      <div class="empty-icon">🛠️</div>
+      <div class="empty-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 9l-9 9M14 9l6 6M14 9v6h6" />
+        </svg>
+      </div>
       <h3 *ngIf="services.length === 0">No services found</h3>
       <h3 *ngIf="services.length > 0 && filteredServices.length === 0">No services match your search</h3>
       <p>Start by adding your first service!</p>
@@ -330,10 +396,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let experience of filteredExperiences">
+          <tr *ngFor="let experience of filteredExperiences; trackBy: trackByExperienceId">
             <td class="listing-cell">
               <div class="listing-image">
-                <img [src]="getImageUrl(experience.imageUrl || experience.images?.[0])" alt="">
+                <img [src]="getImageUrl(experience.imageUrl || experience.images?.[0])" alt="" loading="lazy">
               </div>
               <div class="listing-info">
                 <strong>{{ experience.name }}</strong>
@@ -342,7 +408,12 @@
             </td>
             <td>{{ experience.category }}</td>
             <td>${{ experience.price }}</td>
-            <td>⭐ {{ experience.rating }} ({{ experience.reviewCount }})</td>
+            <td>
+              <svg class="rating-star" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 17.27L18.18 21 16.54 13.97 22 9.24 14.81 8.63 12 2 9.19 8.63 2 9.24 7.46 13.97 5.82 21z"/>
+              </svg>
+              {{ experience.rating }} ({{ experience.reviewCount }})
+            </td>
             <td>{{ experience.maxParticipants }}</td>
             <td>
               <span [class]="'status-badge ' + getStatusClass(experience.status)">
@@ -376,7 +447,11 @@
     </div>
 
     <div *ngIf="filteredExperiences.length === 0" class="empty-state">
-      <div class="empty-icon">🏄</div>
+      <div class="empty-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l4 8-4 8-4-8 4-8z" />
+        </svg>
+      </div>
       <h3 *ngIf="experiences.length === 0">No experiences found</h3>
       <h3 *ngIf="experiences.length > 0 && filteredExperiences.length === 0">No experiences match your search</h3>
       <p>Start by adding your first experience!</p>
@@ -466,14 +541,19 @@
     </div>
 
     <div *ngIf="bookings.length === 0" class="empty-state">
-      <div class="empty-icon">📅</div>
+      <div class="empty-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14" />
+        </svg>
+      </div>
       <h3>No bookings yet</h3>
       <p>When guests book your listings, they'll appear here.</p>
     </div>
   </section>
 
   <!-- ==================== EARNINGS TAB ==================== -->
-  <section *ngIf="activeTab === 'earnings'" class="tab-content">
+  <ng-container *ngIf="stats$ | async as stats">
+    <section *ngIf="activeTab === 'earnings'" class="tab-content">
     <div class="section-header">
       <h2>Earnings Overview</h2>
       <div class="earnings-summary">
@@ -493,7 +573,11 @@
     <!-- Earnings Chart Placeholder -->
     <div class="earnings-chart">
       <div class="chart-placeholder">
-        <div class="placeholder-icon">📈</div>
+        <div class="placeholder-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 13h4V3H3v10zm6 8h4V3h-4v18zm6-6h4V3h-4v12z"/>
+          </svg>
+        </div>
         <h3>Earnings Analytics</h3>
         <p>Detailed charts and analytics coming soon.</p>
       </div>
@@ -517,7 +601,8 @@
         </div>
       </div>
     </div>
-  </section>
+    </section>
+  </ng-container>
 
   <!-- ==================== MODALS ==================== -->
 
