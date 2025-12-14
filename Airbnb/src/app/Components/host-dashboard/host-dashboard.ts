@@ -1,13 +1,14 @@
 // components/host-dashboard/host-dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-
+import { RouterModule, Router } from '@angular/router'; // Import Router here
 
 import { HostService } from '../../Services/Host.service';
 import { HostBooking } from '../../Models/HostBooking';
 import { HostStats } from '../../Models/HostStats';
 import { HostListing } from '../../Models/HostListing';
+
+import { AuthService } from '../../Services/auth';
 
 @Component({
   selector: 'app-host-dashboard',
@@ -20,13 +21,18 @@ export class HostDashboardComponent implements OnInit {
   stats!: HostStats;
   bookings: HostBooking[] = [];
   properties: HostListing[] = [];
-  experiences: any[] = []; // TODO: Create Experience model
-  services: any[] = []; // TODO: Create Service model
+  experiences: any[] = [];
+  services: any[] = [];
 
   activeTab: 'overview' | 'properties' | 'experiences' | 'services' | 'bookings' | 'earnings' = 'overview';
   showCreateListing = false;
+  currentUserId: string | null = null;
 
-  constructor(private hostService: HostService) { }
+  constructor(
+    private hostService: HostService,
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
   ngOnInit() {
     this.loadHostData();
@@ -64,8 +70,34 @@ export class HostDashboardComponent implements OnInit {
 
     this.hostService.getListings().subscribe({
       next: (listings) => {
-        // Ensure properties is always an array
-        this.properties = Array.isArray(listings) ? listings : [];
+        const allListings = Array.isArray(listings) ? listings : [];
+
+        // Filter by current user ID
+        const currentUser = this.authService.getCurrentUser();
+        const currentUserId = currentUser ? currentUser.id : null;
+
+        console.log('🔍 Debugging Host Filter:');
+        console.log('👉 Current User:', currentUser);
+        console.log('👉 Current User ID:', currentUserId);
+        console.log('👉 Total Listings Fetched:', allListings.length);
+        if (allListings.length > 0) {
+          console.log('👉 First Listing HostId:', allListings[0].hostId);
+          console.log('👉 First Listing Full Object:', allListings[0]);
+        }
+
+        if (currentUserId) {
+          // Loose equality check for different id types (number vs string)
+          this.properties = allListings.filter(p => {
+            const match = p.hostId == currentUserId;
+            console.log(`Checking property ${p.id}: HostId '${p.hostId}' vs CurrentUser '${currentUserId}' => Match? ${match}`);
+            return match;
+          });
+        } else {
+          console.warn('⚠️ No current user ID found, clearing properties.');
+          this.properties = [];
+        }
+
+        console.log('Filtered properties:', this.properties.length);
       },
       error: (err) => {
         console.error('Error loading properties:', err);
@@ -74,12 +106,6 @@ export class HostDashboardComponent implements OnInit {
     });
 
     // TODO: Load experiences and services from backend
-    // this.hostService.getExperiences().subscribe(experiences => {
-    //   this.experiences = experiences;
-    // });
-    // this.hostService.getServices().subscribe(services => {
-    //   this.services = services;
-    // });
   }
 
   setActiveTab(tab: 'overview' | 'properties' | 'experiences' | 'services' | 'bookings' | 'earnings'): void {
@@ -96,7 +122,8 @@ export class HostDashboardComponent implements OnInit {
   }
 
   toggleCreateListing(): void {
-    this.showCreateListing = !this.showCreateListing;
+    // Navigate to the dedicated add listing page with returnUrl
+    this.router.navigate(['/admin/add-listing'], { queryParams: { returnUrl: '/host' } });
   }
 
   deleteProperty(id: number): void {

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router'; // Consolidated imports
 import { AdminService } from '../../../Services/Admin.service';
 
 @Component({
@@ -36,7 +36,8 @@ export class AddListingComponent implements OnInit {
 
     constructor(
         private adminService: AdminService,
-        private router: Router
+        private router: Router,
+        private route: ActivatedRoute
     ) { }
 
     ngOnInit() {
@@ -68,8 +69,13 @@ export class AddListingComponent implements OnInit {
         }
     }
 
+    private navigateBack() {
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/admin';
+        this.router.navigate([returnUrl]);
+    }
+
     goBack() {
-        this.router.navigate(['/admin']);
+        this.navigateBack();
     }
 
     onSubmit() {
@@ -114,7 +120,7 @@ export class AddListingComponent implements OnInit {
             next: () => {
                 alert('Listing created successfully');
                 this.isLoading = false;
-                this.router.navigate(['/admin']);
+                this.navigateBack();
             },
             error: (err) => {
                 console.error('Create Listing Error:', err);

@@ -731,8 +731,8 @@ export class SearchComponent implements OnInit {
       if (this.authService.isHost()) {
         // User is already a host - show Host Dashboard
         items.push({ label: 'Host Dashboard', icon: '🏠', route: '/host' });
-      } else {
-        // User is guest - show Become a Host (navigates to host dashboard)
+      } else if (!this.authService.isAdmin()) {
+        // User is guest AND NOT ADMIN - show Become a Host
         items.push({ label: 'Become a Host', icon: '🏠', route: '/host' });
       }
 

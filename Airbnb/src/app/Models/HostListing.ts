@@ -10,4 +10,5 @@ export interface HostListing {
   bookingsCount: number;
   images: string[];
   approvalStatus?: 'pending' | 'approved' | 'rejected'; // Admin approval status
+  hostId?: string;
 }

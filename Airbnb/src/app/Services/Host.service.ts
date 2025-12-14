@@ -69,7 +69,8 @@ export class HostService {
           rating: p.averageRating || p.rating,
           reviewCount: p.reviewsCount || p.reviewCount,
           bookingsCount: 0, // Not available from backend
-          images: [p.coverImageUrl || p.imageUrl]
+          images: [p.coverImageUrl || p.imageUrl],
+          hostId: p.hostId || p.HostId
         }));
         this.listingsSubject.next(hostListings);
       })
