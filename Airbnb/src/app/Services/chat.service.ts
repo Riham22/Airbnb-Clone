@@ -1,39 +1,41 @@
+// chat.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface ChatRequest {
+  sessionId: string;
+  message: string;
+}
+
+export interface ChatResponse {
+  response: string;
+  success: boolean;
+  sessionId: string;
+}
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class ChatService {
-    private apiUrl = 'https://localhost:7020/api/chatbot';
-    private sessionId: string;
+  // Update this URL to match your backend port (e.g., 7020 or 5001)
+  private apiUrl = 'https://localhost:7020/api/Chatbot';
 
-    constructor(private http: HttpClient) {
-        // Generate session ID once
-        this.sessionId = this.generateUUID();
-    }
+  constructor(private http: HttpClient) {}
 
-    sendMessage(message: string) {
-        return this.http.post(`${this.apiUrl}/send`, {
-            sessionId: this.sessionId,  // ← Include session ID
-            message: message
-        });
-    }
+  sendMessage(message: string, sessionId: string): Observable<ChatResponse> {
+    const payload: ChatRequest = {
+      sessionId: sessionId,
+      message: message
+    };
+    return this.http.post<ChatResponse>(`${this.apiUrl}/send`, payload);
+  }
 
-    clearChat() {
-        return this.http.post(`${this.apiUrl}/clear/${this.sessionId}`, {});
-    }
-
-    newConversation() {
-        // Start fresh conversation
-        this.sessionId = this.generateUUID();
-    }
-
-    private generateUUID(): string {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
+  refreshKnowledge(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/refresh-knowledge`, {});
+  }
+  
+  clearHistory(sessionId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/clear/${sessionId}`, {});
+  }
 }

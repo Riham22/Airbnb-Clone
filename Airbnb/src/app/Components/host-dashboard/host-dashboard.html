@@ -105,7 +105,7 @@
             </svg>
           </div>
           <div class="stat-info">
-            <h3>{{ stats?.totalEarnings || 0 | currency }}</h3>
+            <h3>{{ stats.totalEarnings || 0 | currency }}</h3>
             <p>Total Earnings</p>
           </div>
         </div>
@@ -118,7 +118,7 @@
             </svg>
           </div>
           <div class="stat-info">
-            <h3>{{ stats?.totalBookings || 0 }}</h3>
+            <h3>{{ stats.totalBookings || 0 }}</h3>
             <p>Total Bookings</p>
           </div>
         </div>
@@ -131,7 +131,7 @@
             </svg>
           </div>
           <div class="stat-info">
-            <h3>{{ stats?.activeListings || 0 }}</h3>
+            <h3>{{ stats.activeListings || 0 }}</h3>
             <p>Active Listings</p>
           </div>
         </div>
@@ -144,7 +144,7 @@
             </svg>
           </div>
           <div class="stat-info">
-            <h3>{{ stats?.occupancyRate || 0 }}%</h3>
+            <h3>{{ stats.occupancyRate || 0 }}%</h3>
             <p>Occupancy Rate</p>
           </div>
         </div>
@@ -182,7 +182,7 @@
       <div class="properties-grid">
         <div *ngFor="let property of properties" class="property-card">
           <div class="property-image">
-            <img alt="" [src]="property.images?.[0] || 'assets/default-listing.jpg'" />
+            <img alt="" [src]="property.images[0] || 'assets/default-listing.jpg'" />
             <div class="property-status" [class.active]="property.status === 'active'">
               {{ property.status }}
             </div>
@@ -395,15 +395,15 @@
         <div class="breakdown-list">
           <div class="breakdown-item">
             <span class="breakdown-label">Completed stays</span>
-            <span class="breakdown-amount">{{ stats?.totalBookings }} bookings</span>
+            <span class="breakdown-amount">{{ stats.totalBookings }} bookings</span>
           </div>
           <div class="breakdown-item">
             <span class="breakdown-label">Average nightly rate</span>
-            <span class="breakdown-amount">{{ stats?.averageRating | currency }}</span>
+            <span class="breakdown-amount">{{ stats.averageRating | currency }}</span>
           </div>
           <div class="breakdown-item">
             <span class="breakdown-label">Occupancy rate</span>
-            <span class="breakdown-amount">{{ stats?.occupancyRate || 0 }}%</span>
+            <span class="breakdown-amount">{{ stats.occupancyRate || 0 }}%</span>
           </div>
         </div>
       </div>

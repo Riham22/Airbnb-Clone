@@ -1,101 +1,89 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ChatService } from '../../Services/chat.service';
+// chat.component.ts
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common'; // Required for *ngFor, *ngIf
+import { FormsModule } from '@angular/forms';   // Required for [(ngModel)]
+import { ChatService, ChatResponse } from '../../Services/chat.service';
+
+interface Message {
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
 
 @Component({
-    selector: 'app-chat',
-    standalone: true,
-    imports: [CommonModule, FormsModule],
-    templateUrl: './chat.component.html',
-    styleUrls: ['./chat.component.css']
+  selector: 'app-chat',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './chat.component.html',
+  styleUrls: ['./chat.component.css']
 })
-export class ChatComponent {
-    messages: any[] = [];
-    userInput: string = '';
-    isOpen: boolean = false;
-    isLoading: boolean = false;
+export class ChatComponent implements OnInit {
+  messages: Message[] = [];
+  userInput: string = '';
+  isLoading: boolean = false;
+  sessionId: string = '';
+  isOpen: boolean = false; // Toggle for chat window
 
-    constructor(private chatService: ChatService) { }
+  constructor(private chatService: ChatService) { }
 
-    toggleChat() {
-        this.isOpen = !this.isOpen;
-    }
+  ngOnInit(): void {
+    // Generate or retrieve a session ID
+    this.sessionId = localStorage.getItem('chatSessionId') || this.generateSessionId();
+    localStorage.setItem('chatSessionId', this.sessionId);
 
-    sendMessage() {
-        if (!this.userInput.trim()) return;
+    // Add initial greeting
+    this.addBotMessage('Hello! How can I help you explore our properties and services today?');
+  }
 
-        // Add user message to UI
-        this.messages.push({
-            sender: 'user',
-            text: this.userInput
-        });
+  toggleChat() {
+    this.isOpen = !this.isOpen;
+  }
 
-        const msgToSend = this.userInput;
-        this.userInput = '';
-        this.isLoading = true;
+  sendMessage() {
+    if (!this.userInput.trim()) return;
 
-        // Send to API
-        this.chatService.sendMessage(msgToSend).subscribe({
-            next: (response: any) => {
-                this.isLoading = false;
-                console.log('Chatbot API Response:', response); // Debug log
+    const userMsg = this.userInput;
+    this.addUserMessage(userMsg);
+    this.userInput = '';
+    this.isLoading = true;
 
-                // Handle potential case sensitivity or empty response
-                const botResponse = response.response || response.Response || 'I did not receive a text response.';
+    this.chatService.sendMessage(userMsg, this.sessionId).subscribe({
+      next: (res: ChatResponse) => {
+        this.addBotMessage(res.response);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Chat error:', err);
+        this.addBotMessage('Sorry, I am having trouble connecting to the server.');
+        this.isLoading = false;
+      }
+    });
+  }
 
-                // Add bot response to UI
-                this.messages.push({
-                    sender: 'bot',
-                    text: botResponse
-                });
-            },
-            error: (error) => {
-                this.isLoading = false;
-                console.error('Chatbot Error:', error);
+  private addUserMessage(text: string) {
+    this.messages.push({ text, sender: 'user', timestamp: new Date() });
+  }
 
-                let errorMessage = 'Sorry, I encountered an error. Please try again.';
-                if (error.status === 0) {
-                    errorMessage = 'Cannot connect to server. Check if backend is running.';
-                } else if (error.error && error.error.error) {
-                    errorMessage = `Error: ${error.error.error}`;
-                } else if (error.message) {
-                    errorMessage = `Error: ${error.message}`;
-                }
+  private addBotMessage(text: string) {
+    this.messages.push({ text, sender: 'bot', timestamp: new Date() });
+  }
 
-                this.messages.push({
-                    sender: 'bot',
-                    text: errorMessage
-                });
-            }
-        });
-    }
+  newChat() {
+    this.messages = [];
+    this.sessionId = this.generateSessionId();
+    localStorage.setItem('chatSessionId', this.sessionId);
+    this.addBotMessage('Hello! How can I help you explore our properties and services today?');
+  }
 
-    clearChat() {
-        this.isLoading = true;
-        this.chatService.clearChat().subscribe({
-            next: () => {
-                this.isLoading = false;
-                this.messages = [];
-            },
-            error: (err) => {
-                this.isLoading = false;
-                console.error(err);
-            }
-        });
-    }
+  formatMessageWithLinks(text: string): string {
+    // Simple regex to convert URLs to links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, (url) => {
+      return `<a href="${url}" target="_blank" style="color: #ff385c; text-decoration: underline;">${url}</a>`;
+    });
+  }
 
-    newChat() {
-        this.chatService.newConversation();
-        this.messages = [];
-    }
-
-    formatMessageWithLinks(text: string): string {
-        // Simple basic link formatting could be added here
-        // For now, returning text as is, or preventing XSS if needed (Angular sanitizes by default but innerHTML needs care)
-        // If text contains http links, we could replace them.
-        if (!text) return '';
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank">${url}</a>`);
-    }
+  private generateSessionId(): string {
+    return 'session-' + Math.random().toString(36).substr(2, 9);
+  }
 }

@@ -38,25 +38,17 @@
       <!-- Step 1: Property Type -->
       <div class="step-content" *ngIf="currentStep === 1">
         <div class="property-type-grid">
-          <div *ngFor="let type of propertyTypes"
-               class="property-type-card"
-               [class.selected]="listingData.propertyType === type.value"
-               (click)="selectPropertyType(type.value)"
-               role="button"
-               tabindex="0"
-               (keyup.enter)="selectPropertyType(type.value)"
-               (keyup.space)="selectPropertyType(type.value)"
-               [attr.aria-label]="type.label">
+          <div *ngFor="let type of propertyTypes" class="property-type-card"
+            [class.selected]="listingData.propertyType === type.value" (click)="selectPropertyType(type.value)"
+            role="button" tabindex="0" (keyup.enter)="selectPropertyType(type.value)"
+            (keyup.space)="selectPropertyType(type.value)" [attr.aria-label]="type.label">
             <span class="property-icon">{{ type.icon }}</span>
             <span class="property-label">{{ type.label }}</span>
           </div>
         </div>
 
         <div class="step-actions">
-          <button class="next-button"
-                  [disabled]="!listingData.propertyType"
-                  (click)="nextStep()"
-                  type="button">
+          <button class="next-button" [disabled]="!listingData.propertyType" (click)="nextStep()" type="button">
             Next
           </button>
         </div>
@@ -66,20 +58,13 @@
       <div class="step-content" *ngIf="currentStep === 2">
         <div class="location-input">
           <label for="location-search">Where's your place located?</label>
-          <input type="text"
-                 id="location-search"
-                 placeholder="Enter your address"
-                 [(ngModel)]="listingData.location"
-                 (input)="searchLocations($event.target?.value || '')"
-                 class="location-search">
+          <input type="text" id="location-search" placeholder="Enter your address" [(ngModel)]="listingData.location"
+            (input)="searchLocations($event.target.value || '')" class="location-search">
 
           <div class="location-suggestions" *ngIf="locationSuggestions.length > 0">
-            <div *ngFor="let suggestion of locationSuggestions"
-                 class="suggestion-item"
-                 (click)="selectLocation(suggestion)"
-                 role="button"
-                 tabindex="0"
-                 (keyup.enter)="selectLocation(suggestion)">
+            <div *ngFor="let suggestion of locationSuggestions" class="suggestion-item"
+              (click)="selectLocation(suggestion)" role="button" tabindex="0"
+              (keyup.enter)="selectLocation(suggestion)">
               📍 {{ suggestion }}
             </div>
           </div>
@@ -94,10 +79,7 @@
         </div>
 
         <div class="step-actions">
-          <button class="next-button"
-                  [disabled]="!listingData.location"
-                  (click)="nextStep()"
-                  type="button">
+          <button class="next-button" [disabled]="!listingData.location" (click)="nextStep()" type="button">
             Next
           </button>
         </div>
@@ -165,18 +147,12 @@
       <!-- Step 4: Amenities (Accessible Version) -->
       <div class="step-content" *ngIf="currentStep === 4">
         <div class="amenities-grid">
-          <div *ngFor="let amenity of amenitiesList"
-               class="amenity-card"
-               [class.selected]="isAmenitySelected(amenity.value)">
-            <input type="checkbox"
-                   [id]="'amenity-' + amenity.value"
-                   [name]="'amenity-' + amenity.value"
-                   [value]="amenity.value"
-                   [checked]="isAmenitySelected(amenity.value)"
-                   (change)="toggleAmenity(amenity.value)"
-                   class="amenity-checkbox">
-            <label [for]="'amenity-' + amenity.value"
-                   class="amenity-label">
+          <div *ngFor="let amenity of amenitiesList" class="amenity-card"
+            [class.selected]="isAmenitySelected(amenity.value)">
+            <input type="checkbox" [id]="'amenity-' + amenity.value" [name]="'amenity-' + amenity.value"
+              [value]="amenity.value" [checked]="isAmenitySelected(amenity.value)"
+              (change)="toggleAmenity(amenity.value)" class="amenity-checkbox">
+            <label [for]="'amenity-' + amenity.value" class="amenity-label">
               <span class="amenity-icon">{{ amenity.icon }}</span>
               <span class="amenity-label-text">{{ amenity.label }}</span>
               <span class="checkmark" *ngIf="isAmenitySelected(amenity.value)">✓</span>
@@ -196,25 +172,16 @@
         <div class="description-section">
           <div class="form-group">
             <label for="title-input">Listing Title</label>
-            <input type="text"
-                   id="title-input"
-                   placeholder="e.g., Cozy apartment near downtown"
-                   [(ngModel)]="listingData.title"
-                   maxlength="50"
-                   class="title-input">
-            <span class="char-count">{{ listingData.title?.length || 0 }}/50</span>
+            <input type="text" id="title-input" placeholder="e.g., Cozy apartment near downtown"
+              [(ngModel)]="listingData.title" maxlength="50" class="title-input">
+            <span class="char-count">{{ listingData.title.length || 0 }}/50</span>
           </div>
 
           <div class="form-group">
             <label for="description-textarea">Description</label>
-            <textarea
-              id="description-textarea"
-              placeholder="Describe what makes your place special..."
-              [(ngModel)]="listingData.description"
-              rows="6"
-              maxlength="500"
-              class="description-textarea"></textarea>
-            <span class="char-count">{{ listingData.description?.length || 0 }}/500</span>
+            <textarea id="description-textarea" placeholder="Describe what makes your place special..."
+              [(ngModel)]="listingData.description" rows="6" maxlength="500" class="description-textarea"></textarea>
+            <span class="char-count">{{ listingData.description.length || 0 }}/500</span>
           </div>
 
           <div class="photo-upload">
@@ -226,11 +193,8 @@
                 <button type="button" class="remove-photo" (click)="removePhoto(i)" title="Remove photo">×</button>
               </div>
               <div class="photo-upload-placeholder" *ngIf="listingData.photos.length < 10">
-                <input id="photo-upload-input" title="photo" type="file"
-                       multiple
-                       accept="image/*"
-                       (change)="handlePhotoUpload($event)"
-                       class="photo-input">
+                <input id="photo-upload-input" title="photo" type="file" multiple accept="image/*"
+                  (change)="handlePhotoUpload($event)" class="photo-input">
                 <div class="upload-content">
                   <span class="upload-icon">📷</span>
                   <span>Add Photos</span>
@@ -245,8 +209,8 @@
 
         <div class="step-actions">
           <button class="next-button" type="button"
-                  [disabled]="!listingData.title || !listingData.description || listingData.photos.length < 5"
-                  (click)="nextStep()">
+            [disabled]="!listingData.title || !listingData.description || listingData.photos.length < 5"
+            (click)="nextStep()">
             Next
           </button>
         </div>
@@ -259,12 +223,8 @@
             <label for="price-control-input">Nightly Price ($)</label>
             <div class="price-control">
               <span class="currency">$</span>
-              <input id="price-control-input" title="price" type="number"
-                     [(ngModel)]="listingData.price"
-                     [placeholder]="getPriceSuggestion().toString()"
-                     min="10"
-                     max="10000"
-                     step="1">
+              <input id="price-control-input" title="price" type="number" [(ngModel)]="listingData.price"
+                [placeholder]="getPriceSuggestion().toString()" min="10" max="10000" step="1">
             </div>
             <p class="price-suggestion">
               Suggested price: ${{ getPriceSuggestion() }} per night
@@ -284,9 +244,7 @@
 
             <div class="setting-item">
               <label class="toggle-label">
-                <input type="checkbox"
-                       [(ngModel)]="listingData.availability.instantBook"
-                       id="instant-book">
+                <input type="checkbox" [(ngModel)]="listingData.availability.instantBook" id="instant-book">
                 <span class="toggle-slider"></span>
                 <span class="toggle-text">Instant Book</span>
               </label>
@@ -296,16 +254,16 @@
             <div class="setting-item">
               <label>Check-in Window</label>
               <div class="time-inputs">
-                <select title="checkInStart" name="checkInStart" id="checkInStart" 
-                        [(ngModel)]="listingData.availability.checkInStart">
+                <select title="checkInStart" name="checkInStart" id="checkInStart"
+                  [(ngModel)]="listingData.availability.checkInStart">
                   <option value="">Select start time</option>
                   <option *ngFor="let time of ['14:00', '15:00', '16:00', '17:00']" [value]="time">
                     {{ time }}
                   </option>
                 </select>
                 <span>to</span>
-                <select title="checkInEnd" name="checkInEnd" id="checkInEnd" 
-                        [(ngModel)]="listingData.availability.checkInEnd">
+                <select title="checkInEnd" name="checkInEnd" id="checkInEnd"
+                  [(ngModel)]="listingData.availability.checkInEnd">
                   <option value="">Select end time</option>
                   <option *ngFor="let time of ['19:00', '20:00', '21:00', '22:00']" [value]="time">
                     {{ time }}
@@ -316,8 +274,7 @@
 
             <div class="setting-item">
               <label for="checkOut">Check-out Time</label>
-              <select name="checkOut" id="checkOut" title="checkOut" 
-                      [(ngModel)]="listingData.availability.checkOut">
+              <select name="checkOut" id="checkOut" title="checkOut" [(ngModel)]="listingData.availability.checkOut">
                 <option value="">Select check-out time</option>
                 <option *ngFor="let time of ['10:00', '11:00', '12:00']" [value]="time">
                   {{ time }}
@@ -328,9 +285,7 @@
         </div>
 
         <div class="step-actions final-actions">
-          <button class="publish-button" type="button"
-                  [disabled]="isSubmitting"
-                  (click)="submitListing()">
+          <button class="publish-button" type="button" [disabled]="isSubmitting" (click)="submitListing()">
             <span *ngIf="!isSubmitting">Publish Listing</span>
             <span *ngIf="isSubmitting">Publishing...</span>
           </button>

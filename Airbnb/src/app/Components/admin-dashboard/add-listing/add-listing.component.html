@@ -83,7 +83,7 @@
                     <div *ngFor="let amenity of amenityList" class="amenity-item"
                         style="display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #eee; border-radius: 6px;">
                         <input type="checkbox" [id]="'amenity-' + amenity.id" [value]="amenity.id"
-                            [checked]="newListing.amenityIds?.includes(amenity.id)"
+                            [checked]="newListing.amenityIds.includes(amenity.id)"
                             (change)="toggleAmenitySelection(amenity.id, $event)">
                         <label [for]="'amenity-' + amenity.id" style="margin: 0; cursor: pointer;">{{ amenity.name
                             }}</label>
