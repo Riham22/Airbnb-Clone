@@ -8,7 +8,7 @@
       </div>
       <button class="btn-primary" (click)="toggleCreateListing()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 1a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2H9v5a1 1 0 1 1-2 0V9H2a1 1 0 0 1 0-2h5V2a1 1 0 0 1 1-1z"/>
+          <path d="M8 1a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2H9v5a1 1 0 1 1-2 0V9H2a1 1 0 0 1 0-2h5V2a1 1 0 0 1 1-1z" />
         </svg>
         {{ showCreateListing ? 'Cancel' : 'Create Listing' }}
       </button>
@@ -69,28 +69,22 @@
   <!-- Navigation Tabs -->
   <nav class="dashboard-nav">
     <div class="nav-tabs">
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'overview'"
-        (click)="setActiveTab('overview')">
+      <button class="nav-tab" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">
         Overview
       </button>
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'listings'"
-        (click)="setActiveTab('listings')">
-        Listings
+      <button class="nav-tab" [class.active]="activeTab === 'properties'" (click)="setActiveTab('properties')">
+        Properties
       </button>
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'bookings'"
-        (click)="setActiveTab('bookings')">
+      <button class="nav-tab" [class.active]="activeTab === 'experiences'" (click)="setActiveTab('experiences')">
+        Experiences
+      </button>
+      <button class="nav-tab" [class.active]="activeTab === 'services'" (click)="setActiveTab('services')">
+        Services
+      </button>
+      <button class="nav-tab" [class.active]="activeTab === 'bookings'" (click)="setActiveTab('bookings')">
         Bookings
       </button>
-      <button
-        class="nav-tab"
-        [class.active]="activeTab === 'earnings'"
-        (click)="setActiveTab('earnings')">
+      <button class="nav-tab" [class.active]="activeTab === 'earnings'" (click)="setActiveTab('earnings')">
         Earnings
       </button>
     </div>
@@ -106,7 +100,8 @@
         <div class="stat-card">
           <div class="stat-icon earnings">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.78-1.18 2.73-3.12 3.16z"/>
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.78-1.18 2.73-3.12 3.16z" />
             </svg>
           </div>
           <div class="stat-info">
@@ -118,7 +113,8 @@
         <div class="stat-card">
           <div class="stat-icon bookings">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 11V3H7v4H3v14h8v-4h2v4h8V11h-4zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm4 4H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>
+              <path
+                d="M17 11V3H7v4H3v14h8v-4h2v4h8V11h-4zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm4 4H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z" />
             </svg>
           </div>
           <div class="stat-info">
@@ -130,7 +126,8 @@
         <div class="stat-card">
           <div class="stat-icon listings">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+              <path
+                d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
             </svg>
           </div>
           <div class="stat-info">
@@ -142,7 +139,8 @@
         <div class="stat-card">
           <div class="stat-icon occupancy">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+              <path
+                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
             </svg>
           </div>
           <div class="stat-info">
@@ -175,39 +173,131 @@
       </div>
     </div>
 
-    <!-- Listings Tab -->
-    <div *ngIf="activeTab === 'listings'" class="tab-content listings-tab">
+    <!-- Properties Tab -->
+    <div *ngIf="activeTab === 'properties'" class="tab-content properties-tab">
       <div class="section-header">
-        <h2>Your Listings ({{ listings.length }})</h2>
+        <h2>Your Properties ({{ properties.length }})</h2>
       </div>
 
-      <div class="listings-grid">
-        <div *ngFor="let listing of listings" class="listing-card">
-          <div class="listing-image">
-            <img alt="" [src]="listing.images[0]"   />
-            <div class="listing-status" [class.active]="listing.status === 'active'">
-              {{ listing.status }}
+      <div class="properties-grid">
+        <div *ngFor="let property of properties" class="property-card">
+          <div class="property-image">
+            <img alt="" [src]="property.images?.[0] || 'assets/default-listing.jpg'" />
+            <div class="property-status" [class.active]="property.status === 'active'">
+              {{ property.status }}
+            </div>
+            <div class="approval-badge" [class]="property.approvalStatus || 'pending'">
+              {{ property.approvalStatus || 'Pending' }}
             </div>
           </div>
-          <div class="listing-content">
-            <h3 class="listing-title">{{ listing.title }}</h3>
-            <p class="listing-location">{{ listing.location }}</p>
-            <div class="listing-stats">
-              <span class="listing-price">{{ listing.price | currency }} <small>night</small></span>
-              <div class="listing-meta">
-                <span>⭐ {{ listing.rating }}</span>
+          <div class="property-content">
+            <h3 class="property-title">{{ property.title }}</h3>
+            <p class="property-location">{{ property.location }}</p>
+            <div class="property-stats">
+              <span class="property-price">{{ property.price | currency }} <small>night</small></span>
+              <div class="property-meta">
+                <span>⭐ {{ property.rating }}</span>
                 <span>·</span>
-                <span>{{ listing.reviewCount }} reviews</span>
+                <span>{{ property.reviewCount }} reviews</span>
               </div>
             </div>
-            <div class="listing-actions">
-              <button
-                class="status-toggle"
-                [class.active]="listing.status === 'active'"
-                (click)="toggleListingStatus(listing.id, listing.status)">
-                {{ listing.status === 'active' ? 'Active' : 'Inactive' }}
+            <div class="property-actions">
+              <button class="status-toggle" [class.active]="property.status === 'active'"
+                (click)="toggleListingStatus(property.id, property.status)">
+                {{ property.status === 'active' ? 'Active' : 'Inactive' }}
               </button>
               <button class="btn-edit">Edit</button>
+              <button class="btn-delete" (click)="deleteProperty(property.id)">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Experiences Tab -->
+    <div *ngIf="activeTab === 'experiences'" class="tab-content experiences-tab">
+      <div class="section-header">
+        <h2>Your Experiences ({{ experiences.length }})</h2>
+        <button class="btn-primary" routerLink="/admin/add-experience">Add Experience</button>
+      </div>
+
+      <div *ngIf="experiences.length === 0" class="empty-state">
+        <p>No experiences yet. Create your first experience to get started!</p>
+      </div>
+
+      <div *ngIf="experiences.length > 0" class="experiences-grid">
+        <div *ngFor="let experience of experiences" class="experience-card">
+          <div class="experience-image">
+            <img alt="" [src]="experience.coverImage || 'assets/default-listing.jpg'" />
+            <div class="experience-status" [class.active]="experience.status === 'active'">
+              {{ experience.status }}
+            </div>
+            <div class="approval-badge" [class]="experience.approvalStatus || 'pending'">
+              {{ experience.approvalStatus || 'Pending' }}
+            </div>
+          </div>
+          <div class="experience-content">
+            <h3 class="experience-title">{{ experience.title }}</h3>
+            <p class="experience-category">{{ experience.category }}</p>
+            <div class="experience-stats">
+              <span class="experience-price">{{ experience.price | currency }} <small>per person</small></span>
+              <div class="experience-meta">
+                <span>⭐ {{ experience.rating || 'New' }}</span>
+                <span>·</span>
+                <span>{{ experience.reviewCount || 0 }} reviews</span>
+              </div>
+            </div>
+            <div class="experience-actions">
+              <button class="status-toggle" [class.active]="experience.status === 'active'">
+                {{ experience.status === 'active' ? 'Active' : 'Inactive' }}
+              </button>
+              <button class="btn-edit">Edit</button>
+              <button class="btn-delete" (click)="deleteExperience(experience.id)">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services Tab -->
+    <div *ngIf="activeTab === 'services'" class="tab-content services-tab">
+      <div class="section-header">
+        <h2>Your Services ({{ services.length }})</h2>
+        <button class="btn-primary" routerLink="/admin/add-service">Add Service</button>
+      </div>
+
+      <div *ngIf="services.length === 0" class="empty-state">
+        <p>No services yet. Create your first service to get started!</p>
+      </div>
+
+      <div *ngIf="services.length > 0" class="services-grid">
+        <div *ngFor="let service of services" class="service-card">
+          <div class="service-image">
+            <img alt="" [src]="service.coverImage || 'assets/default-listing.jpg'" />
+            <div class="service-status" [class.active]="service.status === 'active'">
+              {{ service.status }}
+            </div>
+            <div class="approval-badge" [class]="service.approvalStatus || 'pending'">
+              {{ service.approvalStatus || 'Pending' }}
+            </div>
+          </div>
+          <div class="service-content">
+            <h3 class="service-title">{{ service.name }}</h3>
+            <p class="service-category">{{ service.category }}</p>
+            <div class="service-stats">
+              <span class="service-price">{{ service.price | currency }}</span>
+              <div class="service-meta">
+                <span>⭐ {{ service.rating || 'New' }}</span>
+                <span>·</span>
+                <span>{{ service.reviewCount || 0 }} reviews</span>
+              </div>
+            </div>
+            <div class="service-actions">
+              <button class="status-toggle" [class.active]="service.status === 'active'">
+                {{ service.status === 'active' ? 'Active' : 'Inactive' }}
+              </button>
+              <button class="btn-edit">Edit</button>
+              <button class="btn-delete" (click)="deleteService(service.id)">Delete</button>
             </div>
           </div>
         </div>
@@ -215,72 +305,66 @@
     </div>
 
     <!-- Bookings Tab -->
-<div *ngIf="activeTab === 'bookings'" class="tab-content bookings-tab">
-  <div class="section-header">
-    <h2>Bookings</h2>
-    <div class="booking-filters">
-      <select title="g" class="filter-select">
-        <option>All bookings</option>
-        <option>Upcoming</option>
-        <option>Current</option>
-        <option>Completed</option>
-        <option>Cancelled</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="bookings-list">
-    <div *ngFor="let booking of bookings" class="booking-card">
-      <div class="booking-header">
-        <div class="booking-guest">
-          <img alt="" [src]="booking.guestAvatar"  class="guest-avatar" />
-          <div class="guest-info">
-            <h4>{{ booking.guestName }}</h4>
-            <p>{{ booking.guests }} guests · {{ booking.listingName }}</p>
-          </div>
-        </div>
-        <div class="booking-status" [class]="booking.status">
-          {{ booking.status }}
+    <div *ngIf="activeTab === 'bookings'" class="tab-content bookings-tab">
+      <div class="section-header">
+        <h2>Bookings</h2>
+        <div class="booking-filters">
+          <select title="g" class="filter-select">
+            <option>All bookings</option>
+            <option>Upcoming</option>
+            <option>Current</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
         </div>
       </div>
 
-      <div class="booking-details">
-        <div class="booking-dates">
-          <div class="date-group">
-            <label>Check-in</label>
-            <strong>{{ booking.checkIn }}</strong>
+      <div class="bookings-list">
+        <div *ngFor="let booking of bookings" class="booking-card">
+          <div class="booking-header">
+            <div class="booking-guest">
+              <img alt="" [src]="booking.guestAvatar" class="guest-avatar" />
+              <div class="guest-info">
+                <h4>{{ booking.guestName }}</h4>
+                <p>{{ booking.guests }} guests · {{ booking.listingName }}</p>
+              </div>
+            </div>
+            <div class="booking-status" [class]="booking.status">
+              {{ booking.status }}
+            </div>
           </div>
-          <div class="date-group">
-            <label>Check-out</label>
-            <strong>{{ booking.checkOut }}</strong>
+
+          <div class="booking-details">
+            <div class="booking-dates">
+              <div class="date-group">
+                <label>Check-in</label>
+                <strong>{{ booking.checkIn }}</strong>
+              </div>
+              <div class="date-group">
+                <label>Check-out</label>
+                <strong>{{ booking.checkOut }}</strong>
+              </div>
+            </div>
+
+            <div class="booking-amount">
+              <label>Total</label>
+              <strong>{{ booking.totalPrice| currency }}</strong>
+            </div>
+          </div>
+
+          <div class="booking-actions">
+            <!-- Use 'upcoming' instead of 'pending' -->
+            <button *ngIf="booking.status === 'upcoming'" class="btn-confirm" (click)="confirmBooking(booking.id)">
+              Confirm Booking
+            </button>
+            <button class="btn-message">Message</button>
+            <button *ngIf="booking.status === 'upcoming'" class="btn-cancel" (click)="cancelBooking(booking.id)">
+              Cancel
+            </button>
           </div>
         </div>
-
-        <div class="booking-amount">
-          <label>Total</label>
-          <strong>{{ booking.totalPrice| currency }}</strong>
-        </div>
-      </div>
-
-      <div class="booking-actions">
-        <!-- Use 'upcoming' instead of 'pending' -->
-        <button
-          *ngIf="booking.status === 'upcoming'"
-          class="btn-confirm"
-          (click)="confirmBooking(booking.id)">
-          Confirm Booking
-        </button>
-        <button class="btn-message">Message</button>
-        <button
-          *ngIf="booking.status === 'upcoming'"
-          class="btn-cancel"
-          (click)="cancelBooking(booking.id)">
-          Cancel
-        </button>
       </div>
     </div>
-  </div>
-</div>
 
     <!-- Earnings Tab -->
     <div *ngIf="activeTab === 'earnings'" class="tab-content earnings-tab">

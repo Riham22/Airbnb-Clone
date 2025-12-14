@@ -115,6 +115,7 @@ export class SearchComponent implements OnInit {
   isAdminPage = false;
   isTripsPage = false;
   isAccountPage = false;
+  isHostPage = false;
 
   // Years and decades arrays
   availableYears: number[] = [];
@@ -125,11 +126,12 @@ export class SearchComponent implements OnInit {
     private router: Router,
     private authService: AuthService
   ) {
-    // Listen for route changes to verify if it is Admin or Trips or Account Page
+    // Listen for route changes to verify if it is Admin or Trips or Account or Host Page
     this.router.events.subscribe(() => {
       this.isAdminPage = this.router.url.includes('/admin');
       this.isTripsPage = this.router.url.includes('/trips');
       this.isAccountPage = this.router.url.includes('/account');
+      this.isHostPage = this.router.url.includes('/host');
     });
   }
 
@@ -137,6 +139,7 @@ export class SearchComponent implements OnInit {
     this.isAdminPage = this.router.url.includes('/admin'); // Initial check
     this.isTripsPage = this.router.url.includes('/trips'); // Initial check
     this.isAccountPage = this.router.url.includes('/account'); // Initial check
+    this.isHostPage = this.router.url.includes('/host'); // Initial check
     this.loadAllData();
     this.generateAvailableYears();
     this.generateAvailableDecades();
@@ -759,10 +762,18 @@ export class SearchComponent implements OnInit {
         items.push({ label: 'Admin Dashboard', icon: '⚡', route: '/admin' });
       }
 
+      // Add Host Dashboard or Become a Host based on role
+      items.push({ separator: true });
+
+      if (this.authService.isHost()) {
+        // User is already a host - show Host Dashboard
+        items.push({ label: 'Host Dashboard', icon: '🏠', route: '/host' });
+      } else {
+        // User is guest - show Become a Host (navigates to host dashboard for registration)
+        items.push({ label: 'Become a Host', icon: '🏠', route: '/host' });
+      }
+
       items.push(
-        { separator: true },
-        { label: 'Become a Host', icon: '🏠', route: '/become-host' },
-        { label: 'Host an experience', icon: '🌟', route: '/host-experience' },
         { label: 'Help Center', icon: '❓', route: '/help' },
         { label: 'Gift cards', icon: '🎁', route: '/gift-cards' },
         { separator: true },

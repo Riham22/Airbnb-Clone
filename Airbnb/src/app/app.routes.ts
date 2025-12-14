@@ -224,19 +224,19 @@ export const routes: Routes = [
         path: 'admin/add-listing',
         loadComponent: () => import('./Components/admin-dashboard/add-listing/add-listing.component').then(m => m.AddListingComponent),
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['Admin'] }
+        data: { roles: ['Admin', 'Host'] }
       },
       {
         path: 'admin/add-service',
         loadComponent: () => import('./Components/admin-dashboard/add-service/add-service.component').then(m => m.AddServiceComponent),
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['Admin'] }
+        data: { roles: ['Admin', 'Host'] }
       },
       {
         path: 'admin/add-experience',
         loadComponent: () => import('./Components/admin-dashboard/add-experience/add-experience.component').then(m => m.AddExperienceComponent),
         canActivate: [AuthGuard, RoleGuard],
-        data: { roles: ['Admin'] }
+        data: { roles: ['Admin', 'Host'] }
       },
       {
         path: 'account-settings',

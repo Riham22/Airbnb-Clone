@@ -19,38 +19,70 @@ import { HostListing } from '../../Models/HostListing';
 export class HostDashboardComponent implements OnInit {
   stats!: HostStats;
   bookings: HostBooking[] = [];
-  listings: HostListing[] = [];
-  activeTab: 'overview' | 'listings' | 'bookings' | 'earnings' = 'overview';
+  properties: HostListing[] = [];
+  experiences: any[] = []; // TODO: Create Experience model
+  services: any[] = []; // TODO: Create Service model
+
+  activeTab: 'overview' | 'properties' | 'experiences' | 'services' | 'bookings' | 'earnings' = 'overview';
   showCreateListing = false;
 
-  constructor(private hostService: HostService) {}
+  constructor(private hostService: HostService) { }
 
   ngOnInit() {
     this.loadHostData();
   }
-cancelBooking(bookingId: number): void {
-  this.hostService.updateBookingStatus(bookingId, 'cancelled');
-  // Update local state
-  const booking = this.bookings.find(b => b.id === bookingId);
-  if (booking) {
-    booking.status = 'cancelled';
+
+  cancelBooking(bookingId: number): void {
+    this.hostService.updateBookingStatus(bookingId, 'cancelled');
+    // Update local state
+    const booking = this.bookings.find(b => b.id === bookingId);
+    if (booking) {
+      booking.status = 'cancelled';
+    }
   }
-}
+
   private loadHostData(): void {
-    this.hostService.getStats().subscribe(stats => {
-      this.stats = stats;
+    this.hostService.getStats().subscribe({
+      next: (stats) => {
+        this.stats = stats;
+      },
+      error: (err) => {
+        console.error('Error loading stats:', err);
+      }
     });
 
-    this.hostService.getBookings().subscribe(bookings => {
-      this.bookings = bookings;
+    this.hostService.getBookings().subscribe({
+      next: (bookings) => {
+        // Ensure bookings is always an array
+        this.bookings = Array.isArray(bookings) ? bookings : [];
+      },
+      error: (err) => {
+        console.error('Error loading bookings:', err);
+        this.bookings = [];
+      }
     });
 
-    this.hostService.getListings().subscribe(listings => {
-      this.listings = listings;
+    this.hostService.getListings().subscribe({
+      next: (listings) => {
+        // Ensure properties is always an array
+        this.properties = Array.isArray(listings) ? listings : [];
+      },
+      error: (err) => {
+        console.error('Error loading properties:', err);
+        this.properties = [];
+      }
     });
+
+    // TODO: Load experiences and services from backend
+    // this.hostService.getExperiences().subscribe(experiences => {
+    //   this.experiences = experiences;
+    // });
+    // this.hostService.getServices().subscribe(services => {
+    //   this.services = services;
+    // });
   }
 
-  setActiveTab(tab: 'overview' | 'listings' | 'bookings' | 'earnings'): void {
+  setActiveTab(tab: 'overview' | 'properties' | 'experiences' | 'services' | 'bookings' | 'earnings'): void {
     this.activeTab = tab;
   }
 
@@ -65,5 +97,26 @@ cancelBooking(bookingId: number): void {
 
   toggleCreateListing(): void {
     this.showCreateListing = !this.showCreateListing;
+  }
+
+  deleteProperty(id: number): void {
+    if (confirm('Are you sure you want to delete this property?')) {
+      // TODO: Call delete API
+      this.properties = this.properties.filter(p => p.id !== id);
+    }
+  }
+
+  deleteExperience(id: number): void {
+    if (confirm('Are you sure you want to delete this experience?')) {
+      // TODO: Call delete API
+      this.experiences = this.experiences.filter(e => e.id !== id);
+    }
+  }
+
+  deleteService(id: number): void {
+    if (confirm('Are you sure you want to delete this service?')) {
+      // TODO: Call delete API
+      this.services = this.services.filter(s => s.id !== id);
+    }
   }
 }

@@ -4,8 +4,8 @@
   <div class="navbar-top">
     <div class="navbar-brand">airbnb</div>
 
-    <!-- Property Type Filter Bar - Hide on Admin Page and Trips Page and Account Page -->
-    <div class="property-type-bar" *ngIf="!isAdminPage && !isTripsPage && !isAccountPage">
+    <!-- Property Type Filter Bar - Hide on Admin Page and Trips Page and Account Page and Host Page -->
+    <div class="property-type-bar" *ngIf="!isAdminPage && !isTripsPage && !isAccountPage && !isHostPage">
       <div class="property-type-filters">
 
         <div *ngFor="let type of propertyTypes" class="property-type-option"
@@ -76,7 +76,7 @@
     <!-- Filter Button - Hide on Admin Page and Trips Page -->
     <!-- Filter Button Removed -->
 
-    <div class="search-bar" *ngIf="!isAdminPage && !isTripsPage && !isAccountPage">
+    <div class="search-bar" *ngIf="!isAdminPage && !isTripsPage && !isAccountPage && !isHostPage">
       <!-- Where -->
       <div class="search-section" [class.active]="activePanel === 'location'" (click)="openPanel('location')">
         <div class="search-label">Where</div>
